@@ -1,0 +1,20 @@
+.dog-box {
+  width: 100%;
+  height: 300px;        /* ปรับความสูงได้ */
+  overflow: hidden;
+  border-radius: 20px;
+}
+
+.dog-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.5;
+  transition: transform 0.8s, opacity 0.5s;
+}
+
+.dog-box img:hover {
+  transform: scale(1.2);
+  opacity: 1;
+  border: 10px solid #ffffff;
+}
