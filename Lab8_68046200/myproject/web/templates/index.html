@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>Ass8_68046200 Sininat Chaemchu</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+
+body{
+height:100vh;
+margin:0;
+background-image:url("https://images.unsplash.com/photo-1501785888041-af3ef285b470");
+background-size:cover;
+background-position:center;
+background-repeat:no-repeat;
+}
+
+.overlay{
+background:rgba(0,0,0,0.5);
+height:100vh;
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+text-align:center;
+color:white;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+<div class="container">
+
+<a class="navbar-brand fw-bold" style="color:#d81b60;">SPU</a>
+
+<div>
+<a class="btn btn-outline-light me-2" href="{% url 'index' %}">หน้าแรก</a>
+<a class="btn btn-outline-light me-2" href="{% url 'form' %}">ลงทะเบียน</a>
+<a class="btn btn-outline-light" href="{% url 'about' %}">เกี่ยวกับเรา</a>
+</div>
+
+</div>
+</nav>
+
+<div class="container mt-4">
+<div class="position-relative">
+<div class="overlay">
+
+<h1 class="display-3">Welcome to My Website</h1>
+<h2 class="mb-3">Western Food & Nature Gallery</h2>
+
+</div>
+</div>
+</div>
+
+<div class="container mt-4">
+
+<!-- card 1 -->
+<div class="card mb-3">
+<div class="row g-0">
+
+<div class="col-md-3">
+<img src="https://picsum.photos/200" class="img-fluid rounded-start">
+</div>
+
+<div class="col-md-9">
+<div class="card-body">
+<h5 class="card-title">สถานที่ท่องเที่ยว</h5>
+<p class="card-text">
+ประเทศตะวันตกมีสถานที่ท่องเที่ยวที่มีชื่อเสียงมากมาย เช่น หอไอเฟลในประเทศฝรั่งเศส รูปปั้นเทพีเสรีภาพในสหรัฐอเมริกา และบิ๊กเบนในประเทศอังกฤษ
+</p>
+</div>
+</div>
+
+</div>
+</div>
+
+<!-- card 2 -->
+<div class="card mb-3">
+<div class="row g-0">
+
+<div class="col-md-3">
+<img src="https://picsum.photos/201" class="img-fluid rounded-start">
+</div>
+
+<div class="col-md-9">
+<div class="card-body">
+<h5 class="card-title">วัฒนธรรม</h5>
+<p class="card-text">
+วัฒนธรรมของประเทศตะวันตกมีความหลากหลายและเปิดกว้าง ผู้คนให้ความสำคัญกับเสรีภาพ ความเท่าเทียม และการเคารพสิทธิของผู้อื่น
+</p>
+</div>
+</div>
+
+</div>
+</div>
+
+<!-- card 3 -->
+<div class="card mb-3">
+<div class="row g-0">
+
+<div class="col-md-3">
+<img src="https://picsum.photos/202" class="img-fluid rounded-start">
+</div>
+
+<div class="col-md-9">
+<div class="card-body">
+<h5 class="card-title">อาหาร</h5>
+<p class="card-text">
+อาหารของประเทศตะวันตกมีหลายประเภท เช่น สเต๊ก แฮมเบอร์เกอร์ พิซซ่า พาสต้า และสลัด
+</p>
+</div>
+</div>
+
+</div>
+</div>
+
+<!-- card 4 -->
+<div class="card mb-3">
+<div class="row g-0">
+
+<div class="col-md-3">
+<img src="https://picsum.photos/203" class="img-fluid rounded-start">
+</div>
+
+<div class="col-md-9">
+<div class="card-body">
+<h5 class="card-title">ธรรมชาติ</h5>
+<p class="card-text">
+ธรรมชาติของประเทศตะวันตกมีความหลากหลาย เช่น ภูเขา แม่น้ำ ทะเลสาบ และป่าไม้
+</p>
+</div>
+</div>
+
+</div>
+</div>
+
+<h4 class="mt-5">Western World Map</h4>
+
+<iframe 
+src="https://www.google.com/maps?q=Europe&output=embed"
+width="100%" 
+height="300"
+style="border:0;">
+</iframe>
+
+</div>
+
+<footer class="bg-dark text-white text-center p-3 mt-5">
+© 2026 ICT12367 SPU | 68046200 Sininat Chaemchu
+</footer>
+
+</body>
+</html>
