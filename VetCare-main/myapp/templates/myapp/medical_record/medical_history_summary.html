@@ -1,0 +1,362 @@
+{% extends 'myapp/core/base.html' %}
+{% load static %}
+
+{% block content %}
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css">
+
+<div class="container-fluid py-4" style="background: linear-gradient(135deg, #1e293b 0%, #334155 100%); min-height: 100vh;">
+    
+    <div class="row align-items-center mb-4">
+        <div class="col-md-6">
+            <h2 class="text-white fw-bold mb-1" style="font-family: 'Kanit', sans-serif; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+                <i class="fas fa-history me-2 text-info"></i>สรุปประวัติการรักษาย้อนหลัง
+            </h2>
+            <p class="text-white opacity-75 mb-0">ติดตามสถิติการรักษาและยอดค่าใช้จ่ายสะสมทั้งหมด</p>
+        </div>
+        <div class="col-md-6 text-md-end mt-3 mt-md-0">
+            <a href="{% url 'medical_record_list' %}" class="btn btn-light rounded-pill px-4 fw-bold shadow">
+                <i class="fas fa-arrow-left me-2"></i>กลับหน้าประวัติหลัก
+            </a>
+        </div>
+    </div>
+
+    
+    <div id="resultsContainer">
+    <div class="row g-3 mb-4">
+        
+        <div class="col-md-4">
+            <div class="card border-0 rounded-4 shadow" style="background: white; border-bottom: 5px solid #3b82f6 !important;">
+                <div class="card-body p-4 text-dark">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-primary bg-opacity-10 text-primary rounded-3 p-3 me-3">
+                            <i class="fas fa-calendar-check fs-3"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted fw-bold mb-0">จำนวนการเข้ารักษาทั้งหมด</h6>
+                        </div>
+                    </div>
+                    <h2 class="fw-bold mb-0" style="font-family: 'Kanit', sans-serif; color: #1e293b;">{{ total_visits }} <small class="fs-6 fw-normal text-muted">ครั้ง</small></h2>
+                </div>
+            </div>
+        </div>
+
+        
+        <div class="col-md-4">
+            <div class="card border-0 rounded-4 shadow" style="background: white; border-bottom: 5px solid #22c55e !important;">
+                <div class="card-body p-4 text-dark">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-success bg-opacity-10 text-success rounded-3 p-3 me-3">
+                            <i class="fas fa-hand-holding-dollar fs-3"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted fw-bold mb-0">ยอดรวมค่าใช้จ่ายสะสม</h6>
+                        </div>
+                    </div>
+                    <h2 class="fw-bold mb-0" style="font-family: 'Kanit', sans-serif; color: #16a34a;">
+                        ฿ {{ total_spending|floatformat:2 }}
+                    </h2>
+                </div>
+            </div>
+        </div>
+
+        
+        <div class="col-md-4">
+            <div class="card border-0 rounded-4 shadow" style="background: white; border-bottom: 5px solid #06b6d4 !important;">
+                <div class="card-body p-4 text-dark">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-info bg-opacity-10 text-info rounded-3 p-3 me-3">
+                            <i class="fas fa-clock-rotate-left fs-3"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted fw-bold mb-0">เข้ารักษาครั้งล่าสุดเมื่อ</h6>
+                        </div>
+                    </div>
+                    <h2 class="fw-bold mb-0" style="font-family: 'Kanit', sans-serif; color: #1e293b;">
+                        {% if last_visit_date %}
+                            {{ last_visit_date|date:"d M Y" }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+    <div class="card border-0 rounded-4 mb-4 shadow-sm" style="background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.2) !important;">
+        <div class="card-body p-4">
+            <form method="GET" class="row g-3 align-items-end text-white">
+                <div class="col-md-4">
+                    <label class="form-label fw-bold small">ค้นหาเจ้าของ / รหัสสัตว์เลี้ยง / เลขที่บิล</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-0 text-muted"><i class="fas fa-search"></i></span>
+                        <input type="text" name="q" id="searchInput" value="{{ query }}" class="form-control border-0 shadow-none py-2" placeholder="ระบุชื่อเจ้าของหรือเลขบิล..." style="background: white;">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold small">เริ่มต้นวันที่</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0 text-muted"><i class="fas fa-calendar-alt"></i></span>
+                        <input type="text" name="date_from" id="dateFromInput" value="{{ date_from }}" class="form-control border-start-0 py-2 datepicker" placeholder="เลือกวันที่..." style="background: white;">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold small">สิ้นสุดวันที่</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0 text-muted"><i class="fas fa-calendar-alt"></i></span>
+                        <input type="text" name="date_to" id="dateToInput" value="{{ date_to }}" class="form-control border-start-0 py-2 datepicker" placeholder="เลือกวันที่..." style="background: white;">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary rounded-pill px-4 flex-grow-1 fw-bold shadow-sm">
+                            <i class="fas fa-filter me-2"></i>อัปเดตการกรอง
+                        </button>
+                        <button type="button" class="btn btn-success rounded-pill px-4 fw-bold shadow-sm" onclick="window.print()">
+                            <i class="fas fa-print me-2"></i>พิมพ์รายงาน
+                        </button>
+                        <a href="{% url 'medical_history_summary' %}" class="btn btn-light rounded-pill px-3 shadow-sm border">
+                            <i class="fas fa-undo"></i>
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    
+    <div class="card border-0 rounded-4 shadow overflow-hidden no-print" style="background: white;">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4 py-3 border-0 text-muted fw-bold text-uppercase" style="font-size: 0.8rem;">วันที่</th>
+                        <th class="py-3 border-0 text-muted fw-bold text-uppercase" style="font-size: 0.8rem;">เลขที่บิล / ID</th>
+                        <th class="py-3 border-0 text-muted fw-bold text-uppercase" style="font-size: 0.8rem;">ชื่อสัตว์เลี้ยง (เจ้าของ)</th>
+                        <th class="py-3 border-0 text-muted fw-bold text-uppercase" style="font-size: 0.8rem;">รายการรักษา/ยา</th>
+                        <th class="py-3 border-0 text-muted fw-bold text-uppercase text-end pe-4" style="font-size: 0.8rem;">ยอดเงินสุทธิ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in records %}
+                    <tr style="cursor: pointer; transition: 0.2s;" onclick="window.location.href='{% url 'medical_record_detail' record.pk %}'" class="history-row">
+                        <td class="ps-4 py-3">
+                            <div class="fw-bold text-dark">{{ record.visit_date|date:"d/m/Y" }}</div>
+                            <div class="small text-muted">{{ record.created_at|date:"H:i" }}</div>
+                        </td>
+                        <td class="py-3">
+                            <span class="badge bg-primary bg-opacity-10 text-primary fw-bold px-3 py-2" style="border: 1px solid rgba(13,110,253,0.1);">{{ record.ref_no }}</span>
+                        </td>
+                        <td class="py-3">
+                            <div class="fw-bold text-dark">{{ record.pet.name }}</div>
+                            <div class="small text-muted">คุณ {{ record.pet.owner.first_name }} {{ record.pet.owner.last_name }}</div>
+                        </td>
+                        <td class="py-3">
+                            <span class="badge rounded-pill bg-light border text-dark px-3 py-1 mb-1">{{ record.visit_type }}</span>
+                            <div class="small text-truncate text-muted" style="max-width: 250px;">{{ record.diagnosis|truncatechars:100 }}</div>
+                        </td>
+                        <td class="py-3 text-end pe-4">
+                            <h5 class="fw-bold mb-0 text-success">฿{{ record.cost|floatformat:2 }}</h5>
+                            {% if record.is_paid %}
+                                <span class="badge bg-success-subtle text-success small border-success border-opacity-10 mt-1">
+                                    <i class="fas fa-check-circle me-1"></i>ชำระแล้ว
+                                </span>
+                            {% else %}
+                                <span class="badge bg-danger-subtle text-danger small border-danger border-opacity-10 mt-1">
+                                    <i class="fas fa-clock me-1"></i>ยังไม่ชำระ
+                                </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted">
+                            <i class="fas fa-folder-open fs-1 mb-3 d-block opacity-25"></i>
+                            ไม่พบข้อมูลประวัติการรักษาในช่วงที่ระบุ
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    </div>
+</div>
+
+<!-- ==========================================
+     PRINT VIEW (Mimics Image 2 Layout)
+     ========================================== -->
+<div class="print-only" id="printReportArea">
+    <div class="text-center mb-4">
+        <h1 class="fw-bold" style="font-size: 2.5rem; color: #000;">ประวัติการรักษาย้อนหลัง</h1>
+        <div class="text-primary fw-bold">ประวัติการรักษา</div>
+    </div>
+
+    <div class="d-flex justify-content-between mb-3 border-bottom pb-2" style="font-size: 1rem;">
+        <div>
+            {% if date_from %}
+                <span class="text-primary fw-bold">จากวันที่</span> {{ date_from }}
+            {% endif %}
+            {% if date_to %}
+                <span class="text-primary fw-bold mx-2">ถึงวันที่</span> {{ date_to }}
+            {% endif %}
+        </div>
+        <div>
+            หน้า 1 / 1
+            <div class="small text-muted">พิมพ์เมื่อ: {% now "j F Y H:i" %}</div>
+        </div>
+    </div>
+
+    <table class="report-table">
+        <thead>
+            <tr>
+                <th>เลขที่บิล</th>
+                <th>วันที่</th>
+                <th>ชื่อสัตว์เลี้ยง</th>
+                <th>ลูกค้า</th>
+                <th class="text-end">จำนวนเงินสุทธิ</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for record in records %}
+            <tr class="main-row">
+                <td>{{ record.ref_no }}</td>
+                <td>{{ record.visit_date|date:"d/m/Y" }}</td>
+                <td>{{ record.pet.name }}</td>
+                <td>{{ record.pet.owner.first_name }} {{ record.pet.owner.last_name }}</td>
+                <td class="text-end fw-bold">{{ record.cost|floatformat:2 }}</td>
+            </tr>
+            <tr class="detail-row">
+                <td></td>
+                <td colspan="4">
+                    <div style="font-size: 0.85rem; padding-left: 20px;">
+                        <span class="text-muted">รายการ:</span> {{ record.visit_type }} | 
+                        <span class="text-muted">ผลการตรวจ:</span> {{ record.diagnosis|default:"-" }}
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr class="border-top" style="border-top: 2px solid #000 !important;">
+                <td colspan="4" class="text-end fw-bold pt-2">รวมจำนวนเงินสุทธิทั้งสิ้น:</td>
+                <td class="text-end fw-bold pt-2" style="font-size: 1.2rem;">฿ {{ total_spending|floatformat:2 }}</td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap');
+    
+    /* สไตล์สำหรับหน้าจอปกติ */
+    .print-only { display: none; }
+
+    .history-row:hover {
+        background-color: rgba(56, 189, 248, 0.05) !important;
+        transform: translateX(5px);
+    }
+    
+    .card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    /* สไตล์สำหรับ Print */
+    @media print {
+        @page { size: A4; margin: 1cm; }
+        body { background: white !important; color: black !important; }
+        .no-print, .btn, .navbar, .sidebar, form { display: none !important; }
+        .container-fluid { background: white !important; padding: 0 !important; }
+        .print-only { display: block !important; }
+        
+        .report-table {
+            width: 100%;
+            border-collapse: collapse;
+            border-top: 2px solid #000;
+            border-bottom: 2px solid #000;
+        }
+        .report-table th {
+            border-bottom: 1px solid #000;
+            padding: 8px;
+            text-align: left;
+            color: #0000ff; /* สีน้ำเงินตามรูปที่ 2 */
+            font-weight: bold;
+        }
+        .report-table td {
+            padding: 5px 8px;
+            vertical-align: top;
+        }
+        .main-row td { padding-top: 10px; }
+        .detail-row td { 
+            padding-bottom: 10px; 
+            border-bottom: 1px solid #ddd;
+        }
+        .text-primary { color: #0000ff !important; }
+    }
+
+    input[type="date"]::-webkit-calendar-picker-indicator {
+        filter: invert(1);
+    }
+
+    .table > :not(caption) > * > * {
+        border-bottom-color: rgba(0,0,0,0.05) !important;
+    }
+</style>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/th.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        flatpickr(".datepicker", {
+            dateFormat: "Y-m-d",
+            locale: "th",
+            altInput: true,
+            altFormat: "j F Y",
+            allowInput: true,
+            disableMobile: "true",
+            onChange: function(selectedDates, dateStr, instance) {
+                triggerSearch();
+            }
+        });
+
+        const searchInput = document.getElementById('searchInput');
+        let searchTimeout;
+
+        function triggerSearch() {
+            clearTimeout(searchTimeout);
+            const query = searchInput.value;
+            const dateFrom = document.getElementById('dateFromInput').value;
+            const dateTo = document.getElementById('dateToInput').value;
+            
+            const url = new URL(window.location.href);
+            url.searchParams.set('q', query);
+            url.searchParams.set('date_from', dateFrom);
+            url.searchParams.set('date_to', dateTo);
+
+            searchTimeout = setTimeout(() => {
+                fetch(url, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const newContent = doc.getElementById('resultsContainer');
+                    if (newContent) {
+                        document.getElementById('resultsContainer').innerHTML = newContent.innerHTML;
+                        window.history.replaceState({path: url.toString()}, '', url.toString());
+                    }
+                })
+                .catch(error => console.error('Error fetching search results:', error));
+            }, 300);
+        }
+
+        searchInput.addEventListener('input', triggerSearch);
+    });
+</script>
+{% endblock %}

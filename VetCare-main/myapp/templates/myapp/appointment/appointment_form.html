@@ -1,0 +1,351 @@
+{% extends 'myapp/core/base.html' %}
+
+{% block title %}รายการนัดหมาย (Appointment){% endblock %}
+
+{% block content %}
+<style>
+    .section-header {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #155724;
+        border-bottom: 2px solid #c3e6cb;
+        padding-bottom: 8px;
+        margin-bottom: 16px;
+    }
+    .info-card {
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 10px;
+        padding: 18px 20px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        margin-bottom: 18px;
+    }
+    .status-badge {
+        font-size: 0.85rem;
+        padding: 5px 14px;
+        border-radius: 20px;
+        font-weight: 600;
+    }
+    .time-btn {
+        border: 1px solid #c3e6cb;
+        background: #f8fff8;
+        border-radius: 8px;
+        padding: 6px 12px;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        color: #155724;
+    }
+    .time-btn:hover, .time-btn.selected {
+        background: #28a745;
+        color: #fff;
+        border-color: #28a745;
+    }
+    .queue-item {
+        padding: 8px 12px;
+        border-left: 3px solid #28a745;
+        background: #f0fff4;
+        border-radius: 0 6px 6px 0;
+        margin-bottom: 8px;
+        font-size: 0.85rem;
+    }
+    .readonly-field {
+        background: #f8f9fa !important;
+        border-color: #dee2e6;
+        cursor: default;
+    }
+    .ref-badge {
+        background: #e8f5e9;
+        border: 1px solid #a5d6a7;
+        color: #2e7d32;
+        padding: 4px 14px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+</style>
+
+<div class="container-fluid mt-3 mb-5">
+    <div class="card shadow border-0" style="border-radius: 12px; overflow: hidden;">
+        
+        <div class="card-header py-3" style="background-color: #d4edda; border-bottom: 2px solid #c3e6cb;">
+            <div class="d-flex justify-content-between align-items-center">
+                <h4 class="mb-0" style="color: #155724;">
+                    📅 รายการนัดหมาย (Appointment)
+                </h4>
+                <div class="d-flex align-items-center gap-3">
+                    {% if form.instance.pk %}
+                        <span class="ref-badge">{{ form.instance.ref_no }}</span>
+                        {% if form.instance.status == 'confirmed' %}
+                            <span class="badge bg-success status-badge">✅ ยืนยันแล้ว</span>
+                        {% elif form.instance.status == 'cancelled' %}
+                            <span class="badge bg-danger status-badge">❌ ยกเลิก</span>
+                        {% elif form.instance.status == 'completed' %}
+                            <span class="badge bg-primary status-badge">🏁 เสร็จสิ้น</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark status-badge">⏳ รอยืนยัน</span>
+                        {% endif %}
+                    {% else %}
+                        <span class="ref-badge">🔢 Auto-generate</span>
+                        <span class="badge bg-warning text-dark status-badge">⏳ รอยืนยัน</span>
+                    {% endif %}
+                    <small class="text-muted">วันที่บันทึก: {% now "d/m/Y H:i" %}</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body p-4" style="background-color: #fdfbf7;">
+            <form method="post" id="appointment-form">
+                {% csrf_token %}
+
+                <div class="row g-4">
+                    
+                    <div class="col-lg-8">
+
+                        
+                        <div class="info-card">
+                            <p class="section-header">🐾 ข้อมูลผู้เข้ารับบริการ (Client & Pet)</p>
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <label class="form-label text-muted fw-bold small mb-1">🔍 เลือกสัตว์เลี้ยง</label>
+                                    {{ form.pet }}
+                                </div>
+                            </div>
+                            
+                            <div class="row g-3" id="pet-info-section">
+                                <div class="col-md-4">
+                                    <label class="form-label text-muted fw-bold small mb-1">👤 ชื่อเจ้าของ</label>
+                                    <input type="text" id="owner-name" class="form-control readonly-field" readonly placeholder="—">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label text-muted fw-bold small mb-1">🐶 ชื่อสัตว์เลี้ยง</label>
+                                    <input type="text" id="pet-name" class="form-control readonly-field" readonly placeholder="—">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label text-muted fw-bold small mb-1">🏷️ ประเภทสัตว์</label>
+                                    <input type="text" id="pet-species" class="form-control readonly-field" readonly placeholder="—">
+                                </div>
+                            </div>
+                        </div>
+
+                        
+                        <div class="info-card">
+                            <p class="section-header">📋 รายละเอียดการนัด (Appointment Details)</p>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted fw-bold small mb-1">📅 วันที่นัด (Date)</label>
+                                    {{ form.appointment_date }}
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted fw-bold small mb-1">🕐 เวลานัด (Time)</label>
+                                    {{ form.appointment_time }}
+                                </div>
+                            </div>
+
+                            
+                            <div class="mb-3">
+                                <label class="form-label text-muted fw-bold small mb-2">⚡ เลือกเวลาด่วน</label><br>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <button type="button" class="time-btn" onclick="setTime('08:00')">08:00</button>
+                                    <button type="button" class="time-btn" onclick="setTime('09:00')">09:00</button>
+                                    <button type="button" class="time-btn" onclick="setTime('10:00')">10:00</button>
+                                    <button type="button" class="time-btn" onclick="setTime('11:00')">11:00</button>
+                                    <button type="button" class="time-btn" onclick="setTime('13:00')">13:00</button>
+                                    <button type="button" class="time-btn" onclick="setTime('14:00')">14:00</button>
+                                    <button type="button" class="time-btn" onclick="setTime('15:00')">15:00</button>
+                                    <button type="button" class="time-btn" onclick="setTime('16:00')">16:00</button>
+                                    <button type="button" class="time-btn" onclick="setTime('17:00')">17:00</button>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted fw-bold small mb-1">🏥 ประเภทบริการ</label>
+                                    {{ form.service_type }}
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted fw-bold small mb-1">⚕️ สัตวแพทย์ผู้ตรวจ</label>
+                                    {{ form.vet }}
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label text-muted fw-bold small mb-1">💊 สถานะนัดหมาย</label>
+                                {{ form.status }}
+                            </div>
+                        </div>
+
+                        
+                        <div class="info-card">
+                            <p class="section-header">📝 อาการ / หมายเหตุ</p>
+                            {{ form.reason }}
+                        </div>
+
+                        
+                        <div class="d-flex justify-content-end gap-2 mt-3">
+                            <a href="{% url 'appointment_list' %}" class="btn btn-danger px-4">❌ ยกเลิก</a>
+                            <button type="submit" class="btn btn-success px-4">✅ ยืนยันบันทึกนัดหมาย</button>
+                        </div>
+                    </div>
+
+                    
+                    <div class="col-lg-4">
+                        <div class="info-card" style="position: sticky; top: 80px;">
+                            <p class="section-header">📌 คิวนัดหมายวันนี้</p>
+                            {% if today_appointments %}
+                                {% for apt in today_appointments %}
+                                <div class="queue-item">
+                                    <div class="fw-bold">{{ apt.appointment_time|default:"??" }} — {{ apt.pet.name }}</div>
+                                    <small class="text-muted">
+                                        {% if apt.vet %}{{ apt.vet.first_name }} {{ apt.vet.last_name }}{% endif %}
+                                        &bull; {{ apt.service_type|default:"—" }}
+                                    </small>
+                                    <span class="float-end">
+                                        {% if apt.status == 'confirmed' %}
+                                            <span class="badge bg-success" style="font-size:0.7rem;">✅</span>
+                                        {% elif apt.status == 'completed' %}
+                                            <span class="badge bg-primary" style="font-size:0.7rem;">🏁</span>
+                                        {% elif apt.status == 'cancelled' %}
+                                            <span class="badge bg-danger" style="font-size:0.7rem;">❌</span>
+                                        {% else %}
+                                            <span class="badge bg-warning text-dark" style="font-size:0.7rem;">⏳</span>
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="text-center py-4 text-muted">
+                                    <div style="font-size:2rem;">📭</div>
+                                    <small>ยังไม่มีนัดหมายวันนี้</small>
+                                </div>
+                            {% endif %}
+
+                            <hr>
+                            <p class="section-header mt-2">📊 สรุปนัดหมาย</p>
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span>⏳ รอยืนยัน</span>
+                                <span class="badge bg-warning text-dark">{{ stats.pending }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span>✅ ยืนยันแล้ว</span>
+                                <span class="badge bg-success">{{ stats.confirmed }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span>🏁 เสร็จสิ้น</span>
+                                <span class="badge bg-secondary">{{ stats.done }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between small">
+                                <span>❌ ยกเลิก</span>
+                                <span class="badge bg-danger">{{ stats.cancelled }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_green.css">
+<style>
+    /* Styling Flatpickr to match our theme */
+    .flatpickr-calendar {
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        border: none;
+    }
+    .flatpickr-day.selected {
+        background: #28a745 !important;
+        border-color: #28a745 !important;
+    }
+    .flatpickr-months .flatpickr-month {
+        background: #28a745 !important;
+        color: #fff !important;
+        fill: #fff !important;
+    }
+    .flatpickr-current-month .flatpickr-monthDropdown-months {
+        font-weight: 700;
+    }
+    .flatpickr-weekday {
+        color: #155724 !important;
+        font-weight: 700 !important;
+    }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/th.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Flatpickr for Appointment Date
+    flatpickr("#id_appointment_date", {
+        locale: "th",
+        dateFormat: "Y-m-d",
+        altInput: true,
+        altFormat: "j F Y",
+        placeholder: "เลือกวันที่...",
+        minDate: "today",
+        disableMobile: "true"
+    });
+
+    // Initialize Flatpickr for Appointment Time
+    flatpickr("#id_appointment_time", {
+        enableTime: true,
+        noCalendar: true,
+        dateFormat: "H:i",
+        time_24hr: true,
+        placeholder: "เลือกเวลา...",
+        disableMobile: "true"
+    });
+
+    // Pet info auto-fill from AJAX
+    const petData = {
+        {% for pet in pets_json %}
+        "{{ pet.id }}": {
+            "name": "{{ pet.name|escapejs }}",
+            "species": "{{ pet.species|escapejs }}",
+            "owner": "{{ pet.owner_name|escapejs }}"
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    };
+
+    const petSelect = document.getElementById('id_pet');
+    if (petSelect) {
+        petSelect.addEventListener('change', function() {
+            const id = this.value;
+            updatePetInfo(id);
+        });
+
+        // Trigger on load if editing
+        const initPet = petSelect.value;
+        if (initPet) updatePetInfo(initPet);
+    }
+
+    function updatePetInfo(id) {
+        if (id && petData[id]) {
+            document.getElementById('pet-name').value = petData[id].name;
+            document.getElementById('pet-species').value = petData[id].species;
+            document.getElementById('owner-name').value = petData[id].owner;
+        } else {
+            document.getElementById('pet-name').value = '';
+            document.getElementById('pet-species').value = '';
+            document.getElementById('owner-name').value = '';
+        }
+    }
+});
+
+// Set time from quick buttons
+function setTime(t) {
+    const timeInput = document.getElementById('id_appointment_time');
+    if (timeInput._flatpickr) {
+        timeInput._flatpickr.setDate(t);
+    } else {
+        timeInput.value = t;
+    }
+    document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('selected'));
+    if (event && event.target) event.target.classList.add('selected');
+}
+</script>
+{% endblock %}

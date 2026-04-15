@@ -1,0 +1,71 @@
+{% if is_paginated %}
+<style>
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 2rem;
+    }
+    .modern-pagination {
+        display: flex;
+        align-items: center;
+        background: #ffffff;
+        padding: 6px;
+        border-radius: 50px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        border: 1px solid #eee;
+    }
+    .page-status {
+        background: #0d6efd;
+        color: white;
+        padding: 8px 20px;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin-right: 10px;
+        box-shadow: 0 4px 10px rgba(13, 110, 253, 0.2);
+    }
+    .page-nav-link {
+        color: #0d6efd;
+        text-decoration: none;
+        padding: 8px 20px;
+        border-radius: 50px;
+        font-weight: 500;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+    }
+    .page-nav-link:hover {
+        background: #f0f7ff;
+        color: #0a58ca;
+    }
+    .page-nav-link.disabled {
+        color: #ccc;
+        pointer-events: none;
+    }
+</style>
+
+<div class="pagination-container">
+    <div class="modern-pagination">
+        <div class="page-status">
+            {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+        </div>
+        
+        {% if page_obj.has_previous %}
+            <a class="page-nav-link" href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}">
+                <i class="fas fa-chevron-left me-1"></i> ก่อนหน้า
+            </a>
+        {% else %}
+            <span class="page-nav-link disabled"><i class="fas fa-chevron-left me-1"></i> ก่อนหน้า</span>
+        {% endif %}
+
+        <div style="width: 1px; height: 20px; background: #eee; margin: 0 5px;"></div>
+
+        {% if page_obj.has_next %}
+            <a class="page-nav-link" href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}">
+                ถัดไป <i class="fas fa-chevron-right ms-1"></i>
+            </a>
+        {% else %}
+            <span class="page-nav-link disabled">ถัดไป <i class="fas fa-chevron-right ms-1"></i></span>
+        {% endif %}
+    </div>
+</div>
+{% endif %}

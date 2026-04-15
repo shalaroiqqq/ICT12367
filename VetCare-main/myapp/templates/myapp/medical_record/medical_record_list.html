@@ -1,0 +1,393 @@
+{% extends 'myapp/core/base.html' %}
+
+{% block title %}ประวัติการรักษา{% endblock %}
+
+{% block content %}
+<style>
+    .record-item {
+        transition: transform 0.2s, box-shadow 0.2s;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        background: var(--card-bg);
+        margin-bottom: 15px;
+        box-shadow: var(--card-shadow);
+        position: relative;
+        z-index: 1;
+    }
+    .record-item:hover, .record-item:focus-within {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        z-index: 10;
+    }
+    .pet-avatar {
+        width: 50px;
+        height: 50px;
+        background: var(--badge-bg);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        color: var(--badge-color);
+    }
+    .visit-badge {
+        font-size: 0.75rem;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-weight: 600;
+        background: var(--badge-bg);
+        color: var(--badge-color);
+    }
+    .search-bar {
+        background: var(--input-bg);
+        border-radius: 30px;
+        padding: 5px 20px;
+        box-shadow: var(--card-shadow);
+        border: 1px solid var(--border-color) !important;
+    }
+    .search-bar input {
+        background: transparent !important;
+        color: var(--bs-body-color);
+    }
+</style>
+
+<div class="container py-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4 mb-md-5">
+        <div>
+            <h2 class="fw-bold text-success mb-1">📋 ประวัติการรักษา</h2>
+            <p class="text-muted small mb-0">จัดการและบันทึกข้อมูลการรักษาสัตว์เลี้ยงทั้งหมด</p>
+        </div>
+        <div class="w-100 text-md-end" style="max-width: max-content;">
+            <a href="{% url 'medical_record_create' %}" class="btn btn-success rounded-pill px-4 py-2 shadow-sm w-100 w-md-auto">
+                <i class="fas fa-plus me-2"></i>บันทึกประวัติใหม่
+            </a>
+        </div>
+    </div>
+
+    
+    <div class="mb-4">
+        <form method="get" class="search-bar d-flex align-items-center border">
+            <i class="fas fa-search text-muted me-3"></i>
+            <input type="text" name="q" id="searchInput" value="{{ q|default:'' }}" class="form-control border-0 shadow-none" placeholder="ค้นหาตามชื่อสัตว์, เลขที่เอกสาร หรือวันที่ตรวจ (เช่น 21 Apr)...">
+            <button type="submit" class="btn btn-success rounded-pill px-4 ms-2">ค้นหา</button>
+            {% if q %}
+                <a href="{% url 'medical_record_list' %}" class="btn btn-link text-muted ms-1"><i class="fas fa-times"></i></a>
+            {% endif %}
+        </form>
+    </div>
+
+    <div id="resultsContainer">
+    {% if records %}
+    <div class="row">
+        {% for record in records %}
+        <div class="col-12">
+            <div class="card record-item p-3 border">
+                <div class="row g-3 align-items-center">
+                    
+                    <div class="col-7 col-md-3 d-flex align-items-center">
+                        <div class="pet-avatar me-3 shadow-sm border flex-shrink-0">
+                            {% if record.pet.image %}
+                                <img src="{{ record.pet.image.url }}" alt="{{ record.pet.name }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                            {% else %}
+                                <i class="fas fa-paw"></i>
+                            {% endif %}
+                        </div>
+                        <div class="text-truncate">
+                            <h5 class="mb-0 fw-bold text-truncate">{{ record.pet.name }}</h5>
+                            <small class="text-muted">{{ record.ref_no }}</small>
+                        </div>
+                    </div>
+                    
+                    
+                    <div class="col-5 col-md-2 text-end text-md-center">
+                        <span class="visit-badge d-inline-block">{{ record.visit_type|default:"ตรวจทั่วไป" }}</span>
+                        <div class="small text-muted mt-1"><i class="fas fa-user-md me-1"></i>หมอ{{ record.vet.first_name|default:"—" }}</div>
+                    </div>
+                    
+                    
+                    <div class="col-6 col-md-3 text-start text-md-end d-flex flex-column justify-content-center">
+                        <div class="fw-bold fs-5 text-success mb-1">฿{{ record.cost|floatformat:2 }}</div>
+                        <div>
+                            {% if record.cost > 0 %}
+                                {% if record.is_paid %}
+                                    <span class="badge bg-success-subtle text-success rounded-pill px-3 py-1">
+                                        <i class="fas fa-check-circle me-1"></i>ชำระแล้ว
+                                    </span>
+                                {% else %}
+                                    <a href="{% url 'pos' %}?pet_id={{ record.pet.id }}" class="badge bg-danger text-white rounded-pill px-3 py-1 text-decoration-none pulse-btn">
+                                        <i class="fas fa-wallet me-1"></i>รอชำระเงิน
+                                    </a>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge bg-light border text-muted rounded-pill px-3 py-1">ไม่มีค่าใช้จ่าย</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    
+                    <div class="col-6 col-md-4 d-flex flex-column align-items-end justify-content-center">
+                        <div class="small text-muted mb-2">
+                            <i class="far fa-calendar-alt me-1"></i>{{ record.visit_date|date:"d M Y"|default:record.created_at|date:"d M Y" }}
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                             <a href="{% url 'medical_record_detail' record.pk %}" class="btn btn-outline-success btn-sm rounded-pill px-3" title="ดูรายละเอียด">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <button type="button" class="btn btn-outline-info btn-sm rounded-pill px-3" 
+                                    onclick="openPrintPreview('{{ record.pk }}','{{ record.pet.name|escapejs }}','{{ record.pet.owner.first_name|escapejs }} {{ record.pet.owner.last_name|escapejs }}','{{ record.pet.owner.id }}','{{ record.ref_no|escapejs }}','{{ record.visit_date|date:'d/m/Y'|default:record.created_at|date:'d/m/Y' }}','{{ record.visit_type|default:'ตรวจทั่วไป'|escapejs }}','{{ record.symptoms|default:'-'|escapejs }}','{{ record.diagnosis|default:'-'|escapejs }}','{{ record.cost|floatformat:2 }}','หมอ{{ record.vet.first_name|default:'—'|escapejs }}','{{ record.pet.breed|default:'-'|escapejs }}','{{ record.pet.species|default:'-'|escapejs }}')"
+                                    title="พิมพ์ใบสรุป">
+                                <i class="fas fa-print"></i>
+                            </button>
+                            <div class="dropdown">
+                                <button class="btn btn-link text-muted p-0 px-1" type="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-ellipsis-v fs-5"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 z-3">
+                                    <li><a class="dropdown-item" href="{% url 'medical_record_update' record.pk %}"><i class="fas fa-edit me-2 text-warning"></i>แก้ไข</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-danger" href="{% url 'medical_record_delete' record.pk %}"><i class="fas fa-trash-alt me-2"></i>ลบ</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="mt-4">
+        {% include 'myapp/includes/pagination.html' %}
+    </div>
+
+    {% endif %}
+    </div>
+</div>
+
+
+<div class="modal fade" id="printPreviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 bg-light rounded-top-4">
+                <h5 class="modal-title fw-bold text-primary"><i class="fas fa-file-invoice me-2"></i>ตัวอย่างใบสรุปการรักษา</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                
+                <div id="print-area" class="bg-white p-5 mx-auto" style="max-width: 800px; font-family: 'Sarabun', sans-serif; color: #333;">
+                    
+                    <div class="d-flex justify-content-between align-items-start mb-4 border-bottom pb-4">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-primary text-white rounded-3 p-3 me-3 d-print-none">
+                                <i class="fas fa-clinic-medical fs-2"></i>
+                            </div>
+                            <div>
+                                <h3 class="fw-bold mb-0 text-primary clinic-name" style="letter-spacing: -0.5px;">ANTIGRAVITY VET CLINIC</h3>
+                                <p class="mb-0 text-muted small">123/45 ถ.สุขุมวิท แขวงคลองเตย เขตคลองเตย กรุงเทพฯ 10110</p>
+                                <p class="mb-0 text-muted small">โทร: 02-123-4567 | Line: @antigravvet</p>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <h4 class="fw-bold text-uppercase mb-1" style="color: #64748b;">ใบสรุปการรักษา</h4>
+                            <p class="mb-0 fw-bold">เลขที่เอกสาร: <span id="preview-ref-no" class="text-primary"></span></p>
+                            <p class="mb-0 fw-bold text-dark">วันที่เข้ารับการรักษา: <span id="preview-date"></span></p>
+                        </div>
+                    </div>
+
+                    
+                    <div class="row g-4 mb-4 pt-2">
+                        <div class="col-6">
+                            <div class="p-3 border rounded-3 bg-light bg-opacity-50">
+                                <h6 class="text-primary fw-bold mb-2 border-bottom pb-1 small">ข้อมูลเจ้าของ</h6>
+                                <p class="mb-1 fw-bold">คุณ: <span id="preview-owner" class="text-dark"></span></p>
+                                <p class="mb-0 text-muted small">รหัสลูกค้า: <span id="preview-cust-id"></span></p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 border rounded-3 bg-light bg-opacity-50">
+                                <h6 class="text-primary fw-bold mb-2 border-bottom pb-1 small">ข้อมูลสัตว์เลี้ยง</h6>
+                                <p class="mb-1 fw-bold">ชื่อ: <span id="preview-pet" class="text-dark"></span></p>
+                                <p class="mb-0 text-muted small">สายพันธุ์: <span id="preview-breed"></span> (<span id="preview-species"></span>)</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    
+                    <div class="mb-4">
+                        <h6 class="text-primary fw-bold mb-2 d-flex align-items-center">
+                            <i class="fas fa-stethoscope me-2"></i> บันทึกการตรวจรักษา
+                        </h6>
+                        <div class="table-responsive">
+                            <table class="table table-bordered border-secondary border-opacity-25" style="border-radius: 8px; overflow: hidden;">
+                                <tr class="bg-light">
+                                    <th style="width: 25%;" class="small fw-bold">อาการที่พบ</th>
+                                    <td id="preview-symptoms" class="small py-2 text-wrap"></td>
+                                </tr>
+                                <tr>
+                                    <th class="small fw-bold">ผลวินิจฉัย</th>
+                                    <td id="preview-diagnosis" class="small py-2 text-primary fw-bold"></td>
+                                </tr>
+                                <tr class="bg-light">
+                                    <th class="small fw-bold">ประเภทการเข้าตรวจ</th>
+                                    <td id="preview-visit-type" class="small py-2"></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    
+                    <div class="mb-5">
+                        <h6 class="text-primary fw-bold mb-2 d-flex align-items-center">
+                            <i class="fas fa-money-bill-wave me-2"></i> รายการค่าใช้จ่าย
+                        </h6>
+                        <table class="table table-sm border-0">
+                            <thead class="bg-primary text-white">
+                                <tr>
+                                    <th class="ps-3 py-2 border-0 small">ลำดับ</th>
+                                    <th class="py-2 border-0 small">รายการ</th>
+                                    <th class="text-center py-2 border-0 small">จำนวน</th>
+                                    <th class="text-end py-2 border-0 small">ราคา/หน่วย</th>
+                                    <th class="text-end pe-3 py-2 border-0 small">รวมยอดเงิน</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-bottom border-light">
+                                    <td class="ps-3 py-3 small">1</td>
+                                    <td class="py-3 small">ค่าบริการทางการแพทย์ (<span id="table-visit-type"></span>)</td>
+                                    <td class="text-center py-3 small">1</td>
+                                    <td class="text-end py-3 small"><span id="table-unit-price"></span></td>
+                                    <td class="text-end pe-3 py-3 small fw-bold">฿<span id="preview-cost"></span></td>
+                                </tr>
+                                
+                            </tbody>
+                            <tfoot>
+                                <tr class="bg-light border-top border-2 border-primary border-opacity-75">
+                                    <td colspan="4" class="text-end fw-bold py-3">ยอดรวมสุทธิ (Grand Total):</td>
+                                    <td class="text-end pe-3 fs-5 fw-bold text-primary py-3">฿<span id="preview-total-cost"></span></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    
+                    <div class="row pt-4 mt-4">
+                        <div class="col-8">
+                            <p class="text-muted small mb-1">* ใบเอกสารนี้ใช้เป็นสรุปประวัติการรักษาในเบื้องต้นเท่านั้น</p>
+                            <p class="text-muted small mb-0 font-italic text-sm">พิมพ์เมื่อ: {{ now|date:"d M Y H:i" }}</p>
+                        </div>
+                        <div class="col-4 text-center">
+                            <div class="mt-4 border-bottom border-secondary border-opacity-50" style="height: 40px; width: 150px; margin: 0 auto;"></div>
+                            <p class="mb-0 mt-2 small fw-bold text-dark"><span id="preview-vet-sign"></span></p>
+                            <p class="text-muted small">สัตวแพทย์ผู้รักษา</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 bg-light rounded-bottom-4 py-3">
+                <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">ปิด</button>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-primary rounded-pill px-4 fw-bold print-action">
+                        <i class="fas fa-print me-2"></i>พิมพ์เอกสาร
+                    </button>
+                </div>
+            </div>
+        </div>
+<script>
+// ฟังก์ชันเปิด Modal พร้อมข้อมูล (แบบส่งค่าตรง ไม่ผ่าน dataset เพื่อความชัวร์)
+function openPrintPreview(id, pet, owner, ownerId, refNo, date, visitType, symptoms, diagnosis, cost, vet, breed, species) {
+    // ใส่ข้อมูลลงใน Modal Preview
+    document.getElementById('preview-pet').textContent = pet;
+    document.getElementById('preview-owner').textContent = owner;
+    document.getElementById('preview-ref-no').textContent = refNo;
+    document.getElementById('preview-date').textContent = date;
+    document.getElementById('preview-cust-id').textContent = 'P-' + ownerId;
+    document.getElementById('preview-visit-type').textContent = visitType;
+    document.getElementById('table-visit-type').textContent = visitType;
+    document.getElementById('preview-symptoms').textContent = symptoms;
+    document.getElementById('preview-diagnosis').textContent = diagnosis;
+    document.getElementById('preview-cost').textContent = cost;
+    document.getElementById('preview-total-cost').textContent = cost;
+    document.getElementById('table-unit-price').textContent = cost;
+    document.getElementById('preview-vet-sign').textContent = vet;
+    document.getElementById('preview-breed').textContent = breed;
+    document.getElementById('preview-species').textContent = species;
+    
+    // แสดง Modal
+    const modalElement = document.getElementById('printPreviewModal');
+    const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+    modal.show();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // ฟังก์ชันพิมพ์แบบสะอาดยอดนิยม (เสถียร 1 หน้าถ้วน)
+    function printClean(contentId) {
+        const content = document.getElementById(contentId).innerHTML;
+        const printWindow = window.open('', '', 'height=800,width=1000');
+        
+        printWindow.document.write('<html><head><title>Print Receipt</title>');
+        printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">');
+        printWindow.document.write('<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">');
+        printWindow.document.write('<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;700&display=swap" rel="stylesheet">');
+        printWindow.document.write('<style>');
+        printWindow.document.write('body { font-family: "Sarabun", sans-serif; padding: 0; margin: 0; background: white; }');
+        printWindow.document.write('#print-area { width: 100%; max-width: 100%; padding: 20px; border: none; box-shadow: none; margin: 0 auto; overflow: hidden; }');
+        printWindow.document.write('.clinic-name { color: #0d6efd !important; }');
+        printWindow.document.write('.text-primary { color: #0d6efd !important; }');
+        printWindow.document.write('.bg-primary { background-color: #0d6efd !important; color: white !important; }');
+        printWindow.document.write('.badge { border: 1px solid #dee2e6; color: #333; }');
+        printWindow.document.write('.bg-light { background-color: #f8f9fa !important; }');
+        printWindow.document.write('@page { size: A4; margin: 10mm; }');
+        printWindow.document.write('</style></head><body>');
+        printWindow.document.write('<div id="print-area">' + content + '</div>');
+        printWindow.document.write('</body></html>');
+        
+        printWindow.document.close();
+        
+        setTimeout(function() {
+            printWindow.focus();
+            printWindow.print();
+            printWindow.close();
+        }, 1000);
+    }
+
+    // ฟังการกดปุ่มพิมพ์ใน Modal
+    const printActionBtn = document.querySelector('.print-action');
+    if (printActionBtn) {
+        printActionBtn.addEventListener('click', function() {
+            printClean('print-area');
+        });
+    }
+
+    // Real-time AJAX search setup
+    const searchInput = document.getElementById('searchInput');
+    const resultsContainer = document.getElementById('resultsContainer');
+    let searchTimeout;
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            const query = this.value;
+            const url = new URL(window.location.href);
+            url.searchParams.set('q', query);
+
+            searchTimeout = setTimeout(() => {
+                fetch(url, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const newResults = doc.getElementById('resultsContainer');
+                    if (newResults) {
+                        resultsContainer.innerHTML = newResults.innerHTML;
+                        window.history.replaceState({path: url.toString()}, '', url.toString());
+                    }
+                })
+                .catch(error => console.error('Error fetching search results:', error));
+            }, 300);
+        });
+    }
+});
+</script>
+{% endblock %}

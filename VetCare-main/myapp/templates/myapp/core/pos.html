@@ -1,0 +1,2515 @@
+{% extends 'myapp/core/base.html' %}
+{% block title %}ระบบขายสินค้าหน้าร้าน (POS) | VetCare{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ===== POS LAYOUT (Bootstrap Grid Based) ===== */
+  .pos-container {
+      height: calc(100vh - 120px);
+      overflow: hidden;
+  }
+  @media (max-width: 991.98px) {
+      .pos-container { height: auto; overflow: visible; }
+  }
+
+  /* LEFT PANEL */
+  .pos-left {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding: 1.5rem; /* Desktop default */
+  }
+  @media (max-width: 991.98px) {
+    .pos-left { 
+      padding: 1rem; 
+      display: block !important; 
+      height: auto !important;
+      overflow: visible !important;
+    }
+  }
+
+  /* RIGHT PANEL */
+  .pos-right-card {
+    display: flex;
+    flex-direction: column;
+    border-radius: 20px;
+    background: var(--card-bg);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.07);
+    overflow: hidden;
+    height: 100%;
+  }
+  @media (max-width: 991.98px) {
+    .pos-right-card { 
+      height: auto !important; 
+      min-height: auto !important; 
+      display: block !important;
+      overflow: visible !important;
+    }
+  }
+
+  /* ===== SEARCH BAR ===== */
+  .pos-search-wrap {
+    display: flex;
+    gap: .6rem;
+    margin-bottom: .75rem;
+  }
+  .pos-search-wrap .form-control {
+    border-radius: 12px;
+    border: 1.5px solid #e2e8f0;
+    font-family: 'Kanit', sans-serif;
+    font-size: .95rem;
+    padding: .55rem 1rem;
+    background: var(--card-bg);
+    color: var(--text-heading);
+    transition: border-color .2s;
+  }
+  .pos-search-wrap .form-control:focus {
+    border-color: #22c55e;
+    box-shadow: 0 0 0 3px rgba(34,197,94,.12);
+  }
+  .btn-scan {
+    border-radius: 12px;
+    background: linear-gradient(135deg, #0f172a, #1e3a5f);
+    color: #fff;
+    border: none;
+    padding: .55rem 1rem;
+    font-family: 'Kanit', sans-serif;
+    font-size: .9rem;
+    white-space: nowrap;
+    transition: all .2s;
+  }
+  .btn-scan:hover { opacity: .88; transform: scale(1.02); color:#fff; }
+
+  /* ===== QUICK KEYS ===== */
+  .quick-keys-wrap {
+    display: flex;
+    gap: .5rem;
+    flex-wrap: wrap;
+    margin-bottom: .75rem;
+  }
+  .quick-key-btn {
+    border: 1.5px solid #22c55e;
+    color: #16a34a;
+    background: rgba(34,197,94,.08);
+    border-radius: 20px;
+    padding: .3rem .85rem;
+    font-size: .82rem;
+    font-weight: 600;
+    font-family: 'Kanit', sans-serif;
+    cursor: pointer;
+    transition: all .2s;
+    white-space: nowrap;
+  }
+  .quick-key-btn:hover {
+    background: #22c55e;
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(34,197,94,.25);
+  }
+
+  /* ===== PRODUCT GRID ===== */
+  .product-grid-scroll {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding-right: 4px;
+    min-height: 400px; /* Prevent collapse */
+  }
+  @media (max-width: 991.98px) {
+    .product-grid-scroll {
+      flex: none;
+      height: auto;
+      min-height: 200px;
+      overflow: visible;
+    }
+  }
+  .product-grid-scroll::-webkit-scrollbar { width: 5px; }
+  .product-grid-scroll::-webkit-scrollbar-track { background: transparent; }
+  .product-grid-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+  .product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: .75rem;
+  }
+
+  .product-card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    padding: 1rem .85rem .85rem;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all .22s cubic-bezier(.4,0,.2,1);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .product-card:hover {
+    border-color: #22c55e;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(34,197,94,.15);
+  }
+  .product-card.selected-flash {
+    animation: cardFlash .35s ease;
+  }
+  @keyframes cardFlash {
+    0% { background: rgba(34,197,94,.18); }
+    100% { background: var(--card-bg); }
+  }
+
+  .product-card .prod-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.45rem;
+    margin-bottom: .6rem;
+    flex-shrink: 0;
+  }
+  .product-card .prod-img {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    object-fit: cover;
+    margin-bottom: .6rem;
+  }
+  .product-card .prod-name {
+    font-size: .82rem;
+    font-weight: 600;
+    color: var(--text-heading);
+    line-height: 1.3;
+    margin-bottom: .25rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .product-card .prod-price {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #16a34a;
+  }
+  .product-card .prod-stock {
+    font-size: .72rem;
+    color: var(--text-muted);
+    margin-top: .15rem;
+  }
+  .prod-type-badge {
+    position: absolute;
+    top: .5rem;
+    right: .5rem;
+    border-radius: 8px;
+    padding: .1rem .45rem;
+    font-size: .65rem;
+    font-weight: 600;
+  }
+  .product-card .out-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: #ef4444;
+    font-size: .8rem;
+    backdrop-filter: blur(2px);
+    border-radius: 16px;
+  }
+
+  /* ===== RIGHT CART ===== */
+  .cart-header {
+    padding: 1.1rem 1.25rem .85rem;
+    border-bottom: 1px solid var(--border-color);
+  }
+  .cart-header h6 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-heading);
+    margin: 0;
+  }
+
+  /* Pet search strip */
+  .pet-search-strip {
+    padding: .6rem 1.25rem;
+    border-bottom: 1px solid var(--border-color);
+    background: rgba(34,197,94,.04);
+  }
+  .pet-search-strip .form-control {
+    font-size: .82rem;
+    border-radius: 10px;
+    border: 1.5px solid #e2e8f0;
+    font-family: 'Kanit', sans-serif;
+    padding: .35rem .85rem;
+    background: var(--card-bg);
+    color: var(--text-heading);
+  }
+  .pet-search-strip .form-control:focus {
+    border-color: #22c55e;
+    box-shadow: 0 0 0 3px rgba(34,197,94,.12);
+  }
+  .pet-dropdown {
+    position: absolute;
+    left: 0; right: 0; top: 100%;
+    background: var(--card-bg);
+    border: 1.5px solid #e2e8f0;
+    border-radius: 12px;
+    z-index: 999;
+    max-height: 180px;
+    overflow-y: auto;
+    box-shadow: 0 8px 24px rgba(0,0,0,.1);
+  }
+  .pet-dropdown-item {
+    padding: .5rem .85rem;
+    cursor: pointer;
+    font-size: .83rem;
+    color: var(--text-heading);
+    transition: background .15s;
+  }
+  .pet-dropdown-item:hover { background: rgba(34,197,94,.08); }
+
+  /* Cart items */
+  .cart-items-wrap {
+    flex: 1 1 0;
+    overflow-y: auto;
+    padding: .5rem .75rem;
+  }
+  .cart-items-wrap::-webkit-scrollbar { width: 4px; }
+  .cart-items-wrap::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+  .cart-item {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .55rem .6rem;
+    border-radius: 12px;
+    background: rgba(241,248,241,.5);
+    margin-bottom: .45rem;
+    transition: background .2s;
+    animation: slideIn .2s ease;
+  }
+  [data-bs-theme="dark"] .cart-item { background: rgba(255,255,255,.04); }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(12px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  .cart-item .ci-name {
+    flex: 1 1 0;
+    font-size: .8rem;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--text-heading);
+  }
+  .ci-qty-wrap {
+    display: flex;
+    align-items: center;
+    gap: .25rem;
+  }
+  .ci-qty-wrap .btn-qty {
+    width: 24px; height: 24px;
+    border-radius: 8px;
+    border: none;
+    background: #e2e8f0;
+    color: #374151;
+    font-size: .85rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .15s;
+    padding: 0;
+  }
+  .ci-qty-wrap .btn-qty:hover { background: #22c55e; color:#fff; }
+  .ci-qty {
+    width: 28px; text-align: center;
+    font-size: .85rem; font-weight: 700;
+    color: var(--text-heading);
+  }
+  .ci-price {
+    font-size: .8rem; font-weight: 700; color: #16a34a;
+    width: 56px; text-align: right; white-space: nowrap;
+  }
+  .btn-del-item {
+    border: none; background: none;
+    color: #ef4444; font-size: .85rem; cursor: pointer;
+    padding: .2rem;
+    border-radius: 6px;
+    transition: all .15s;
+  }
+  .btn-del-item:hover { background: rgba(239,68,68,.1); }
+
+  /* Empty cart */
+  .cart-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-muted);
+    opacity: .6;
+    font-size: .85rem;
+    gap: .5rem;
+  }
+  .cart-empty i { font-size: 2.5rem; }
+
+  /* Summary */
+  .cart-summary {
+    border-top: 1px solid var(--border-color);
+    padding: .85rem 1.25rem .5rem;
+  }
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: .83rem;
+    color: var(--text-muted);
+    margin-bottom: .3rem;
+  }
+  .summary-row.total {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #15803d;
+    margin-top: .4rem;
+    border-top: 2px solid #e2e8f0;
+    padding-top: .5rem;
+  }
+
+  /* Checkout buttons */
+  .cart-actions {
+    padding: .75rem 1.25rem 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+  }
+  .btn-checkout {
+    background: linear-gradient(135deg, #16a34a, #22c55e);
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    padding: .75rem;
+    font-size: 1rem;
+    font-weight: 700;
+    font-family: 'Kanit', sans-serif;
+    cursor: pointer;
+    transition: all .22s;
+    box-shadow: 0 4px 16px rgba(34,197,94,.3);
+  }
+  .btn-checkout:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(34,197,94,.4);
+  }
+  .btn-checkout:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
+  .btn-cancel-cart {
+    background: rgba(239,68,68,.09);
+    color: #dc2626;
+    border: 1.5px solid rgba(239,68,68,.2);
+    border-radius: 14px;
+    padding: .55rem;
+    font-size: .88rem;
+    font-weight: 600;
+    font-family: 'Kanit', sans-serif;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .btn-cancel-cart:hover { background: #dc2626; color:#fff; }
+
+  /* ===== PAYMENT MODAL ===== */
+  .payment-option {
+    position: relative;
+    border: 2px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 1.1rem .85rem;
+    cursor: pointer;
+    text-align: center;
+    transition: all .25s cubic-bezier(0.4, 0, 0.2, 1);
+    font-family: 'Kanit', sans-serif;
+    background: #fff;
+    overflow: hidden;
+  }
+  .payment-option:hover {
+    border-color: #cbd5e1;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  }
+  .payment-option.selected {
+    border-color: #15803d;
+    background: rgba(21, 128, 61, 0.05);
+    box-shadow: 0 4px 12px rgba(21, 128, 61, 0.15);
+  }
+  .payment-option .check-icon {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    color: #15803d;
+    font-size: 1.1rem;
+    opacity: 0;
+    transform: scale(0.5);
+    transition: all .25s ease;
+  }
+  .payment-option.selected .check-icon {
+    opacity: 1;
+    transform: scale(1);
+  }
+  .payment-option i.main-icon { font-size: 1.8rem; display: block; margin-bottom: .4rem; transition: transform .2s ease; }
+  .payment-option.selected i.main-icon { transform: scale(1.1); color: #15803d !important; }
+  .payment-option span { font-size: .85rem; font-weight: 600; color: #475569; transition: color .2s ease; }
+  .payment-option.selected span { color: #15803d; }
+  
+  /* Dynamic Content Animation */
+  .payment-dynamic-content {
+    display: none;
+    animation: fadeInSlideUp 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+  .payment-dynamic-content.active {
+    display: block;
+  }
+  @keyframes fadeInSlideUp {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Form and QR styling */
+  .qr-box {
+    text-align: center;
+    padding: 1.25rem;
+    background: #fff;
+    border: 1.5px dashed #cbd5e1;
+    border-radius: 16px;
+  }
+  .qr-box img { width: 140px; height: 140px; margin-bottom: .5rem; }
+  .countdown-timer { font-size: 1.1rem; font-weight: 700; color: #dc2626; font-family: 'Courier New', monospace; letter-spacing: 1px; }
+  
+  .cc-form .form-control { border-radius: 12px; font-size: .95rem; padding: .65rem 1rem; border: 1.5px solid #e2e8f0; font-family: 'Kanit', sans-serif; }
+  .cc-form .form-control:focus { border-color: #15803d; box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.1); }
+  .cc-form .input-group-text { border: 1.5px solid #e2e8f0; background: #f8fafc; border-top-left-radius: 12px; border-bottom-left-radius: 12px; }
+
+  /* ===== SUCCESS ANIMATION ===== */
+  @keyframes stroke { 100% { stroke-dashoffset: 0; } }
+  .success-backdrop { animation: fadeIn .3s ease forwards; }
+
+  /* ===== RECEIPT MODAL ===== */
+  .receipt-box {
+    background: #fff;
+    border-radius: 16px;
+    font-family: 'Courier New', monospace;
+    font-size: .83rem;
+    color: #111;
+  }
+  .receipt-box .r-header { text-align: center; border-bottom: 2px dashed #ccc; padding-bottom: .75rem; margin-bottom: .75rem; }
+  .receipt-box .r-row { display: flex; justify-content: space-between; margin-bottom: .2rem; }
+  .receipt-box .r-sep { border-top: 1.5px dashed #ccc; margin: .5rem 0; }
+  .receipt-box .r-total { font-size: 1rem; font-weight: 700; }
+
+  /* ===== CATEGORY TABS ===== */
+  .category-tabs {
+    display: flex;
+    gap: .6rem;
+    margin-bottom: 1rem;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: .2rem .2rem .5rem .2rem;
+  }
+  .category-tabs::-webkit-scrollbar {
+    height: 6px;
+  }
+  .category-tabs::-webkit-scrollbar-thumb {
+    background: rgba(0,0,0,0.1);
+    border-radius: 10px;
+  }
+  [data-bs-theme="dark"] .category-tabs::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.1);
+  }
+  .cat-tab {
+    border: 1.5px solid #e2e8f0;
+    background: var(--card-bg);
+    color: var(--text-muted);
+    border-radius: 20px;
+    padding: .35rem .9rem;
+    font-size: .83rem;
+    font-weight: 600;
+    min-width: 90px;
+    text-align: center;
+    cursor: pointer;
+    transition: all .18s;
+    font-family: 'Kanit', sans-serif;
+  }
+  .cat-tab:hover, .cat-tab.active {
+    background: #0f172a;
+    color: #fff;
+    border-color: #0f172a;
+  }
+
+  /* Type color map (Light Mode) */
+  .type-ยาเม็ด { background: rgba(59,130,246,.12); color:#2563eb; }
+  .type-ยาน้ำ  { background: rgba(168,85,247,.12); color:#7c3aed; }
+  .type-ยาฉีด  { background: rgba(239,68,68,.12); color:#dc2626; }
+  .type-วัคซีน { background: rgba(34,197,94,.12); color:#16a34a; }
+  .type-อาหารเสริม { background: rgba(245,158,11,.12); color:#b45309; }
+  .type-อุปกรณ์ทำแผล { background: rgba(20,184,166,.12); color:#0f766e; }
+  .type-อุปกรณ์การแพทย์ { background: rgba(99,102,241,.12); color:#4338ca; }
+  .type-อื่นๆ { background: rgba(107,114,128,.12); color:#374151; }
+
+  /* Type color map (Dark Mode - Brightened) */
+  [data-bs-theme="dark"] .type-ยาเม็ด { background: rgba(96, 165, 250, 0.15) !important; color: #60a5fa !important; }
+  [data-bs-theme="dark"] .type-ยาน้ำ  { background: rgba(192, 132, 252, 0.15) !important; color: #c084fc !important; }
+  [data-bs-theme="dark"] .type-ยาฉีด  { background: rgba(248, 113, 113, 0.15) !important; color: #f87171 !important; }
+  [data-bs-theme="dark"] .type-วัคซีน { background: rgba(74, 222, 128, 0.15) !important; color: #4ade80 !important; }
+  [data-bs-theme="dark"] .type-อาหารเสริม { background: rgba(251, 191, 36, 0.15) !important; color: #fbbf24 !important; }
+  [data-bs-theme="dark"] .type-อุปกรณ์ทำแผล { background: rgba(45, 212, 191, 0.15) !important; color: #2dd4bf !important; }
+  [data-bs-theme="dark"] .type-อุปกรณ์การแพทย์ { background: rgba(129, 140, 248, 0.15) !important; color: #818cf8 !important; }
+  [data-bs-theme="dark"] .type-อื่นๆ { background: rgba(203, 213, 225, 0.15) !important; color: #cbd5e1 !important; }
+
+  .type-icon-ยาเม็ด::before { content: '💊'; }
+  .type-icon-ยาน้ำ::before  { content: '🧪'; }
+  .type-icon-ยาฉีด::before  { content: '💉'; }
+  .type-icon-วัคซีน::before { content: '🛡️'; }
+  .type-icon-อาหารเสริม::before { content: '🌿'; }
+  .type-icon-อุปกรณ์ทำแผล::before { content: '🩹'; }
+  .type-icon-อุปกรณ์การแพทย์::before { content: '🔬'; }
+  .type-icon-อื่นๆ::before { content: '📦'; }
+
+  /* POS Extra Dark Mode UX Fixes */
+  [data-bs-theme="dark"] .cat-tab { background: var(--card-bg); border-color: var(--border-color); color: var(--text-muted); }
+  [data-bs-theme="dark"] .cat-tab:hover, [data-bs-theme="dark"] .cat-tab.active { background: #38bdf8; border-color: #38bdf8; color: #fff; }
+  [data-bs-theme="dark"] .product-card .prod-name { color: var(--text-heading); }
+
+  /* Stock alert toast */
+  #stockToast {
+    position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999;
+    min-width: 260px;
+  }
+
+  /* No results */
+  .no-results {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--text-muted);
+  }
+
+  /* ===== RESPONSIVE FIXES ===== */
+  /* ===== RESPONSIVE GRID & SMOOTH SCROLLING ===== */
+  .scroll-smooth {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+
+  @media (max-width: 991px) {
+    .pos-left, .pos-right {
+      padding: 0.75rem !important;
+    }
+    
+    .category-tabs {
+      padding-bottom: 8px !important;
+    }
+
+    .summary-row.total {
+      font-size: 1.15rem !important; /* Slightly smaller for mobile fit */
+    }
+
+    /* Bigger buttons for cart on mobile */
+    .btn-checkout, .btn-cancel-cart {
+      width: 100% !important;
+      padding: 0.9rem !important;
+      font-size: 1.1rem !important;
+      border-radius: 14px !important;
+    }
+
+    /* Small header for mobile */
+    .pos-title-h4 {
+      font-size: 1.2rem !important;
+    }
+    .btn-scan {
+      padding: 0.45rem 0.75rem !important;
+      font-size: 0.78rem !important;
+    }
+  }
+
+  @media (max-width: 576px) {
+    .product-grid {
+      grid-template-columns: repeat(2, 1fr) !important; /* Force 2 columns even on very small phones */
+    }
+    .product-card .prod-name {
+      font-size: 0.8rem !important;
+      height: 2.4rem;
+    }
+    .product-card .prod-price {
+      font-size: 1.1rem !important;
+    }
+    .quick-key-btn {
+      font-size: 0.78rem !important;
+      padding: 0.35rem 0.75rem !important;
+    }
+  }
+
+  /* Grab scroll cursor */
+  .category-tabs {
+    cursor: grab;
+    user-select: none;
+  }
+  .category-tabs:active {
+    cursor: grabbing;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div id="stockToast" class="toast align-items-center text-bg-success border-0" role="alert" style="display:none;opacity:0">
+  <div class="d-flex">
+    <div class="toast-body" id="stockToastMsg">✅ ตัดสต็อกสำเร็จ!</div>
+    <button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="hideToast()"></button>
+  </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h4 class="fw-bold mb-0 pos-title-h4" style="color:var(--text-heading)">
+      <i class="fas fa-cash-register me-2 text-success"></i>ระบบขายสินค้าหน้าร้าน
+    </h4>
+    <small class="text-muted">POS — Point of Sale</small>
+  </div>
+  <div class="d-flex align-items-center gap-2">
+    
+    <button class="btn btn-outline-success btn-sm px-3 fw-semibold" onclick="openSalesReport()" id="btnSalesReport"
+      style="border-radius:10px;font-family:'Kanit',sans-serif;border-width:1.5px;">
+      📊 สรุปยอดขาย
+    </button>
+    <span class="badge bg-success rounded-pill px-3 py-2 fs-6" id="cartCountBadge">🛒 0 รายการ</span>
+  </div>
+</div>
+
+
+<div class="modal fade" id="salesReportModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-fullscreen">
+    <div class="modal-content" style="background:#f8fafc;">
+      
+      <div class="modal-header border-0 shadow-sm" style="background:#fff;padding:1rem 1.75rem;">
+        <div>
+          <h5 class="modal-title fw-bold mb-0" style="color:#1e293b;font-size:1.15rem;">
+            📈 สรุปรายรับ-รายจ่าย <span style="color:#64748b;font-weight:400;font-size:.9rem;">(Sales &amp; Revenue Report)</span>
+          </h5>
+          <small class="text-muted" id="reportSubtitle">ข้อมูล ณ วันนี้</small>
+        </div>
+        <div class="d-flex align-items-center gap-2 ms-auto no-print">
+          <button class="btn btn-outline-secondary btn-sm px-3" onclick="window.print()" style="border-radius:8px;font-family:'Kanit',sans-serif;">
+            🖨️ พิมพ์รายงาน (Print PDF)
+          </button>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+      </div>
+
+      
+      <div class="modal-body p-4" style="overflow-y:auto;">
+
+        
+        <div class="d-flex gap-2 mb-4 no-print" id="reportFilterTabs">
+          <button class="btn btn-sm fw-semibold px-4 active-tab-btn" id="tab-day" onclick="switchTab('day',this)"
+            style="border-radius:20px;background:#1e293b;color:#fff;border:none;font-family:'Kanit',sans-serif;">รายวัน</button>
+          <button class="btn btn-sm fw-semibold px-4" id="tab-month" onclick="switchTab('month',this)"
+            style="border-radius:20px;background:#e2e8f0;color:#475569;border:none;font-family:'Kanit',sans-serif;">รายเดือน</button>
+          <button class="btn btn-sm fw-semibold px-4" id="tab-year" onclick="switchTab('year',this)"
+            style="border-radius:20px;background:#e2e8f0;color:#475569;border:none;font-family:'Kanit',sans-serif;">รายปี</button>
+          <div class="ms-auto d-flex align-items-center gap-2">
+            <label class="text-muted small fw-semibold mb-0">ช่วงวันที่:</label>
+            <input type="date" id="reportDateFrom" class="form-control form-control-sm" style="border-radius:8px;width:140px;" onchange="updateReportData()">
+            <span class="text-muted">—</span>
+            <input type="date" id="reportDateTo" class="form-control form-control-sm" style="border-radius:8px;width:140px;" onchange="updateReportData()">
+          </div>
+        </div>
+
+        
+        <div class="row g-3 mb-4">
+          
+          <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm h-100" style="border-radius:16px;overflow:hidden;">
+              <div class="card-body p-3">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                  <div class="p-2 rounded-3" style="background:rgba(34,197,94,.12)">
+                    <span style="font-size:1.3rem">💰</span>
+                  </div>
+                  <span class="badge rounded-pill" id="kpi-sales-trend"
+                    style="background:rgba(34,197,94,.12);color:#16a34a;font-size:.72rem;">▲ 0%</span>
+                </div>
+                <div class="fw-bold" style="font-size:1.45rem;color:#1e293b;" id="kpi-total-sales">฿0.00</div>
+                <div class="text-muted small mt-1">ยอดขายรวม (บาท)</div>
+              </div>
+              <div style="height:4px;background:linear-gradient(90deg,#22c55e,#16a34a)"></div>
+            </div>
+          </div>
+          
+          <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm h-100" style="border-radius:16px;overflow:hidden;">
+              <div class="card-body p-3">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                  <div class="p-2 rounded-3" style="background:rgba(59,130,246,.12)">
+                    <span style="font-size:1.3rem">🧾</span>
+                  </div>
+                  <span class="badge rounded-pill" id="kpi-bills-trend"
+                    style="background:rgba(59,130,246,.12);color:#2563eb;font-size:.72rem;">▲ 0</span>
+                </div>
+                <div class="fw-bold" style="font-size:1.45rem;color:#1e293b;" id="kpi-total-bills">0</div>
+                <div class="text-muted small mt-1">จำนวนบิล (ออเดอร์)</div>
+              </div>
+              <div style="height:4px;background:linear-gradient(90deg,#3b82f6,#2563eb)"></div>
+            </div>
+          </div>
+          
+          <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm h-100" style="border-radius:16px;overflow:hidden;">
+              <div class="card-body p-3">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                  <div class="p-2 rounded-3" style="background:rgba(245,158,11,.12)">
+                    <span style="font-size:1.3rem">📦</span>
+                  </div>
+                  <span class="badge rounded-pill" id="kpi-cost-trend"
+                    style="background:rgba(245,158,11,.12);color:#b45309;font-size:.72rem;">— 0%</span>
+                </div>
+                <div class="fw-bold" style="font-size:1.45rem;color:#1e293b;" id="kpi-total-cost">฿0.00</div>
+                <div class="text-muted small mt-1">ต้นทุนรวม (บาท)</div>
+              </div>
+              <div style="height:4px;background:linear-gradient(90deg,#f59e0b,#d97706)"></div>
+            </div>
+          </div>
+          
+          <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm h-100" style="border-radius:16px;overflow:hidden;">
+              <div class="card-body p-3">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                  <div class="p-2 rounded-3" style="background:rgba(99,102,241,.12)">
+                    <span style="font-size:1.3rem">📊</span>
+                  </div>
+                  <span class="badge rounded-pill" id="kpi-profit-trend"
+                    style="background:rgba(99,102,241,.12);color:#4f46e5;font-size:.72rem;">▲ 0%</span>
+                </div>
+                <div class="fw-bold" id="kpi-total-profit" style="font-size:1.45rem;color:#16a34a;">฿0.00</div>
+                <div class="text-muted small mt-1">กำไรสุทธิ (บาท)</div>
+              </div>
+              <div style="height:4px;background:linear-gradient(90deg,#6366f1,#4f46e5)"></div>
+            </div>
+          </div>
+        </div>
+
+        
+        <div class="row g-3 mb-4">
+          
+          <div class="col-lg-7">
+            <div class="card border-0 shadow-sm h-100" style="border-radius:16px;">
+              <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <div>
+                    <div class="fw-bold" style="color:#1e293b;">📊 ยอดขาย</div>
+                    <small class="text-muted" id="barChartLabel">รายวัน (7 วันล่าสุด)</small>
+                  </div>
+                </div>
+                <canvas id="salesBarChart" style="max-height:280px;"></canvas>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-lg-5">
+            <div class="card border-0 shadow-sm h-100" style="border-radius:16px;">
+              <div class="card-body p-4">
+                <div class="fw-bold mb-1" style="color:#1e293b;">🥇 หมวดสินค้าขายดี</div>
+                <small class="text-muted d-block mb-3">สัดส่วนยอดขายตามประเภท</small>
+                <canvas id="categoryDoughnutChart" style="max-height:240px;"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        
+        <div class="card border-0 shadow-sm" style="border-radius:16px;">
+          <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <div class="fw-bold" style="color:#1e293b;">🧾 รายการบิลล่าสุด</div>
+              <span class="badge rounded-pill" style="background:#e2e8f0;color:#475569;" id="billTableCount">0 รายการ</span>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-hover align-middle" style="font-family:'Kanit',sans-serif;font-size:.87rem;">
+                <thead>
+                  <tr style="background:#f8fafc;color:#64748b;">
+                    <th class="border-0 fw-semibold">#</th>
+                    <th class="border-0 fw-semibold">วันที่/เวลา</th>
+                    <th class="border-0 fw-semibold">รายการ</th>
+                    <th class="border-0 fw-semibold">ช่องทาง</th>
+                    <th class="border-0 fw-semibold text-end">ยอดรวม</th>
+                    <th class="border-0 fw-semibold text-center">สถานะ</th>
+                  </tr>
+                </thead>
+                <tbody id="billTableBody">
+                  <tr>
+                    <td colspan="6" class="text-center text-muted py-4">
+                      <div style="font-size:2rem">📋</div>
+                      <div>ยังไม่มีข้อมูลการขาย</div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="row g-3 pos-container">
+  
+  <div class="col-lg-8 col-12 pos-left">
+    
+    <div class="pos-search-wrap d-flex gap-2 mb-3">
+      <input type="text" id="productSearch" class="form-control" placeholder="🔍  ค้นหาชื่อยา, บาร์โค้ด, รหัสสินค้า...">
+      <button class="btn-scan" onclick="focusScan()"><i class="fas fa-barcode me-1"></i>สแกน</button>
+    </div>
+    <input type="text" id="barcodeInput" style="position:absolute;opacity:0;pointer-events:none;width:1px;height:1px;" autocomplete="off">
+
+    
+    <div class="category-tabs d-flex flex-nowrap overflow-auto mb-3" id="categoryTabs">
+      <button class="cat-tab active" data-cat="all" onclick="setCategory('all', this)">ทั้งหมด</button>
+    </div>
+
+    
+    <div class="quick-keys-wrap d-flex flex-wrap gap-2 mb-3" id="quickKeysWrap">
+      <span class="text-muted small align-self-center">⚡ Quick:</span>
+      {% for m in quick_items %}
+      <button class="quick-key-btn" onclick="addToCartById({{ m.id }})">{{ m.name }}</button>
+      {% empty %}
+      <span class="text-muted small">ไม่มีสินค้าแนะนำ</span>
+      {% endfor %}
+    </div>
+
+    
+    <div class="product-grid-scroll">
+      <div class="product-grid" id="productGrid">
+        
+      </div>
+    </div>
+  </div>
+
+  
+  <div class="col-lg-4 col-12 pos-right">
+    <div class="pos-right-card">
+      
+      <div class="cart-header d-flex justify-content-between align-items-center">
+        <h6><i class="fas fa-receipt me-2 text-success"></i>รายการสั่งซื้อ</h6>
+        <span class="badge bg-light text-success border border-success" style="font-size:.75rem;" id="itemCountLabel">0 รายการ</span>
+      </div>
+
+      
+      <div class="pet-search-strip">
+        <div class="position-relative">
+          <input type="text" id="petSearch" class="form-control" placeholder="🐾 ค้นหาสัตว์เลี้ยง / เจ้าของ (ไม่บังคับ)">
+          <div class="pet-dropdown" id="petDropdown" style="display:none;"></div>
+        </div>
+      <div id="selectedPetBadge" style="display:none; margin-top:.4rem;">
+        <span class="badge" style="background:rgba(34,197,94,.12);color:#15803d;border-radius:10px;padding:.3rem .7rem;font-size:.78rem;">
+          <i class="fas fa-paw me-1"></i><span id="selectedPetName"></span>
+          <button onclick="clearPet()" style="border:none;background:none;color:#15803d;padding:0;margin-left:.35rem;font-size:.85rem;">✕</button>
+        </span>
+      </div>
+      
+      <div id="unpaidAlert" class="mt-2" style="display:none;"></div>
+    </div>
+
+    
+    <div class="cart-items-wrap" id="cartItemsWrap">
+      <div class="cart-empty" id="cartEmpty">
+        <i class="fas fa-shopping-basket"></i>
+        <div>ยังไม่มีสินค้า</div>
+        <small>เลือกสินค้าจากด้านซ้าย</small>
+      </div>
+    </div>
+
+    
+    <div class="cart-summary">
+      <div class="summary-row"><span>ราคาก่อน VAT</span><span id="subtotalDisplay">฿0.00</span></div>
+      <div class="summary-row"><span>VAT 7%</span><span id="vatDisplay">฿0.00</span></div>
+      <div class="summary-row total"><span>ยอดสุทธิ</span><span id="totalDisplay">฿0.00</span></div>
+    </div>
+
+    
+    <div class="cart-actions">
+      <button class="btn-checkout" id="checkoutBtn" onclick="openPaymentModal()" disabled>
+        <i class="fas fa-wallet me-2"></i>ชำระเงิน (Checkout)
+      </button>
+      <button class="btn-cancel-cart" onclick="openCancelModal()">
+        <i class="fas fa-times-circle me-1"></i>ยกเลิกรายการ
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<div class="modal fade" id="paymentModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 rounded-4 shadow-lg">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold"><i class="fas fa-wallet me-2 text-success"></i>เลือกวิธีชำระเงิน</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body pt-3">
+        <div class="row g-3" id="paymentOptions">
+          <div class="col-4">
+            <div class="payment-option selected" data-method="เงินสด" onclick="selectPayment(this,'เงินสด')">
+              <i class="fas fa-check-circle check-icon"></i>
+              <i class="fas fa-money-bill-wave text-success main-icon"></i>
+              <span>เงินสด</span>
+            </div>
+          </div>
+          <div class="col-4">
+            <div class="payment-option" data-method="QR Code" onclick="selectPayment(this,'QR Code')">
+              <i class="fas fa-check-circle check-icon"></i>
+              <i class="fas fa-qrcode text-primary main-icon"></i>
+              <span>QR Code</span>
+            </div>
+          </div>
+          <div class="col-4">
+            <div class="payment-option" data-method="บัตรเครดิต" onclick="selectPayment(this,'บัตรเครดิต')">
+              <i class="fas fa-check-circle check-icon"></i>
+              <i class="fas fa-credit-card text-warning main-icon"></i>
+              <span>บัตรเครดิต</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4 mb-2">
+          
+          <div id="content-เงินสด" class="payment-dynamic-content active">
+            <label class="form-label fw-bold" style="font-size:.9rem; color:var(--text-heading)">รับเงิน (บาท)</label>
+            <input type="number" id="cashReceived" class="form-control form-control-lg" placeholder="0.00" style="border-radius:12px;font-family:'Kanit',sans-serif; text-align:right; font-size:1.3rem; font-weight:700; color:#15803d; border: 1.5px solid #e2e8f0;" oninput="calcChange()">
+            <div class="d-flex justify-content-between mt-2 align-items-center" style="font-size:.95rem; padding:0 .2rem;">
+              <span class="text-muted fw-bold">เงินทอน:</span>
+              <span class="fw-bold fs-5" id="changeDisplay" style="color:#16a34a;">฿0.00</span>
+            </div>
+          </div>
+
+          
+          <div id="content-QR Code" class="payment-dynamic-content">
+            <div class="qr-box shadow-sm">
+              <img src="https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg" alt="QR Code" style="opacity: 0.9;">
+              <div class="fw-bold mb-1 mt-2 text-dark fs-6">สแกนเพื่อชำระเงินกับ VetCare</div>
+              <div class="text-muted small">ยอดชำระ <span class="fw-bold text-success qr-total fs-5">฿0.00</span></div>
+              <div class="mt-3 py-2 rounded-pill bg-light border d-inline-block px-4">
+                <i class="fas fa-clock text-danger me-1"></i> QR จะหมดอายุใน: <span id="qrTimer" class="countdown-timer">05:00</span>
+              </div>
+            </div>
+          </div>
+
+          
+          <div id="content-บัตรเครดิต" class="payment-dynamic-content cc-form">
+            <div class="mb-3">
+              <label class="form-label small fw-bold text-muted mb-1">หมายเลขบัตรเครดิต/เดบิต</label>
+              <div class="input-group">
+                <span class="input-group-text border-end-0"><i class="fas fa-credit-card text-muted"></i></span>
+                <input type="text" class="form-control border-start-0 ps-0" placeholder="0000 0000 0000 0000" maxlength="19" oninput="formatCC(this)">
+              </div>
+            </div>
+            <div class="row g-2">
+              <div class="col-6">
+                <label class="form-label small fw-bold text-muted mb-1">วันหมดอายุ</label>
+                <input type="text" class="form-control text-center" placeholder="MM/YY" maxlength="5">
+              </div>
+              <div class="col-6">
+                <label class="form-label small fw-bold text-muted mb-1">CVV <i class="fas fa-info-circle ms-1" title="ตัวเลข 3 หลักหลังบัตร"></i></label>
+                <input type="password" class="form-control text-center" placeholder="•••" maxlength="3">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        
+        <div class="p-3 rounded-4 mt-4" style="background:#eefdf4; border:1px solid #bbf7d0;">
+          <div class="d-flex justify-content-between" style="font-size:.9rem; color:#475569;"><span>รวมสินค้า</span><span id="pm-subtotal" class="fw-bold">฿0.00</span></div>
+          <div class="d-flex justify-content-between my-1" style="font-size:.9rem; color:#475569;"><span>VAT 7%</span><span id="pm-vat" class="fw-bold">฿0.00</span></div>
+          <div class="d-flex justify-content-between fw-bold mt-2 pt-2 border-top border-success border-opacity-25" style="font-size:1.2rem;color:#15803d;"><span>ยอดชำระ</span><span id="pm-total">฿0.00</span></div>
+        </div>
+      </div>
+      <div class="modal-footer border-0 pt-0 pb-3 justify-content-center gap-2">
+        <button class="btn btn-light rounded-pill px-4 fw-bold text-muted" style="background:#f1f5f9;" data-bs-dismiss="modal">ยกเลิก</button>
+        <button class="btn btn-success rounded-pill px-5 fw-bold" onclick="confirmCheckout()" id="confirmPayBtn" style="background:#15803d; border:none; box-shadow:0 4px 12px rgba(21, 128, 61, 0.3); transition:all .2s;">
+          <i class="fas fa-check-circle me-1"></i> ยืนยันชำระเงิน
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="modal fade" id="receiptModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 rounded-4 shadow-lg">
+      <div class="modal-header border-0 mt-3 pb-0 text-center" style="flex-direction:column;align-items:center;">
+        <div class="mb-3">
+          <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52" style="width: 65px; height: 65px;">
+            <circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none" style="stroke:#15803d; stroke-width:3; stroke-dasharray:166; stroke-dashoffset:166; animation: stroke 0.4s cubic-bezier(0.65, 0, 0.45, 1) forwards;" />
+            <path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" style="transform-origin:50% 50%; stroke:#15803d; stroke-width:4; stroke-dasharray:48; stroke-dashoffset:48; animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.4s forwards;" />
+          </svg>
+        </div>
+        <h4 class="fw-bold text-success mb-0" style="color: #15803d !important;">ชำระเงินสำเร็จ</h4>
+        <div id="receiptStockMsg" class="alert alert-success mt-3 py-2 px-3 rounded-pill" style="font-size:.85rem;display:none; border:1px solid #bbf7d0;">
+          <i class="fas fa-check-circle me-1"></i>ตัดสต็อกสินค้าเรียบร้อยแล้ว
+        </div>
+      </div>
+      <div class="modal-body">
+        <div class="receipt-box p-3" id="receiptContent">
+          
+        </div>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button class="btn btn-light rounded-3 px-4" onclick="printReceipt()"><i class="fas fa-print me-1"></i>พิมพ์ใบเสร็จ</button>
+        <button class="btn btn-success rounded-3 px-4 fw-bold" onclick="closeReceipt()">ขายต่อ <i class="fas fa-arrow-right ms-1"></i></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="modal fade" id="cancelModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content border-0 rounded-4 shadow-lg text-center">
+      <div class="modal-body pt-4 pb-2">
+        <div style="font-size:2.8rem;">🗑️</div>
+        <h6 class="fw-bold mt-2 mb-1">ยืนยันยกเลิกรายการ?</h6>
+        <p class="text-muted small mb-0">รายการสินค้าทั้งหมดจะถูกล้าง</p>
+      </div>
+      <div class="modal-footer border-0 justify-content-center pt-2 pb-4 gap-2">
+        <button class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">ยกเลิก (กลับไป)</button>
+        <button class="btn btn-danger rounded-pill px-4 fw-bold" onclick="confirmClearCart()">
+          <i class="fas fa-trash-alt me-1"></i>ยืนยันล้าง
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ===================== DATA =====================
+const ALL_MEDICINES  = {{ medicines_json|safe }};
+const ALL_PETS       = {{ pets_json|safe }};
+const UNPAID_RECORDS = {{ unpaid_json|safe|default:"[]" }};
+
+// ===================== STATE =====================
+let cart = [];          // [{id, name, price, qty, unit, stock}]
+let selectedPet = null;
+let selectedPayment = 'เงินสด';
+let activeCategory = 'all';
+let searchQuery = '';
+
+// ===================== CATEGORY TABS =====================
+function buildCategories() {
+  const tabs = document.getElementById('categoryTabs');
+  const allCategories = [
+    'ยาเม็ด', 'ยาน้ำ', 'ยาฉีด', 'วัคซีน', 
+    'อุปกรณ์ทำแผล', 'อุปกรณ์การแพทย์', 'เวชภัณฑ์', 
+    'อาหารเสริม', 'อื่นๆ'
+  ];
+  
+  allCategories.forEach(t => {
+    const btn = document.createElement('button');
+    btn.className = 'cat-tab';
+    btn.dataset.cat = t;
+    btn.textContent = t;
+    btn.onclick = () => setCategory(t, btn);
+    tabs.appendChild(btn);
+  });
+  
+  // Enable mouse drag-to-scroll
+  enableDragScroll(tabs);
+}
+
+function enableDragScroll(el) {
+    let isDown = false;
+    let startX;
+    let scrollLeft;
+
+    el.addEventListener('mousedown', (e) => {
+        isDown = true;
+        el.classList.add('active-dragging');
+        startX = e.pageX - el.offsetLeft;
+        scrollLeft = el.scrollLeft;
+    });
+    el.addEventListener('mouseleave', () => {
+        isDown = false;
+    });
+    el.addEventListener('mouseup', () => {
+        isDown = false;
+    });
+    el.addEventListener('mousemove', (e) => {
+        if(!isDown) return;
+        e.preventDefault();
+        const x = e.pageX - el.offsetLeft;
+        const walk = (x - startX) * 2; // scroll-fast factor
+        el.scrollLeft = scrollLeft - walk;
+    });
+}
+
+function setCategory(cat, el) {
+  activeCategory = cat;
+  document.querySelectorAll('.cat-tab').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  renderGrid();
+}
+
+// ===================== GRID RENDER =====================
+function typeIcon(type) {
+  return `<span class="type-icon-${type}" style="font-size:1.6rem;line-height:1;"></span>`;
+}
+
+function typeColor(type) {
+  const map = {
+    'ยาเม็ด':'type-ยาเม็ด','ยาน้ำ':'type-ยาน้ำ','ยาฉีด':'type-ยาฉีด',
+    'วัคซีน':'type-วัคซีน','อาหารเสริม':'type-อาหารเสริม',
+    'อุปกรณ์ทำแผล':'type-อุปกรณ์ทำแผล','อุปกรณ์การแพทย์':'type-อุปกรณ์การแพทย์','อื่นๆ':'type-อื่นๆ'
+  };
+  return map[type] || 'type-อื่นๆ';
+}
+
+function renderGrid() {
+  const q = searchQuery.toLowerCase();
+  const grid = document.getElementById('productGrid');
+  let filtered = ALL_MEDICINES.filter(m => {
+    const matchCat = activeCategory === 'all' || m.product_type === activeCategory;
+    const matchQ = !q || m.name.toLowerCase().includes(q) ||
+                   (m.generic_name||'').toLowerCase().includes(q) ||
+                   (m.barcode||'').toLowerCase().includes(q);
+    return matchCat && matchQ;
+  });
+
+  if (!filtered.length) {
+    grid.innerHTML = `<div class="no-results"><i class="fas fa-search fa-2x mb-2"></i><br>ไม่พบสินค้า</div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map(m => {
+    const imgHtml = m.image
+      ? `<img src="${m.image}" class="prod-img" alt="${m.name}">`
+      : `<div class="prod-icon ${typeColor(m.product_type)}">${typeIcon(m.product_type)}</div>`;
+    const outOfStock = m.stock <= 0;
+    return `
+    <div class="product-card" id="pcard-${m.id}" onclick="addToCartById(${m.id})" style="${outOfStock?'cursor:not-allowed;opacity:.7':''}">
+      <span class="prod-type-badge ${typeColor(m.product_type)}">${m.product_type||'อื่นๆ'}</span>
+      ${imgHtml}
+      <div class="prod-name">${m.name}</div>
+      <div class="prod-price">฿${m.selling_price.toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+      <div class="prod-stock">คงเหลือ ${m.stock} ${m.unit}</div>
+      ${outOfStock?'<div class="out-overlay">หมดสต็อก</div>':''}
+    </div>`;
+  }).join('');
+}
+
+// ===================== CART =====================
+function addToCartById(id) {
+  const med = ALL_MEDICINES.find(m => m.id === id);
+  if (!med || med.stock <= 0) return;
+
+  const cartItem = cart.find(c => c.id === id);
+  const currentQty = cartItem ? cartItem.qty : 0;
+  if (currentQty >= med.stock) {
+    alert(`สต็อก ${med.name} คงเหลือเพียง ${med.stock} ${med.unit}`);
+    return;
+  }
+
+  // Flash card
+  const card = document.getElementById(`pcard-${id}`);
+  if (card) { card.classList.remove('selected-flash'); void card.offsetWidth; card.classList.add('selected-flash'); }
+
+  if (cartItem) {
+    cartItem.qty++;
+  } else {
+    cart.push({ id: med.id, name: med.name, price: med.selling_price, qty: 1, unit: med.unit, stock: med.stock });
+  }
+  renderCart();
+}
+
+function changeQty(id, delta) {
+  const item = cart.find(c => c.id === id);
+  if (!item) return;
+  item.qty += delta;
+  if (item.qty <= 0) cart = cart.filter(c => c.id !== id);
+  renderCart();
+}
+
+function removeFromCart(id) {
+  cart = cart.filter(c => c.id !== id);
+  renderCart();
+}
+
+function openCancelModal() {
+  if (!cart.length) return; // ไม่มีสินค้าก็ไม่ต้องถาม
+  new bootstrap.Modal(document.getElementById('cancelModal')).show();
+}
+
+function confirmClearCart() {
+  bootstrap.Modal.getInstance(document.getElementById('cancelModal')).hide();
+  cart = [];
+  selectedPet = null;
+  document.getElementById('petSearch').value = '';
+  document.getElementById('selectedPetBadge').style.display = 'none';
+  renderCart();
+}
+
+function renderCart() {
+  const wrap = document.getElementById('cartItemsWrap');
+  const empty = document.getElementById('cartEmpty');
+
+  if (!cart.length) {
+    if (!wrap.contains(empty)) wrap.appendChild(empty);
+    empty.style.display = 'flex';
+    // remove item elements
+    wrap.querySelectorAll('.cart-item').forEach(el => el.remove());
+    updateSummary(0);
+    document.getElementById('checkoutBtn').disabled = true;
+    document.getElementById('cartCountBadge').textContent = '🛒 0 รายการ';
+    document.getElementById('itemCountLabel').textContent = '0 รายการ';
+    return;
+  }
+
+  empty.style.display = 'none';
+  // Re-render all items
+  wrap.querySelectorAll('.cart-item').forEach(el => el.remove());
+
+  let subtotal = 0;
+  // Separate into Medical bills vs Items for better UI receipt logic (optional, but good for display)
+  cart.forEach(item => {
+    const lineTotal = item.price * item.qty;
+    subtotal += lineTotal;
+    const div = document.createElement('div');
+    div.className = 'cart-item';
+    div.id = `ci-${item.id}`;
+    
+    if (item.type === 'medical_record') {
+      // Specialized look for medical records
+      div.innerHTML = `
+        <div class="ci-name" style="color: #0d9488;"><i class="fas fa-file-medical me-1"></i>${item.name}</div>
+        <div class="ci-qty-wrap" style="visibility:hidden">
+          <button class="btn-qty" disabled>−</button><span class="ci-qty">1</span><button class="btn-qty" disabled>+</button>
+        </div>
+        <div class="ci-price" style="color:#0f766e;">฿${lineTotal.toLocaleString('th-TH',{minimumFractionDigits:2})}</div>
+        <button class="btn-del-item" onclick="removeFromCart('${item.mr_id}', true)"><i class="fas fa-times-circle"></i></button>
+      `;
+    } else {
+      div.innerHTML = `
+        <div class="ci-name">${item.name}<br><span style="color:var(--text-muted);font-size:.72rem;font-weight:400;">${item.price.toLocaleString('th-TH',{minimumFractionDigits:2})} บ./${item.unit}</span></div>
+        <div class="ci-qty-wrap">
+          <button class="btn-qty" onclick="changeQty(${item.id},-1)">−</button>
+          <span class="ci-qty">${item.qty}</span>
+          <button class="btn-qty" onclick="changeQty(${item.id},1)">+</button>
+        </div>
+        <div class="ci-price">฿${lineTotal.toLocaleString('th-TH',{minimumFractionDigits:2})}</div>
+        <button class="btn-del-item" onclick="removeFromCart(${item.id}, false)"><i class="fas fa-trash-alt"></i></button>
+      `;
+    }
+    wrap.appendChild(div);
+  });
+
+  updateSummary(subtotal);
+  document.getElementById('checkoutBtn').disabled = false;
+  const total = cart.reduce((s,c) => s + c.qty, 0);
+  document.getElementById('cartCountBadge').textContent = `🛒 ${total} รายการ`;
+  document.getElementById('itemCountLabel').textContent = `${cart.length} รายการ`;
+}
+
+function updateSummary(subtotal) {
+  const vat = subtotal * 0.07;
+  const grand = subtotal + vat;
+  const fmt = v => '฿' + v.toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});
+  document.getElementById('subtotalDisplay').textContent = fmt(subtotal);
+  document.getElementById('vatDisplay').textContent = fmt(vat);
+  document.getElementById('totalDisplay').textContent = fmt(grand);
+  document.getElementById('pm-subtotal').textContent = fmt(subtotal);
+  document.getElementById('pm-vat').textContent = fmt(vat);
+  document.getElementById('pm-total').textContent = fmt(grand);
+}
+
+// ===================== PET SEARCH =====================
+const petInput = document.getElementById('petSearch');
+const petDropdown = document.getElementById('petDropdown');
+
+petInput.addEventListener('input', () => {
+  const q = petInput.value.toLowerCase();
+  if (!q) { petDropdown.style.display='none'; return; }
+  const matches = ALL_PETS.filter(p =>
+    p.name.toLowerCase().includes(q) || p.owner.toLowerCase().includes(q) || p.species.toLowerCase().includes(q)
+  ).slice(0,8);
+  if (!matches.length) { petDropdown.style.display='none'; return; }
+  petDropdown.innerHTML = matches.map(p =>
+    `<div class="pet-dropdown-item" onclick="selectPet(${p.id},'${p.name}','${p.owner}','${p.species}')">
+      <i class="fas fa-paw me-1 text-success"></i><b>${p.name}</b>
+      <small class="text-muted ms-1">${p.species} · ${p.owner}</small>
+    </div>`
+  ).join('');
+  petDropdown.style.display = 'block';
+});
+
+function selectPet(id, name, owner, species) {
+  selectedPet = { id, name, owner, species };
+  petInput.value = '';
+  petDropdown.style.display = 'none';
+  document.getElementById('selectedPetName').textContent = `${name} (${species}) · ${owner}`;
+  document.getElementById('selectedPetBadge').style.display = 'block';
+
+  // Check for unpaid records
+  checkUnpaidRecords(id);
+}
+
+function checkUnpaidRecords(petId) {
+  const alertDiv = document.getElementById('unpaidAlert');
+  alertDiv.innerHTML = '';
+  
+  const unpaid = UNPAID_RECORDS.filter(r => r.pet_id === petId);
+  
+  if (unpaid.length > 0) {
+    let htmlLines = '';
+    unpaid.forEach(r => {
+      // Check if already in cart
+      const inCart = cart.some(c => c.type === 'medical_record' && c.mr_id === r.mr_id);
+      const btnHtml = inCart 
+        ? `<button class="btn btn-sm btn-secondary rounded-pill px-3 py-1" disabled><i class="fas fa-check me-1"></i>อยู่ในบิล</button>`
+        : `<button class="btn btn-sm btn-outline-danger fw-bold rounded-pill px-3 py-1" onclick="addMedicalBill(${r.mr_id})"><i class="fas fa-plus me-1"></i>เพิ่มลงในบิล</button>`;
+        
+      htmlLines += `
+        <div class="d-flex justify-content-between align-items-center mb-1 pb-1 border-bottom border-danger border-opacity-25 border-dashed">
+          <div>
+            <div class="fw-bold text-danger" style="font-size:0.8rem;">${r.visit_type}</div>
+            <div class="text-danger opacity-75" style="font-size:0.7rem;">(วันที่ ${r.visit_date})</div>
+          </div>
+          <div class="d-flex flex-column align-items-end">
+            <div class="fw-bold mb-1 text-danger">฿${r.cost.toLocaleString('th-TH',{minimumFractionDigits:2})}</div>
+            ${btnHtml}
+          </div>
+        </div>
+      `;
+    });
+    
+    alertDiv.innerHTML = `
+      <div class="alert alert-danger p-2 mb-0 shadow-sm" style="border-radius:12px; font-size:0.85rem; border:1px solid rgba(220,38,38,0.2);">
+        <div class="d-flex align-items-center mb-2 fw-bold text-danger">
+          <i class="fas fa-exclamation-circle me-2"></i>พบค่ารักษาพยาบาลค้างชำระ:
+        </div>
+        ${htmlLines}
+      </div>
+    `;
+    alertDiv.style.display = 'block';
+  } else {
+    // Show paid/cleared state
+    alertDiv.innerHTML = `
+      <div class="p-2 mb-0" style="border-radius:12px; font-size:0.8rem; background: rgba(34,197,94,0.06); color:#16a34a; border:1px solid rgba(34,197,94,0.15);">
+        <i class="fas fa-check-circle me-1"></i>ชำระค่ารักษาเรียบร้อยแล้ว
+      </div>
+    `;
+    alertDiv.style.display = 'block';
+  }
+}
+
+function clearPet() {
+  selectedPet = null;
+  document.getElementById('selectedPetBadge').style.display = 'none';
+  document.getElementById('unpaidAlert').style.display = 'none';
+  // Also remove medical bills from cart if any
+  cart = cart.filter(c => c.type !== 'medical_record');
+  renderCart();
+}
+
+function addMedicalBill(mr_id) {
+  const r = UNPAID_RECORDS.find(x => x.mr_id === mr_id);
+  if(!r) return;
+  // Avoid duplicate
+  if(cart.some(c => c.type === 'medical_record' && c.mr_id === mr_id)) return;
+  
+  cart.push({
+    id: 'M_' + r.mr_id, // unique local ID to not clash with med IDs
+    mr_id: r.mr_id,
+    type: 'medical_record',
+    name: `ค่าบริการ (${r.visit_type})`,
+    price: r.cost,
+    qty: 1,
+    unit: 'ครั้ง',
+    stock: 99
+  });
+  
+  renderCart();
+  if(selectedPet) checkUnpaidRecords(selectedPet.id); // Refresh buttons UI
+}
+
+function removeFromCart(id, isMedical) {
+  if (isMedical) {
+    cart = cart.filter(c => !(c.type === 'medical_record' && c.mr_id == id));
+    if(selectedPet) checkUnpaidRecords(selectedPet.id);
+  } else {
+    cart = cart.filter(c => c.id !== id);
+  }
+  renderCart();
+}
+
+document.addEventListener('click', e => {
+  if (!petInput.contains(e.target) && !petDropdown.contains(e.target)) petDropdown.style.display='none';
+});
+
+// ===================== PAYMENT MODAL =====================
+let payModal = null;
+let receipModal = null;
+let qrInterval = null;
+
+function formatCC(input) {
+  let v = input.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+  let parts = [];
+  for(let i=0; i<v.length; i+=4) { parts.push(v.substring(i, i+4)); }
+  input.value = parts.length > 1 ? parts.join(' ') : v;
+}
+
+function startQrTimer() {
+  clearInterval(qrInterval);
+  let time = 300; // 5 mins
+  const display = document.getElementById('qrTimer');
+  
+  const updateTimer = () => {
+    const m = Math.floor(time / 60).toString().padStart(2, '0');
+    const s = (time % 60).toString().padStart(2, '0');
+    display.textContent = `${m}:${s}`;
+    if (time <= 0) {
+      clearInterval(qrInterval);
+      display.textContent = "หมดเวลา";
+    }
+    time--;
+  };
+  
+  updateTimer();
+  qrInterval = setInterval(updateTimer, 1000);
+}
+
+function openPaymentModal() {
+  if (!cart.length) return;
+  // reset ช่องรับเงินให้ว่างทุกครั้งที่เปิด
+  document.getElementById('cashReceived').value = '';
+  document.getElementById('changeDisplay').textContent = '฿0.00';
+  document.getElementById('changeDisplay').style.color = '#16a34a';
+  // เริ่มต้นเลือกเงินสด — ต้องกรอกก่อน
+  selectedPayment = 'เงินสด';
+  document.querySelectorAll('.payment-option').forEach(e => e.classList.remove('selected'));
+  const cashOpt = document.querySelector('.payment-option[data-method="เงินสด"]');
+  if (cashOpt) cashOpt.classList.add('selected');
+  
+  document.querySelectorAll('.payment-dynamic-content').forEach(e => e.classList.remove('active'));
+  document.getElementById('content-เงินสด').classList.add('active');
+  
+  clearInterval(qrInterval);
+
+  updateConfirmBtn();
+  payModal = new bootstrap.Modal(document.getElementById('paymentModal'));
+  payModal.show();
+}
+
+function selectPayment(el, method) {
+  selectedPayment = method;
+  document.querySelectorAll('.payment-option').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected');
+  
+  document.querySelectorAll('.payment-dynamic-content').forEach(e => e.classList.remove('active'));
+  const targetContent = document.getElementById('content-' + method);
+  if(targetContent) targetContent.classList.add('active');
+
+  clearInterval(qrInterval);
+
+  if (method === 'เงินสด') {
+    document.getElementById('cashReceived').value = '';
+    document.getElementById('changeDisplay').textContent = '฿0.00';
+    document.getElementById('changeDisplay').style.color = '#16a34a';
+  } else if (method === 'QR Code') {
+    document.querySelector('.qr-total').textContent = document.getElementById('pm-total').textContent;
+    startQrTimer();
+  }
+
+  updateConfirmBtn();
+}
+
+function calcChange() {
+  const totalEl = document.getElementById('pm-total').textContent;
+  const grand = parseFloat(totalEl.replace('฿','').replace(/,/g,'')) || 0;
+  const received = parseFloat(document.getElementById('cashReceived').value) || 0;
+  const change = received - grand;
+  const changeEl = document.getElementById('changeDisplay');
+  if (received > 0 && received < grand) {
+    changeEl.textContent = '⚠️ เงินไม่พอ';
+    changeEl.style.color = '#dc2626';
+  } else {
+    changeEl.textContent = '฿' + (change >= 0 ? change : 0).toLocaleString('th-TH',{minimumFractionDigits:2});
+    changeEl.style.color = '#16a34a';
+  }
+  updateConfirmBtn();
+}
+
+function updateConfirmBtn() {
+  const btn = document.getElementById('confirmPayBtn');
+  if (selectedPayment === 'เงินสด') {
+    const totalEl = document.getElementById('pm-total').textContent;
+    const grand = parseFloat(totalEl.replace('฿','').replace(/,/g,'')) || 0;
+    const received = parseFloat(document.getElementById('cashReceived').value) || 0;
+    const ok = received >= grand && received > 0;
+    btn.disabled = !ok;
+    btn.title = ok ? '' : 'กรุณาใส่จำนวนเงินที่รับก่อน';
+  } else {
+    btn.disabled = false;
+    btn.title = '';
+  }
+}
+
+// ===================== CHECKOUT =====================
+async function confirmCheckout() {
+  const btn = document.getElementById('confirmPayBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>กำลังดำเนินการ...';
+
+  const payload = {
+    items: cart.map(c => ({ id: c.id, qty: c.qty, type: c.type || 'medicine', mr_id: c.mr_id })),
+    payment_method: selectedPayment,
+    pet_id: selectedPet ? selectedPet.id : null,
+  };
+
+  try {
+    const resp = await fetch("{% url 'pos_checkout' %}", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCsrf(),
+      },
+      body: JSON.stringify(payload),
+    });
+    const data = await resp.json();
+
+    if (data.success) {
+      // Close payment modal
+      bootstrap.Modal.getInstance(document.getElementById('paymentModal')).hide();
+      
+      // Update local stock
+      data.items.forEach(soldItem => {
+        const med = ALL_MEDICINES.find(m => m.name === soldItem.name);
+        if (med) med.stock -= soldItem.qty;
+      });
+
+      // Update UNPAID_RECORDS: remove those that were just paid
+      const paidMrIds = cart.filter(c => c.type === 'medical_record').map(c => c.mr_id);
+      for (let i = UNPAID_RECORDS.length - 1; i >= 0; i--) {
+        if (paidMrIds.includes(UNPAID_RECORDS[i].mr_id)) {
+          UNPAID_RECORDS.splice(i, 1);
+        }
+      }
+
+      // Clear Cart & Selection
+      cart = [];
+      selectedPet = null;
+      document.getElementById('selectedPetBadge').style.display = 'none';
+      document.getElementById('unpaidAlert').style.display = 'none';
+      document.getElementById('unpaidAlert').innerHTML = '';
+      
+      renderGrid();
+      renderCart();
+      showReceipt(data);
+    } else {
+      alert('❌ ' + data.error);
+    }
+  } catch(e) {
+    alert('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-check-circle me-1"></i>ยืนยันชำระเงิน';
+  }
+}
+
+// ===================== RECEIPT =====================
+function showReceipt(data) {
+  const fmt = v => v.toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric'}) + ' ' + now.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+
+  let itemsHtml = data.items.map(i =>
+    `<div class="r-row"><span>${i.name} x${i.qty}</span><span>฿${fmt(i.subtotal)}</span></div>`
+  ).join('');
+
+  const petLine = selectedPet ? `<div class="r-row"><span>สัตว์เลี้ยง</span><span>${selectedPet.name}</span></div>` : '';
+
+  document.getElementById('receiptContent').innerHTML = `
+    <div class="r-header">
+      <div style="font-size:1.1rem;font-weight:700;">🐾 VetCare Clinic</div>
+      <div>ระบบขายสินค้าหน้าร้าน</div>
+      <div style="font-size:.75rem;color:#666;">ใบเสร็จรับเงิน</div>
+    </div>
+    <div class="r-row"><span>เลขที่</span><span>${data.receipt_no}</span></div>
+    <div class="r-row"><span>วันที่/เวลา</span><span>${dateStr}</span></div>
+    <div class="r-row"><span>ชำระด้วย</span><span>${data.payment_method}</span></div>
+    ${petLine}
+    <div class="r-sep"></div>
+    ${itemsHtml}
+    <div class="r-sep"></div>
+    <div class="r-row"><span>ก่อน VAT</span><span>฿${fmt(data.subtotal)}</span></div>
+    <div class="r-row"><span>VAT 7%</span><span>฿${fmt(data.vat)}</span></div>
+    <div class="r-sep"></div>
+    <div class="r-row r-total"><span>ยอดรวม</span><span>฿${fmt(data.grand_total)}</span></div>
+    <div class="r-sep"></div>
+    <div style="text-align:center;color:#666;font-size:.75rem;margin-top:.5rem;">ขอบคุณที่ใช้บริการ 🐾</div>
+  `;
+
+  if (data.stock_updated) {
+    document.getElementById('receiptStockMsg').style.display = 'block';
+    showToast('ตัดสต็อกสินค้าเรียบร้อยแล้ว ทั้งหมด ' + data.items.length + ' รายการ');
+  }
+
+  receipModal = new bootstrap.Modal(document.getElementById('receiptModal'));
+  receipModal.show();
+}
+
+function closeReceipt() {
+  bootstrap.Modal.getInstance(document.getElementById('receiptModal')).hide();
+  cart = [];
+  selectedPet = null;
+  document.getElementById('selectedPetBadge').style.display = 'none';
+  renderCart();
+}
+
+function printReceipt() {
+  const content = document.getElementById('receiptContent').innerHTML;
+  const w = window.open('', '', 'width=400,height=600');
+  w.document.write(`<html><head><title>ใบเสร็จ</title><style>body{font-family:'Courier New',monospace;font-size:13px;padding:20px;} .r-row{display:flex;justify-content:space-between;margin-bottom:4px;} .r-sep{border-top:1.5px dashed #ccc;margin:6px 0;} .r-header{text-align:center;border-bottom:2px dashed #ccc;padding-bottom:12px;margin-bottom:12px;} .r-total{font-size:15px;font-weight:700;}</style></head><body>${content}</body></html>`);
+  w.document.close();
+  w.print();
+}
+
+// ===================== BARCODE SCAN =====================
+let barcodeBuffer = '';
+let barcodeTimer = null;
+
+function focusScan() {
+  const input = document.getElementById('barcodeInput');
+  const btn = document.querySelector('.btn-scan');
+  
+  input.focus();
+  
+  // ให้ Feedback ว่าโหมดสแกนเนอร์ทำงานแล้ว
+  showToast('โหมดสแกนเนอร์พร้อมทำงาน! กรุณายิงบาร์โค้ด');
+  
+  // เปลี่ยนปุ่มชั่วคราวเพื่อให้รู้ว่าทำงานอยู่
+  if (btn) {
+    const oldHtml = btn.innerHTML;
+    const oldBg = btn.style.background;
+    
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>กำลังรอ...';
+    btn.style.background = '#0ea5e9';
+    btn.style.borderColor = '#0284c7';
+    btn.style.color = '#fff';
+    
+    setTimeout(() => {
+      btn.innerHTML = oldHtml;
+      btn.style.background = oldBg;
+      btn.style.borderColor = '';
+      btn.style.color = '';
+    }, 4000); // กลับเป็นปกติใน 4 วินาที
+  }
+}
+
+document.getElementById('barcodeInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    const code = barcodeBuffer.trim();
+    barcodeBuffer = '';
+    if (code) {
+      const med = ALL_MEDICINES.find(m => m.barcode === code);
+      if (med) addToCartById(med.id);
+      else alert('ไม่พบสินค้า barcode: ' + code);
+    }
+    return;
+  }
+  barcodeBuffer += e.key;
+  clearTimeout(barcodeTimer);
+  barcodeTimer = setTimeout(() => { barcodeBuffer = ''; }, 100);
+});
+
+// ===================== SEARCH =====================
+document.getElementById('productSearch').addEventListener('input', e => {
+  searchQuery = e.target.value;
+  renderGrid();
+});
+
+// ===================== UTILS =====================
+function getCsrf() {
+  const name = 'csrftoken';
+  const cookies = document.cookie.split(';');
+  for (let c of cookies) {
+    const [k,v] = c.trim().split('=');
+    if (k === name) return v;
+  }
+  return '';
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('stockToast');
+  document.getElementById('stockToastMsg').textContent = '✅ ' + msg;
+  toast.style.display = 'block';
+  toast.style.opacity = '1';
+  setTimeout(() => { toast.style.opacity='0'; setTimeout(()=>toast.style.display='none',400); }, 3500);
+}
+
+function hideToast() {
+  document.getElementById('stockToast').style.display='none';
+}
+
+// ===================== INIT =====================
+buildCategories();
+renderGrid();
+renderCart();
+
+// Auto-select pet from URL Params
+const urlParams = new URLSearchParams(window.location.search);
+const petParam = urlParams.get('pet_id');
+if (petParam) {
+  const p = ALL_PETS.find(x => x.id == petParam);
+  if (p) {
+    selectPet(p.id, p.name, p.owner, p.species);
+    // If there is an unpaid bill, auto-add it to cart
+    const unpaid = UNPAID_RECORDS.filter(r => r.pet_id == p.id);
+    if(unpaid.length > 0) {
+      unpaid.forEach(r => addMedicalBill(r.mr_id));
+      showToast('ดึงข้อมูลค่ารักษาพยาบาลสำเร็จ');
+    }
+  }
+}
+</script>
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+
+<script>
+// ─── เก็บ instance ของ Chart ───
+let barChartInstance = null;
+let doughnutChartInstance = null;
+
+// ─── เก็บบิลทั้งหมดที่ชำระแล้วในเซสชันนี้ ───
+// (ข้อมูลจริงควรดึงจาก Django API แต่นี่คือ Demo Data)
+let salesHistory = JSON.parse(localStorage.getItem('vetcare_sales') || '[]');
+
+// ─── คอมมา format ───
+function fmtBaht(n) {
+  return '฿' + Number(n).toLocaleString('th-TH', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+
+// ─── บันทึกบิลลงใน localStorage หลัง Checkout ───
+function recordSale(saleData) {
+  // saleData = { datetime, items:[{name,qty,unit,price,subtotal}], total, payment }
+  salesHistory.push(saleData);
+  localStorage.setItem('vetcare_sales', JSON.stringify(salesHistory));
+}
+
+// ─── Tab ปัจจุบัน ───
+let currentTab = 'day';
+
+function switchTab(tab, btn) {
+  currentTab = tab;
+  // Reset button styles
+  ['tab-day','tab-month','tab-year'].forEach(id => {
+    const el = document.getElementById(id);
+    el.style.background = '#e2e8f0';
+    el.style.color = '#475569';
+  });
+  btn.style.background = '#1e293b';
+  btn.style.color = '#fff';
+  updateReportData();
+}
+
+// ─── กรองข้อมูลตาม Tab และ Date Range ───
+function getFilteredSales() {
+  const now = new Date();
+  const from = document.getElementById('reportDateFrom').value;
+  const to = document.getElementById('reportDateTo').value;
+
+  return salesHistory.filter(s => {
+    const d = new Date(s.datetime);
+    if (from && d < new Date(from)) return false;
+    if (to && d > new Date(to + 'T23:59:59')) return false;
+
+    if (!from && !to) {
+      // ถ้าไม่ได้เลือก Date ให้กรองตาม Tab
+      if (currentTab === 'day') {
+        return d.toDateString() === now.toDateString();
+      } else if (currentTab === 'month') {
+        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+      } else if (currentTab === 'year') {
+        return d.getFullYear() === now.getFullYear();
+      }
+    }
+    return true;
+  });
+}
+
+// ─── คำนวณ KPI ───
+function calcKPIs(filtered) {
+  let totalSales = 0, totalCost = 0, billCount = filtered.length;
+  const catSales = {};
+
+  filtered.forEach(s => {
+    totalSales += Number(s.total || 0);
+    s.items.forEach(it => {
+      totalCost += Number(it.cost_price || 0) * Number(it.qty || 1);
+      const cat = it.category || 'อื่นๆ';
+      catSales[cat] = (catSales[cat] || 0) + Number(it.subtotal || 0);
+    });
+  });
+
+  const profit = totalSales - totalCost;
+  return { totalSales, totalCost, profit, billCount, catSales };
+}
+
+// ─── สร้าง Labels สำหรับ Bar Chart ───
+function getBarChartData(filtered) {
+  const now = new Date();
+  const labels = [], data = [];
+
+  if (currentTab === 'day') {
+    // 7 วันล่าสุด
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      const label = `${d.getDate()}/${d.getMonth()+1}`;
+      labels.push(label);
+      const dayTotal = filtered
+        .filter(s => new Date(s.datetime).toDateString() === d.toDateString())
+        .reduce((sum, s) => sum + Number(s.total || 0), 0);
+      data.push(dayTotal);
+    }
+    document.getElementById('barChartLabel').textContent = 'รายวัน (7 วันล่าสุด)';
+  } else if (currentTab === 'month') {
+    // 6 เดือนล่าสุด
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const mName = d.toLocaleDateString('th-TH', {month:'short', year:'2-digit'});
+      labels.push(mName);
+      const mTotal = filtered
+        .filter(s => {
+          const sd = new Date(s.datetime);
+          return sd.getMonth() === d.getMonth() && sd.getFullYear() === d.getFullYear();
+        })
+        .reduce((sum, s) => sum + Number(s.total || 0), 0);
+      data.push(mTotal);
+    }
+    document.getElementById('barChartLabel').textContent = 'รายเดือน (6 เดือนล่าสุด)';
+  } else {
+    // 5 ปีล่าสุด
+    for (let i = 4; i >= 0; i--) {
+      const yr = now.getFullYear() - i;
+      labels.push(String(yr));
+      const yTotal = filtered
+        .filter(s => new Date(s.datetime).getFullYear() === yr)
+        .reduce((sum, s) => sum + Number(s.total || 0), 0);
+      data.push(yTotal);
+    }
+    document.getElementById('barChartLabel').textContent = 'รายปี (5 ปีล่าสุด)';
+  }
+  return { labels, data };
+}
+
+// ─── วาด/อัปเดต Charts ───
+function renderCharts(filtered, catSales) {
+  // --- Bar Chart ---
+  const { labels, data } = getBarChartData(salesHistory); // ใช้ all sales สำหรับ bar
+  const barCtx = document.getElementById('salesBarChart').getContext('2d');
+  if (barChartInstance) barChartInstance.destroy();
+  barChartInstance = new Chart(barCtx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'ยอดขาย (บาท)',
+        data,
+        backgroundColor: 'rgba(34,197,94,0.75)',
+        borderRadius: 8,
+        borderSkipped: false,
+        hoverBackgroundColor: '#16a34a',
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: { label: ctx => ' ฿' + ctx.raw.toLocaleString('th-TH') }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          grid: { color: 'rgba(0,0,0,.05)' },
+          ticks: { callback: v => '฿' + v.toLocaleString('th-TH') }
+        },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+
+  // --- Doughnut Chart ---
+  const doughCtx = document.getElementById('categoryDoughnutChart').getContext('2d');
+  if (doughnutChartInstance) doughnutChartInstance.destroy();
+
+  const catLabels = Object.keys(catSales);
+  const catData = Object.values(catSales);
+  const catColors = ['#22c55e','#3b82f6','#f59e0b','#6366f1','#ef4444','#14b8a6','#f97316','#8b5cf6'];
+
+  if (catLabels.length === 0) {
+    // Demo data ถ้าไม่มีข้อมูล
+    catLabels.push(...['ยาเม็ด','วัคซีน','ยาน้ำ','อาหารเสริม','อุปกรณ์']);
+    catData.push(...[3500, 2800, 1200, 900, 600]);
+  }
+
+  doughnutChartInstance = new Chart(doughCtx, {
+    type: 'doughnut',
+    data: {
+      labels: catLabels,
+      datasets: [{
+        data: catData,
+        backgroundColor: catColors.slice(0, catLabels.length),
+        borderWidth: 3,
+        borderColor: '#fff',
+        hoverOffset: 8,
+      }]
+    },
+    options: {
+      responsive: true,
+      cutout: '65%',
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { padding: 12, font: { family: 'Kanit', size: 12 } }
+        },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${ctx.label}: ฿${ctx.raw.toLocaleString('th-TH')}`
+          }
+        }
+      }
+    }
+  });
+}
+
+// ─── วาดตารางบิล ───
+function renderBillTable(filtered) {
+  const tbody = document.getElementById('billTableBody');
+  document.getElementById('billTableCount').textContent = filtered.length + ' รายการ';
+
+  if (!filtered.length) {
+    tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-4">
+      <div style="font-size:2rem">📋</div><div>ยังไม่มีข้อมูลการขาย</div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = [...filtered].reverse().slice(0, 20).map((s, idx) => {
+    const dt = new Date(s.datetime);
+    const dateStr = dt.toLocaleDateString('th-TH', {day:'2-digit',month:'2-digit',year:'2-digit'});
+    const timeStr = dt.toLocaleTimeString('th-TH', {hour:'2-digit',minute:'2-digit'});
+    const items = (s.items || []).map(i => i.name).slice(0,2).join(', ') + (s.items.length > 2 ? '...' : '');
+    const payIcon = s.payment === 'เงินสด' ? '💵' : s.payment === 'QR Code' ? '📱' : '💳';
+
+    return `<tr>
+      <td class="text-muted" style="font-size:.8rem;">#${filtered.length - idx}</td>
+      <td><div style="font-size:.83rem;font-weight:600">${dateStr}</div>
+          <small class="text-muted">${timeStr}</small></td>
+      <td style="max-width:200px;"><small class="text-truncate d-block">${items || '—'}</small>
+          <span class="badge" style="background:#f1f5f9;color:#64748b;font-size:.7rem;">${s.items.length} รายการ</span></td>
+      <td><span style="font-size:.9rem">${payIcon}</span> <small>${s.payment || '—'}</small></td>
+      <td class="text-end fw-bold" style="color:#16a34a;">${fmtBaht(s.total)}</td>
+      <td class="text-center">
+        <span class="badge rounded-pill" style="background:rgba(34,197,94,.12);color:#16a34a;font-size:.75rem;">✅ ชำระแล้ว</span>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ─── อัปเดตข้อมูลทั้งหมด ───
+function updateReportData() {
+  const filtered = getFilteredSales();
+  const { totalSales, totalCost, profit, billCount, catSales } = calcKPIs(filtered);
+
+  // Update KPI Cards
+  document.getElementById('kpi-total-sales').textContent = fmtBaht(totalSales);
+  document.getElementById('kpi-total-bills').textContent = billCount;
+  document.getElementById('kpi-total-cost').textContent = fmtBaht(totalCost);
+
+  const profitEl = document.getElementById('kpi-total-profit');
+  profitEl.textContent = fmtBaht(profit);
+  profitEl.style.color = profit >= 0 ? '#16a34a' : '#dc2626';
+
+  // Update trend badges
+  document.getElementById('kpi-sales-trend').textContent = totalSales > 0 ? '▲ มีข้อมูล' : '— ว่าง';
+  document.getElementById('kpi-bills-trend').textContent = '🧾 ' + billCount;
+  document.getElementById('kpi-profit-trend').textContent = profit >= 0 ? '▲ กำไร' : '▼ ขาดทุน';
+  document.getElementById('kpi-profit-trend').style.background = profit >= 0 ? 'rgba(34,197,94,.12)' : 'rgba(239,68,68,.12)';
+  document.getElementById('kpi-profit-trend').style.color = profit >= 0 ? '#16a34a' : '#dc2626';
+
+  // Render Charts & Table
+  renderCharts(filtered, catSales);
+  renderBillTable(filtered);
+
+  // Update subtitle
+  const now = new Date();
+  const tabLabels = { day: 'วันนี้', month: 'เดือนนี้', year: 'ปีนี้' };
+  document.getElementById('reportSubtitle').textContent =
+    `ข้อมูล${tabLabels[currentTab]} — อัปเดต ${now.toLocaleTimeString('th-TH')}`;
+}
+
+// ─── เปิด Modal ───
+function openSalesReport() {
+  // ตั้งวันที่ default
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('reportDateFrom').value = '';
+  document.getElementById('reportDateTo').value = '';
+  currentTab = 'day';
+  ['tab-day','tab-month','tab-year'].forEach(id => {
+    const el = document.getElementById(id);
+    el.style.background = '#e2e8f0';
+    el.style.color = '#475569';
+  });
+  document.getElementById('tab-day').style.background = '#1e293b';
+  document.getElementById('tab-day').style.color = '#fff';
+
+  const modal = new bootstrap.Modal(document.getElementById('salesReportModal'));
+  modal.show();
+
+  // รอ Modal ขึ้นก่อนวาด Chart
+  setTimeout(() => updateReportData(), 300);
+}
+
+// ─── Hook เข้า Checkout: บันทึกบิลหลังจ่ายสำเร็จ ───
+// เรียกฟังก์ชันนี้จาก showReceipt() ที่มีอยู่แล้ว
+const _origShowReceipt = typeof showReceipt === 'function' ? showReceipt : null;
+
+// Patch: record sale เมื่อ Checkout สำเร็จ
+document.addEventListener('DOMContentLoaded', function() {
+  const origFetch = window.fetch;
+  window.fetch = function(...args) {
+    return origFetch.apply(this, args).then(async res => {
+      const clone = res.clone();
+      try {
+        const url = typeof args[0] === 'string' ? args[0] : '';
+        if (url.includes('/pos/checkout/') && res.ok) {
+          const data = await clone.json();
+          if (data.success) {
+
+            // ─── ดึงชื่อลูกค้า/สัตว์เลี้ยง จาก selectedPet ───
+            let petLabel = '—';
+            if (typeof selectedPet !== 'undefined' && selectedPet) {
+              petLabel = selectedPet.name || '—';
+              if (selectedPet.owner) petLabel += ` (${selectedPet.owner})`;
+            }
+
+            // ─── เพิ่ม barcode + หมวดหมู่ให้แต่ละ item ───
+            const enrichedItems = (data.items || []).map(it => {
+              // ค้นหาจาก ALL_MEDICINES โดยจับคู่ชื่อสินค้า
+              const med = (typeof ALL_MEDICINES !== 'undefined' ? ALL_MEDICINES : [])
+                            .find(m => m.name === it.name);
+              return {
+                ...it,
+                barcode:    med ? (med.barcode || String(med.id)) : '—',
+                product_id: med ? med.id : '—',
+                category:   med ? (med.product_type || 'อื่นๆ') : 'อื่นๆ',
+                cost_price: med ? (med.cost_price || 0) : 0,
+              };
+            });
+
+            recordSale({
+              datetime:   new Date().toISOString(),
+              items:      enrichedItems,
+              total:      data.grand_total || 0,
+              payment:    data.payment_method || 'เงินสด',
+              pet_name:   petLabel,   // ✅ ชื่อลูกค้า/สัตว์เลี้ยง
+            });
+          }
+        }
+      } catch(e) { console.warn('[POS Sales Record]', e); }
+      return res;
+    });
+  };
+});
+
+</script>
+
+<!-- ========================================================
+     PRINT-ONLY LAYOUT: รายงานกำไรเบื้องต้น
+     ซ่อนในหน้าจอปกติ, แสดงเฉพาะตอนพิมพ์
+======================================================== -->
+<div id="printReportLayout" style="display:none;">
+  
+</div>
+
+
+<style>
+/* ─── ซ่อน Print Layout บนหน้าจอปกติ ─── */
+#printReportLayout { display: none; }
+
+@media print {
+  /* ══════════════════════════════════════════════════
+     1. ซ่อน ทุกอย่าง ในหน้าจอปกติออกหมด
+  ══════════════════════════════════════════════════ */
+  body > *,
+  nav, .navbar, header, footer,
+  .sidebar, .sidebar-overlay,
+  .pos-container, .pos-left, .pos-right,
+  #salesReportModal, .modal, .modal-backdrop,
+  .toast, #stockToast,
+  #btnSalesReport {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  /* ══════════════════════════════════════════════════
+     2. แสดงเฉพาะ Print Layout
+  ══════════════════════════════════════════════════ */
+  #printReportLayout {
+    display: block !important;
+    visibility: visible !important;
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+  }
+
+  /* ══════════════════════════════════════════════════
+     3. ตั้งค่า Page & Font
+  ══════════════════════════════════════════════════ */
+  @page {
+    size: A4 landscape;
+    margin: 12mm 15mm;
+  }
+
+  body, html {
+    background: #fff !important;
+    color: #000 !important;
+    margin: 0 !important; padding: 0 !important;
+    font-family: 'Sarabun', 'TH SarabunPSK', serif !important;
+    font-size: 10pt !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* ══════════════════════════════════════════════════
+     4. Styles สำหรับ Print Layout
+  ══════════════════════════════════════════════════ */
+
+  /* หัวรายงาน */
+  .pr-title {
+    font-size: 28pt;
+    font-weight: 900;
+    text-align: left;
+    color: #000;
+    margin: 0 0 4mm 0;
+    border-bottom: 2px solid #000;
+    padding-bottom: 2mm;
+  }
+  .pr-subtitle {
+    font-size: 11pt;
+    font-weight: 700;
+    text-align: center;
+    color: #000;
+    margin-bottom: 2mm;
+  }
+  .pr-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 9.5pt;
+    color: #000;
+    margin-bottom: 4mm;
+    border-bottom: 1px solid #888;
+    padding-bottom: 2mm;
+  }
+
+  /* ตาราง Master */
+  .pr-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9pt;
+    color: #000;
+    background: #fff;
+  }
+
+  /* แถว Master Header (หัวบิล) */
+  .pr-table .master-header-row th {
+    background: #000 !important;
+    color: #fff !important;
+    font-weight: 700;
+    font-size: 9pt;
+    padding: 2.5mm 2mm;
+    border: 1px solid #000;
+    text-align: center;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* แถวข้อมูลบิล (Master Row) */
+  .pr-table .bill-row td {
+    background: #f0f0f0 !important;
+    font-weight: 700;
+    font-size: 9.5pt;
+    padding: 2mm 2mm;
+    border: 1px solid #555;
+    color: #000;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* หัวคอลัมน์สินค้า (Detail Header) */
+  .pr-table .detail-col-header td {
+    background: #d8d8d8 !important;
+    font-weight: 700;
+    font-size: 8.5pt;
+    padding: 1.5mm 2mm;
+    border: 0.5px solid #888;
+    color: #000;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* แถวสินค้า (Detail Row) */
+  .pr-table .detail-item-row td {
+    background: #fff !important;
+    font-size: 8.5pt;
+    padding: 1.5mm 2mm;
+    border: 0.5px solid #bbb;
+    color: #000;
+    vertical-align: top;
+  }
+
+  /* แถวสรุปกำไรต่อบิล */
+  .pr-table .bill-subtotal-row td {
+    background: #fff !important;
+    font-size: 9pt;
+    font-weight: 700;
+    padding: 1.5mm 2mm;
+    border-top: 1px solid #555;
+    border-bottom: 1.5px solid #555;
+    color: #000;
+    text-align: right;
+  }
+
+  /* แถวสรุปรวมทั้งหมด (Grand Total) */
+  .pr-table .grand-total-row td {
+    background: #e8e8e8 !important;
+    font-size: 10pt;
+    font-weight: 900;
+    padding: 2.5mm 2mm;
+    border: 1.5px solid #000;
+    color: #000;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* ตัวเลขสีแดง = กำไร */
+  .pr-profit { color: #c00000 !important; font-weight: 700; }
+  /* Text align */
+  .pr-right { text-align: right !important; }
+  .pr-center { text-align: center !important; }
+  .pr-left { text-align: left !important; }
+
+  /* ไม่ตัดบิลข้ามหน้า */
+  .bill-block { page-break-inside: avoid; break-inside: avoid; }
+
+  /* Footer รายงาน */
+  .pr-footer {
+    margin-top: 6mm;
+    font-size: 8pt;
+    color: #555;
+    text-align: center;
+    border-top: 1px solid #888;
+    padding-top: 2mm;
+  }
+}
+</style>
+
+
+<script>
+/**
+ * buildPrintReport()
+ * สร้าง HTML ตารางรายงานกำไรเบื้องต้น
+ * แล้ว inject เข้า #printReportLayout ก่อนเรียก window.print()
+ */
+function buildPrintReport() {
+  const filtered = getFilteredSales();
+  const dateFrom = document.getElementById('reportDateFrom').value;
+  const dateTo   = document.getElementById('reportDateTo').value;
+  const now      = new Date();
+
+  // ─── ช่วงวันที่ ───
+  const fmt = (s) => s ? new Date(s).toLocaleDateString('th-TH', {day:'2-digit',month:'2-digit',year:'numeric'})
+                       : now.toLocaleDateString('th-TH', {day:'2-digit',month:'2-digit',year:'numeric'});
+  const fromLabel = dateFrom ? fmt(dateFrom) : fmt(null);
+  const toLabel   = dateTo   ? fmt(dateTo)   : fmt(null);
+
+  // ─── คำนวณ Grand Total ───
+  let grandSales = 0, grandCost = 0, grandProfit = 0;
+  filtered.forEach(s => {
+    grandSales += Number(s.total || 0);
+    (s.items || []).forEach(it => {
+      const cost = Number(it.cost_price || 0) * Number(it.qty || 1);
+      grandCost   += cost;
+      grandProfit += Number(it.subtotal || 0) - cost;
+    });
+  });
+
+  // ─── Build HTML ───
+  let html = `
+  <div class="pr-title">รายงานกำไรเบื้องต้น</div>
+  <div class="pr-subtitle">รายงานกำไรเบื้องต้น แบบ ละเอียด</div>
+  <div class="pr-meta">
+    <span>จากวันที่ <strong>${fromLabel}</strong> &nbsp;&nbsp; ถึงวันที่ <strong>${toLabel}</strong></span>
+    <span>พิมพ์เมื่อ: ${now.toLocaleString('th-TH')}</span>
+    <span>หน้า 1 / 1</span>
+  </div>
+
+  <table class="pr-table">
+    
+    <thead>
+      <tr class="master-header-row">
+        <th class="pr-left" style="width:14%">เลขที่บิล</th>
+        <th class="pr-center" style="width:9%">วันที่ขาย</th>
+        <th class="pr-left" style="width:13%">ชื่อลูกค้า / สัตว์เลี้ยง</th>
+        <th class="pr-right" style="width:10%">ยอดเงินรวม</th>
+        <th class="pr-right" style="width:10%">ยอดเงินสุทธิ</th>
+        <th class="pr-center" style="width:9%">ประเภทชำระ</th>
+        <th class="pr-right" style="width:8%">ต้นทุนรวม</th>
+        <th class="pr-right" style="width:10%">กำไรเบื้องต้น</th>
+        <th class="pr-right" style="width:7%">%กำไร</th>
+      </tr>
+    </thead>
+    <tbody>`;
+
+  if (!filtered.length) {
+    html += `<tr><td colspan="9" class="pr-center" style="padding:6mm;border:1px solid #bbb;">— ไม่มีข้อมูลในช่วงที่เลือก —</td></tr>`;
+  }
+
+  filtered.forEach((s, idx) => {
+    const dt      = new Date(s.datetime);
+    const dateStr = dt.toLocaleDateString('th-TH', {day:'2-digit',month:'2-digit',year:'2-digit'});
+    const billNo  = `BILL-${String(idx + 1).padStart(6, '0')}`;
+    const petName = s.pet_name || '—';
+    const payIcon = s.payment === 'เงินสด' ? 'เงินสด' : s.payment === 'QR Code' ? 'QR Code' : s.payment || '—';
+
+    // คำนวณต้นทุนและกำไรของบิลนี้
+    let billCost = 0, billProfit = 0;
+    (s.items || []).forEach(it => {
+      const cost = Number(it.cost_price || 0) * Number(it.qty || 1);
+      billCost   += cost;
+      billProfit += Number(it.subtotal || 0) - cost;
+    });
+    const billTotal = Number(s.total || 0);
+    const pct = billTotal > 0 ? ((billProfit / billTotal) * 100).toFixed(1) : '0.0';
+
+    const fc = (n) => Number(n).toLocaleString('th-TH', {minimumFractionDigits:2, maximumFractionDigits:2});
+
+    // ─── Master Row ───
+    html += `
+    <tr class="bill-row">
+      <td class="pr-left">${billNo}</td>
+      <td class="pr-center">${dateStr}</td>
+      <td class="pr-left">${petName}</td>
+      <td class="pr-right">${fc(billTotal)}</td>
+      <td class="pr-right">${fc(billTotal)}</td>
+      <td class="pr-center">${payIcon}</td>
+      <td class="pr-right">${fc(billCost)}</td>
+      <td class="pr-right pr-profit">${fc(billProfit)}</td>
+      <td class="pr-right pr-profit">${pct}%</td>
+    </tr>`;
+
+    // ─── Detail Column Header ───
+    if (s.items && s.items.length > 0) {
+      html += `
+      <tr class="detail-col-header">
+        <td class="pr-left" colspan="1">รหัส</td>
+        <td class="pr-left" colspan="2">ชื่อสินค้า</td>
+        <td class="pr-center">จำนวน</td>
+        <td class="pr-right">ราคาขาย</td>
+        <td class="pr-right">รวมเงิน</td>
+        <td class="pr-right">ราคาทุน</td>
+        <td class="pr-right">ต้นทุน</td>
+        <td class="pr-right">กำไรเบื้องต้น</td>
+      </tr>`;
+
+      // ─── Detail Item Rows ───
+      let sumItemProfit = 0;
+      s.items.forEach(it => {
+        const qty      = Number(it.qty || 1);
+        const sellPrc  = Number(it.price || 0);
+        const subtotal = Number(it.subtotal || 0);
+        const costPrc  = Number(it.cost_price || 0);
+        const lineCost = costPrc * qty;
+        const lineProfit = subtotal - lineCost;
+        sumItemProfit += lineProfit;
+
+        html += `
+        <tr class="detail-item-row">
+          <td class="pr-left">${it.barcode || it.id || '—'}</td>
+          <td class="pr-left" colspan="2">${it.name || '—'}</td>
+          <td class="pr-center">${qty.toFixed(2)}</td>
+          <td class="pr-right">${fc(sellPrc)}</td>
+          <td class="pr-right">${fc(subtotal)}</td>
+          <td class="pr-right">${fc(costPrc)}</td>
+          <td class="pr-right">${fc(lineCost)}</td>
+          <td class="pr-right pr-profit">${fc(lineProfit)}</td>
+        </tr>`;
+      });
+
+      // ─── Bill Subtotal ───
+      html += `
+      <tr class="bill-subtotal-row">
+        <td colspan="7" class="pr-right">รวมบิล ${billNo}:</td>
+        <td colspan="1" class="pr-right">${fc(billCost)}</td>
+        <td class="pr-right pr-profit">${fc(billProfit)}</td>
+      </tr>`;
+    }
+  });
+
+  // ─── Grand Total ───
+  const grandPct = grandSales > 0 ? ((grandProfit / grandSales) * 100).toFixed(1) : '0.0';
+  const fc = (n) => Number(n).toLocaleString('th-TH', {minimumFractionDigits:2, maximumFractionDigits:2});
+  html += `
+    <tr class="grand-total-row">
+      <td colspan="3" class="pr-right">รวมทั้งสิ้น (${filtered.length} บิล)</td>
+      <td class="pr-right">${fc(grandSales)}</td>
+      <td class="pr-right">${fc(grandSales)}</td>
+      <td></td>
+      <td class="pr-right">${fc(grandCost)}</td>
+      <td class="pr-right pr-profit">${fc(grandProfit)}</td>
+      <td class="pr-right pr-profit">${grandPct}%</td>
+    </tr>
+    </tbody>
+  </table>
+
+  <div class="pr-footer">
+    ระบบบริหารจัดการคลินิกสัตว์เลี้ยง | VetCare POS System
+    &nbsp;|&nbsp; พิมพ์โดย: ${document.title || 'Admin'}
+    &nbsp;|&nbsp; ${now.toLocaleString('th-TH')}
+  </div>`;
+
+  document.getElementById('printReportLayout').innerHTML = html;
+}
+
+/**
+ * Override window.print ให้ buildPrintReport() ก่อนเสมอ
+ */
+const _nativePrint = window.print.bind(window);
+window.print = function() {
+  buildPrintReport();
+  setTimeout(() => _nativePrint(), 150);
+};
+</script>
+
+{% endblock %}

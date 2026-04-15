@@ -1,0 +1,222 @@
+{% extends 'myapp/core/base.html' %}
+
+{% block title %}โปรไฟล์ {{ object.name }}{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --primary-green: #4CAF50;
+        --pastel-green: #e8f5e9;
+        --soft-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        --border-radius: 20px;
+    }
+    body {
+        background-color: #fcfdfc;
+    }
+    .profile-card {
+        border: none;
+        border-radius: var(--border-radius);
+        box-shadow: var(--soft-shadow);
+        background: #ffffff;
+        overflow: hidden;
+    }
+    .profile-header {
+        background: var(--pastel-green);
+        padding: 2rem;
+        text-align: center;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+    }
+    .profile-image-container {
+        width: 120px;
+        height: 120px;
+        background: white;
+        border-radius: 50%;
+        margin: -60px auto 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        border: 4px solid white;
+    }
+    .profile-image-container i {
+        font-size: 3rem;
+        color: var(--primary-green);
+    }
+    .info-label {
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #888;
+        margin-bottom: 0.2rem;
+    }
+    .info-value {
+        font-weight: 600;
+        color: #333;
+        font-size: 1.1rem;
+    }
+    .info-group {
+        padding: 1rem;
+        border-radius: 12px;
+        transition: background 0.2s;
+        display: flex;
+        align-items: center;
+    }
+    .info-group:hover {
+        background: #f9fdf9;
+    }
+    .info-icon {
+        width: 40px;
+        height: 40px;
+        background: var(--pastel-green);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+        color: var(--primary-green);
+    }
+    .owner-section {
+        background: #fafafa;
+        border-radius: 15px;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+    .btn-action-outline {
+        border-radius: 12px;
+        padding: 0.6rem 1.2rem;
+        font-weight: 500;
+        transition: all 0.3s;
+        border-width: 2px;
+    }
+    .btn-edit-outline {
+        border-color: #ffc107;
+        color: #ff9800;
+    }
+    .btn-edit-outline:hover {
+        background: #ffc107;
+        color: white;
+    }
+    .btn-delete-outline {
+        border-color: #ff8a80;
+        color: #f44336;
+    }
+    .btn-delete-outline:hover {
+        background: #f44336;
+        color: white;
+    }
+</style>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="profile-card">
+                
+                <div class="profile-header">
+                    <h3 class="fw-bold mb-0" style="color: var(--primary-green);">
+                        <i class="fas fa-paw me-2"></i>{{ object.name }}
+                    </h3>
+                    <p class="text-muted small mb-0 mt-2">Pet Profile Information</p>
+                </div>
+
+                <div class="card-body p-4 p-md-5 pt-0">
+                    
+                    <div class="profile-image-container">
+                        {% if object.image %}
+                            <img src="{{ object.image.url }}" class="rounded-circle w-100 h-100" style="object-fit: cover;">
+                        {% else %}
+                            {% if object.species == 'หมา' or object.species == 'สุนัข' %}
+                                <i class="fas fa-dog"></i>
+                            {% elif object.species == 'แมว' %}
+                                <i class="fas fa-cat"></i>
+                            {% elif object.species == 'นก' %}
+                                <i class="fas fa-crow"></i>
+                            {% else %}
+                                <i class="fas fa-paw"></i>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+
+                    
+                    <div class="row g-4 mt-2">
+                        <div class="col-md-6">
+                            <div class="info-group">
+                                <div class="info-icon"><i class="fas fa-font"></i></div>
+                                <div>
+                                    <div class="info-label">ชื่อ (Name)</div>
+                                    <div class="info-value">{{ object.name }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-group">
+                                <div class="info-icon"><i class="fas fa-shapes"></i></div>
+                                <div>
+                                    <div class="info-label">ประเภท (Species)</div>
+                                    <div class="info-value">{{ object.species }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-group">
+                                <div class="info-icon"><i class="fas fa-dna"></i></div>
+                                <div>
+                                    <div class="info-label">สายพันธุ์ (Breed)</div>
+                                    <div class="info-value">{{ object.breed|default:"ไม่ระบุ" }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-group">
+                                <div class="info-icon"><i class="fas fa-birthday-cake"></i></div>
+                                <div>
+                                    <div class="info-label">วันเกิด (Birth Date)</div>
+                                    <div class="info-value">{{ object.birth_date|date:"d M Y"|default:"ไม่ระบุ" }}</div>
+                                </div>
+                            </div>
+                        <div class="col-md-6">
+                            <div class="info-group">
+                                <div class="info-icon"><i class="fas fa-venus-mars"></i></div>
+                                <div>
+                                    <div class="info-label">เพศ (Gender)</div>
+                                    <div class="info-value">{% if object.sex == 'M' %}ตัวผู้ (Male){% else %}ตัวเมีย (Female){% endif %}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    
+                    <div class="owner-section mt-4 d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <div class="info-icon bg-white shadow-sm"><i class="fas fa-user"></i></div>
+                            <div>
+                                <div class="info-label">เจ้าของ (Owner)</div>
+                                <a href="{% url 'owner_detail' object.owner.pk %}" class="fw-bold text-decoration-none" style="color: #64b5f6;">
+                                    {{ object.owner.first_name }} {{ object.owner.last_name }}
+                                </a>
+                            </div>
+                        </div>
+                        <div class="text-end d-none d-sm-block">
+                             <span class="badge rounded-pill bg-light text-muted border">ID: {{ object.owner.customer_id|default:"-" }}</span>
+                        </div>
+                    </div>
+
+                    
+                    <div class="d-flex flex-wrap justify-content-end gap-2 mt-5 pt-4 border-top">
+                        <a href="{% url 'pet_list' %}" class="btn btn-action-outline btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>ย้อนกลับ
+                        </a>
+                        {% if request.user.is_superuser or request.user.is_staff or object.owner.first_name == request.user.first_name and object.owner.last_name == request.user.last_name %}
+                            <a href="{% url 'pet_update' object.pk %}" class="btn btn-action-outline btn-edit-outline">
+                                <i class="fas fa-edit me-2"></i>แก้ไขข้อมูล
+                            </a>
+                            <a href="{% url 'pet_delete' object.pk %}" class="btn btn-action-outline btn-delete-outline">
+                                <i class="fas fa-trash-alt me-2"></i>ลบโปรไฟล์
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

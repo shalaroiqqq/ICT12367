@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="th" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Pet Clinic Dashboard Admin 2026{% endblock %}</title>
+    
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- SweetAlert2 for Beautiful Dialogs -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        :root {
+            --sidebar-width: 260px;
+            --primary-navy: #0f172a;
+            --sidebar-glass: rgba(15, 23, 42, 0.85);
+            --bg-body: #f1f5f9;
+            --card-bg: #ffffff;
+            --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+            --input-bg: #ffffff;
+            --text-heading: #0f172a;
+            --text-muted: #64748b;
+            --border-color: rgba(0, 0, 0, 0.05);
+            --badge-bg: #f1f8f1;
+            --badge-color: #2e7d32;
+        }
+
+        [data-bs-theme="dark"] {
+            --bg-body: #0b0f19; /* Deep Black-Navy */
+            --primary-navy: #1e293b; /* Sidebar Slate */
+            --sidebar-glass: rgba(15, 23, 42, 0.95);
+            --card-bg: #1e293b; /* Slate Navy Card */
+            --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+            --input-bg: #0f172a; /* Deep Navy Input */
+            --text-heading: #f1f5f9; /* Bright White-Grey */
+            --text-muted: #94a3b8; /* Soft Slate */
+            --border-color: rgba(255, 255, 255, 0.08);
+            --badge-bg: rgba(16, 185, 129, 0.1);
+            --badge-color: #10b981; /* Emerald Green */
+        }
+
+        /* ----- Global Dark Mode Fixes (UX/UI Refined) ----- */
+        [data-bs-theme="dark"] .text-dark {
+            color: var(--text-heading) !important;
+        }
+        [data-bs-theme="dark"] .bg-white {
+            background-color: var(--card-bg) !important;
+            border-color: var(--border-color) !important;
+        }
+        [data-bs-theme="dark"] .bg-light {
+            background-color: rgba(15, 23, 42, 0.6) !important;
+            color: var(--text-heading);
+            border: 1px solid var(--border-color);
+        }
+        [data-bs-theme="dark"] .text-muted {
+            color: var(--text-muted) !important;
+        }
+        [data-bs-theme="dark"] .form-control, 
+        [data-bs-theme="dark"] .form-select,
+        [data-bs-theme="dark"] .input-group-text {
+            background-color: var(--input-bg) !important;
+            color: var(--text-heading) !important;
+            border: 1px solid var(--border-color) !important;
+        }
+        [data-bs-theme="dark"] .form-control:focus {
+            border-color: var(--badge-color) !important;
+            box-shadow: 0 0 0 0.25rem rgba(16, 185, 129, 0.25) !important;
+        }
+        [data-bs-theme="dark"] .table {
+            color: var(--text-heading);
+            border-color: var(--border-color);
+        }
+        [data-bs-theme="dark"] .table-light {
+            background-color: rgba(255,255,255,0.05) !important;
+            color: var(--badge-color);
+        }
+        
+        /* Slim Dark Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+        [data-bs-theme="light"] ::-webkit-scrollbar-thumb { background: #cbd5e1; }
+
+        body {
+            font-family: 'Kanit', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--bs-body-color);
+            transition: background-color 0.3s ease, color 0.3s ease;
+            overflow-x: hidden;
+        }
+
+        /* Top Navbar */
+        .navbar-top {
+            background: transparent;
+            padding: 1rem 2rem;
+            margin-left: var(--sidebar-width);
+            transition: margin-left 0.3s ease;
+        }
+
+        /* Premium Slim Glass Sidebar */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.98) 0%, rgba(15, 23, 42, 0.92) 100%);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            color: #fff;
+            padding: 1.5rem 0.5rem;
+            z-index: 1040;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 15px 0 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .sidebar-header {
+            padding: 0 1rem;
+            margin-bottom: 2rem;
+            flex-shrink: 0;
+        }
+
+        .sidebar-brand {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: #fff;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .sidebar-brand i {
+            color: #38bdf8;
+            -webkit-text-fill-color: initial;
+            filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.4));
+            margin-right: 12px;
+        }
+
+        .sidebar-content {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 0 0.5rem;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+        }
+
+        .sidebar-content::-webkit-scrollbar {
+            width: 4px;
+        }
+        .sidebar-content::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .nav-sidebar .nav-item {
+            margin-bottom: 4px;
+        }
+
+        .nav-sidebar .nav-link {
+            color: #94a3b8;
+            border-radius: 14px;
+            padding: 0 1.1rem;
+            height: 48px;
+            font-weight: 500;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .nav-sidebar .nav-link i {
+            width: 24px;
+            font-size: 1.15rem;
+            margin-right: 14px;
+            color: #475569;
+            transition: all 0.3s ease;
+        }
+
+        .nav-sidebar .nav-link:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-sidebar .nav-link.active {
+            color: #fff;
+            background: rgba(56, 189, 248, 0.12);
+            font-weight: 600;
+            box-shadow: inset 0 0 20px rgba(56, 189, 248, 0.05);
+        }
+
+        .nav-sidebar .nav-link.active::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            height: 24px;
+            width: 4px;
+            background: #38bdf8;
+            border-radius: 0 4px 4px 0;
+            box-shadow: 2px 0 10px rgba(56, 189, 248, 0.5);
+        }
+
+        .nav-sidebar .nav-link:hover i, 
+        .nav-sidebar .nav-link.active i {
+            color: #38bdf8;
+            transform: scale(1.1);
+        }
+
+        /* Admin Links Custom Themes */
+        .nav-sidebar .nav-link.theme-gold,
+        .nav-sidebar .nav-link.theme-gold i {
+            color: #fbbf24;
+        }
+        .nav-sidebar .nav-link.theme-gold.active {
+            color: #fff;
+            background: rgba(251, 191, 36, 0.12);
+            box-shadow: inset 0 0 20px rgba(251, 191, 36, 0.05);
+        }
+        .nav-sidebar .nav-link.theme-gold.active::before {
+            background: #fbbf24;
+            box-shadow: 2px 0 10px rgba(251, 191, 36, 0.5);
+        }
+        .nav-sidebar .nav-link.theme-gold:hover i,
+        .nav-sidebar .nav-link.theme-gold.active i { 
+            color: #fbbf24;
+        }
+
+        .nav-sidebar .nav-link.theme-cyan,
+        .nav-sidebar .nav-link.theme-cyan i {
+            color: #38bdf8;
+        }
+        .nav-sidebar .nav-link.theme-cyan.active {
+            color: #fff;
+        }
+        .nav-sidebar .nav-link.theme-cyan:hover i,
+        .nav-sidebar .nav-link.theme-cyan.active i { 
+            color: #38bdf8;
+        }
+
+        .sidebar-footer {
+            flex-shrink: 0;
+            margin-top: auto;
+            padding: 1rem 1rem 1.5rem 1rem;
+            background: none !important;
+            border: none !important;
+            box-shadow: none !important;
+            backdrop-filter: none !important;
+        }
+
+        .btn-logout-premium {
+            background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+            color: #fff;
+            border: none;
+            width: 100%;
+            padding: 0.85rem;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(225, 29, 72, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-logout-premium:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(225, 29, 72, 0.5);
+            filter: brightness(1.1);
+        }
+
+        .user-profile-mini {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 1.25rem;
+            padding: 0;
+        }
+
+        .avatar-circle {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #fff;
+            box-shadow: 0 4px 10px rgba(56, 189, 248, 0.3);
+            font-size: 0.85rem;
+        }
+
+        .username {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #f1f5f9;
+        }
+
+        /* Main Content wrapper */
+        .main-wrapper {
+            margin-left: {% if request.user.is_authenticated %}var(--sidebar-width){% else %}0{% endif %};
+            padding: {% if request.user.is_authenticated %}1.5rem 2rem 3rem 2rem{% else %}0{% endif %};
+            min-height: 100vh;
+            transition: margin-left 0.4s ease;
+        }
+
+        /* Adjustments for non-authenticated pages */
+        {% if not request.user.is_authenticated %}
+        .navbar-top { margin-left: 0; display: none !important; }
+        body { background: #f8fafc; }
+        {% endif %}
+
+        /* Widget & Controls */
+        .glass-widget {
+            background: rgba(255,255,255,0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            border-radius: 20px;
+            padding: 8px 16px;
+        }
+
+        [data-bs-theme="dark"] .glass-widget {
+            background: rgba(30,41,59,0.7);
+            border-color: rgba(255,255,255,0.05);
+        }
+
+        /* Cards override for dashboard */
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        /* Responsive */
+        @media (max-width: 991.98px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            .main-wrapper, .navbar-top {
+                margin-left: 0;
+            }
+        }
+        
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    {% if request.user.is_authenticated %}
+    
+    <aside class="sidebar d-flex flex-column" id="sidebar">
+        <!-- Header Section -->
+        <div class="sidebar-header d-flex justify-content-between align-items-center mb-1">
+            <a href="{% url 'dashboard' %}" class="sidebar-brand mb-0">
+                <i class="fas fa-paw me-2"></i> VetCare
+            </a>
+            <button class="btn btn-link text-white d-lg-none" id="sidebarCloseBtn">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <!-- Scrollable Content Section -->
+        <div class="sidebar-content">
+            <ul class="nav flex-column nav-sidebar w-100">
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == '/' or '/dashboard' in request.path %}active{% endif %}" href="{% url 'dashboard' %}">
+                        <i class="fas fa-chart-pie"></i> ภาพรวมระบบ
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if '/owners' in request.path %}active{% endif %}" href="{% url 'owner_list' %}">
+                        <i class="fas fa-users"></i> รายชื่อเจ้าของสัตว์
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if '/pets' in request.path %}active{% endif %}" href="{% url 'pet_list' %}">
+                        <i class="fas fa-dog"></i> สัตว์เลี้ยง
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if '/appointments' in request.path %}active{% endif %}" href="{% url 'appointment_list' %}">
+                        <i class="far fa-calendar-alt"></i> การนัดหมาย
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if '/medical-records' in request.path %}active{% endif %}" href="{% url 'medical_record_list' %}">
+                        <i class="fas fa-notes-medical"></i> ประวัติการรักษา
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if '/medicines' in request.path %}active{% endif %}" href="{% url 'medicine_list' %}">
+                        <i class="fas fa-pills"></i> คลังยาและเวชภัณฑ์
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if '/vets' in request.path %}active{% endif %}" href="{% url 'vet_list' %}">
+                        <i class="fas fa-user-md"></i> ทีมสัตวแพทย์
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if '/pos' in request.path %}active{% endif %}" href="{% url 'pos' %}">
+                        <i class="fas fa-cash-register"></i> ชำระเงิน / POS
+                    </a>
+                </li>
+                {% if request.user.is_superuser %}
+                <li class="nav-item">
+                    <a class="nav-link theme-gold {% if '/users' in request.path %}active{% endif %}" href="{% url 'admin_user_management' %}">
+                        <i class="fas fa-crown"></i> จัดการยศ/สิทธิ์
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link theme-cyan {% if '/sql-dashboard' in request.path %}active{% endif %}" href="{% url 'sql_clinic_dashboard' %}">
+                        <i class="fas fa-database"></i> SQL Dashboard (ขั้นสูง)
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+        
+        <!-- Sticky Footer Section -->
+        <div class="sidebar-footer">
+            <div class="user-profile-mini">
+                <div class="avatar-circle">
+                    {{ request.user.username|make_list|first|upper }}
+                </div>
+                <div class="username">
+                    {% if request.user.first_name %}{{ request.user.first_name }}{% else %}{{ request.user.username }}{% endif %}
+                </div>
+            </div>
+            
+            <form action="{% url 'logout' %}" method="post" class="px-0">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-logout-premium">
+                    <i class="fas fa-sign-out-alt me-2"></i>ออกจากระบบ
+                </button>
+            </form>
+        </div>
+    </aside>
+    {% endif %}
+
+    {% if request.user.is_authenticated %}
+    
+    <header class="navbar-top d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center">
+            <button class="btn btn-light d-lg-none shadow-sm rounded-circle me-3" id="sidebarToggleBtn" style="width: 40px; height: 40px;">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        
+        <div class="d-flex align-items-center gap-3">
+            
+
+
+            
+            <div class="glass-widget d-none d-md-flex align-items-center">
+                <i class="fas fa-sun text-warning me-2 fs-5"></i>
+                <div>
+                    <div class="fw-bold" style="font-size: 0.85rem;" id="datetimeWidget">Loading...</div>
+                    <div class="text-muted" style="font-size: 0.75rem;">สภาพอากาศแจ่มใส 28°C</div>
+                </div>
+            </div>
+        </div>
+    </header>
+    {% endif %}
+
+    
+    <main class="main-wrapper">
+        <div class="container-fluid px-0">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show rounded-4 border-0 shadow-sm" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Force light theme and remove any saved dark mode pref
+        localStorage.removeItem('theme');
+        document.documentElement.setAttribute('data-bs-theme', 'light');
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Realtime datetime widget
+            const dtWidget = document.getElementById('datetimeWidget');
+            if (dtWidget) {
+                const updateTime = () => {
+                    const now = new Date();
+                    const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit' };
+                    dtWidget.textContent = now.toLocaleDateString('th-TH', options);
+                };
+                updateTime();
+                setInterval(updateTime, 60000);
+            }
+
+            // Mobile Sidebar Toggle
+            const sidebarBtn = document.getElementById('sidebarToggleBtn');
+            const sidebarClose = document.getElementById('sidebarCloseBtn');
+            const sidebar = document.getElementById('sidebar');
+
+            if (sidebarBtn && sidebar) {
+                sidebarBtn.addEventListener('click', () => {
+                    sidebar.classList.add('show');
+                });
+            }
+            if (sidebarClose && sidebar) {
+                sidebarClose.addEventListener('click', () => {
+                    sidebar.classList.remove('show');
+                });
+            }
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

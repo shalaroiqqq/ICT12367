@@ -1,0 +1,63 @@
+{% extends 'myapp/core/base.html' %}
+
+{% block title %}จัดการเจ้าของสัตว์ - Admin{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>👥 จัดการเจ้าของสัตว์</h2>
+    <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary">ย้อนกลับ</a>
+</div>
+
+
+<form method="get" class="mb-4">
+    <div class="input-group shadow-sm rounded-pill overflow-hidden border">
+        <span class="input-group-text border-0 bg-white ps-4">
+            <i class="fas fa-search text-muted"></i>
+        </span>
+        <input type="text" name="q" value="{{ q|default:'' }}" class="form-control border-0 py-2 shadow-none" placeholder="ค้นหารหัสลูกค้า, ชื่อเจ้าของ, นามสกุล หรือเบอร์โทร...">
+        <button type="submit" class="btn btn-success px-4">ค้นหา</button>
+        {% if q %}
+            <a href="{% url 'admin_owners' %}" class="btn btn-outline-secondary border-0 d-flex align-items-center px-3">
+                <i class="fas fa-times"></i>
+            </a>
+        {% endif %}
+    </div>
+</form>
+
+{% include 'myapp/includes/messages.html' %}
+
+{% if owners %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>รหัสลูกค้า</th>
+                    <th>ชื่อ - สกุล</th>
+                    <th>เบอร์โทร</th>
+                    <th>ที่อยู่</th>
+                    <th>สัตว์เลี้ยง</th>
+                    <th>การกระทำ</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for owner in owners %}
+                <tr>
+                    <td><span class="badge bg-secondary">{{ owner.customer_id|default:"-" }}</span></td>
+                    <td><strong>{{ owner.first_name }} {{ owner.last_name }}</strong></td>
+                    <td>{{ owner.phone|default:"ไม่ระบุ" }}</td>
+                    <td>{{ owner.address|truncatewords:10|default:"ไม่ระบุ" }}</td>
+                    <td><span class="badge bg-info">{{ owner.pets.count }}</span></td>
+                    <td>
+                        <a href="{% url 'owner_detail' owner.pk %}" class="btn btn-sm btn-info">📖 ดู</a>
+                        <a href="{% url 'owner_update' owner.pk %}" class="btn btn-sm btn-warning">✏️ แก้ไข</a>
+                        <a href="{% url 'admin_owner_delete' owner.pk %}" class="btn btn-sm btn-danger">🗑️ ลบ</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    {% include 'myapp/includes/empty_state.html' with title='ไม่มีข้อมูล' message='ไม่มีข้อมูลเจ้าของสัตว์' %}
+{% endif %}
+{% endblock %}

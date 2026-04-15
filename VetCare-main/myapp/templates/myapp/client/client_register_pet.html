@@ -1,0 +1,333 @@
+{% extends 'myapp/client/client_base.html' %}
+{% block title %}ลงทะเบียนสัตว์เลี้ยงใหม่ - VetCare{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+    <style>
+        :root {
+            --primary: #0ea5e9;
+            --primary-dark: #0f766e;
+            --bg-glass: rgba(255, 255, 255, 0.9);
+        }
+
+        .avatar-upload-wrapper {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            margin: 0 auto;
+        }
+
+        .avatar-preview-container {
+            width: 200px;
+            height: 200px;
+            position: relative;
+            border-radius: 30px; /* Modern rounded look */
+            overflow: hidden;
+            border: 4px solid #fff;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            background: #f1f5f9;
+            cursor: pointer;
+        }
+
+        #image-preview {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: all 0.3s ease;
+        }
+
+        .avatar-edit-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.6);
+            height: 40%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            backdrop-filter: blur(4px);
+        }
+
+        .avatar-upload-wrapper:hover .avatar-edit-overlay {
+            opacity: 1;
+        }
+
+        .avatar-edit-overlay i {
+            color: #fff;
+            font-size: 1.5rem;
+        }
+
+        /* Cropper Styling */
+        .cropper-view-box, .cropper-face { border-radius: 15px; }
+        .modal-content { border-radius: 25px; overflow: hidden; border: none; }
+        .img-container { max-height: 450px; background: #000; }
+        
+        .custom-radio { position: relative; padding-left: 0; }
+        .custom-radio .form-check-input { width: 1.3em; height: 1.3em; cursor: pointer; border: 2px solid #cbd5e1; margin-right: 8px; }
+        .custom-radio .form-check-input:checked { background-color: #0ea5e9; border-color: #0ea5e9; box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1); }
+        .custom-radio .form-check-label { color: #1e293b !important; cursor: pointer; font-size: 0.95rem; display: inline-flex; align-items: center; vertical-align: middle; }
+        .custom-radio .form-check-input:checked + .form-check-label { color: #0ea5e9 !important; }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+
+    <div class="d-flex align-items-center mb-4">
+        <div class="rounded-circle d-flex justify-content-center align-items-center me-3" style="width: 50px; height: 50px; background: linear-gradient(135deg, #0ea5e9, #0f766e);">
+            <i class="fas fa-paw text-white fs-5"></i>
+        </div>
+        <div>
+            <h3 class="fw-bold mb-0" style="color: #0f172a;">ลงทะเบียนสัตว์เลี้ยงใหม่</h3>
+            <p class="text-muted mb-0">เพิ่มสมาชิกใหม่เข้าสู่ระบบ เพื่อการดูแลรักษาที่ต่อเนื่อง</p>
+        </div>
+    </div>
+
+    <div class="d-flex align-items-center justify-content-between p-3 mb-4 rounded-4 shadow-sm" style="background: white; border: 1px solid #e2e8f0;">
+        <div class="d-flex align-items-center gap-3">
+            <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold text-white shadow-sm" style="width: 44px; height: 44px; background: linear-gradient(135deg, #0f766e, #38bdf8); font-size: 1rem;">
+                {{ owner.first_name|first|upper }}
+            </div>
+            <div>
+                <div class="fw-bold" style="color: #0f172a;">{{ owner.first_name }} {{ owner.last_name }}</div>
+                <div class="small text-muted">{{ owner.phone|default:"ยังไม่ระบุเบอร์" }} &nbsp;|&nbsp; ID: {{ owner.customer_id }}</div>
+            </div>
+        </div>
+        <a href="{% url 'client_profile' %}" class="btn btn-sm px-3 rounded-pill" style="background: #f8fafc; border: 1px solid #e2e8f0; color: #64748b; font-weight: 600;">
+            <i class="fas fa-user-edit me-1"></i>ข้อมูลส่วนตัว
+        </a>
+    </div>
+
+    <div class="card border-0 shadow-lg" style="border-radius: 30px; overflow: hidden;">
+        <div class="card-body p-4 p-md-5">
+            <form method="post" enctype="multipart/form-data" id="petForm">
+                {% csrf_token %}
+
+                <div class="d-none">
+                    {{ form.customer_id }}
+                    {{ form.microchip_number }}
+                    {{ form.price_level }}
+                    {{ form.owner_first_name }}
+                    {{ form.owner_last_name }}
+                    {{ form.owner_address_1 }}
+                    {{ form.owner_address_2 }}
+                    {{ form.owner_phone }}
+                </div>
+
+                <div class="row g-5">
+                    <div class="col-xl-8">
+                        <h5 class="fw-bold mb-4 d-flex align-items-center" style="color: #334155;">
+                            <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex justify-content-center align-items-center me-3" style="width: 35px; height: 35px; font-size: 1rem;">
+                                <i class="fas fa-file-medical"></i>
+                            </div>
+                            ข้อมูลทั่วไป
+                        </h5>
+                        
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted fw-bold small">ชื่อสัตว์เลี้ยง <span class="text-danger">*</span></label>
+                                {{ form.name }}
+                                {% if form.name.errors %}
+                                <div class="text-danger small mt-1"><i class="fas fa-exclamation-circle me-1"></i>{{ form.name.errors|striptags }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label d-block text-muted fw-bold small mb-2">เพศ</label>
+                                <div class="d-flex gap-3 sex-radio-group w-100" id="sexSelectionGroup">
+                                    <style>
+                                        .sex-radio-group .form-check-input { display: none !important; }
+                                        .sex-radio-group .sex-btn {
+                                            display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+                                            padding: 0.65rem 1rem; border: 2px solid #e2e8f0; border-radius: 0.75rem;
+                                            font-weight: 700; cursor: pointer; transition: all 0.2s ease-in-out;
+                                            width: 100%; color: #64748b; background-color: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.02); margin: 0;
+                                        }
+                                        .sex-radio-group .sex-btn:hover { background-color: #f8fafc; border-color: #cbd5e1; transform: translateY(-1px); }
+                                        .sex-radio-group .form-check-input:checked + .sex-btn-male {
+                                            background-color: #eff6ff; border-color: #3b82f6; color: #1d4ed8; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+                                        }
+                                        .sex-radio-group .form-check-input:checked + .sex-btn-female {
+                                            background-color: #fdf2f8; border-color: #ec4899; color: #be185d; box-shadow: 0 4px 12px rgba(236, 72, 153, 0.2);
+                                        }
+                                    </style>
+                                    {% for radio in form.sex %}
+                                        {% if radio.choice_label and '----' not in radio.choice_label %}
+                                        <div class="flex-fill">
+                                            {{ radio.tag }}
+                                            <label class="sex-btn {% if 'ผู้' in radio.choice_label or 'Male' in radio.choice_label %}sex-btn-male{% else %}sex-btn-female{% endif %}" for="{{ radio.id_for_label }}">
+                                                {% if 'ผู้' in radio.choice_label or 'Male' in radio.choice_label %}
+                                                    <i class="fas fa-mars fa-lg"></i>
+                                                {% else %}
+                                                    <i class="fas fa-venus fa-lg"></i>
+                                                {% endif %}
+                                                {{ radio.choice_label }}
+                                            </label>
+                                        </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-muted fw-bold small">สายพันธุ์</label>
+                                {{ form.species }}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-muted fw-bold small">พันธุ์ย่อย</label>
+                                {{ form.breed }}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-muted fw-bold small">วันเกิด</label>
+                                {{ form.birth_date }}
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label text-muted fw-bold small">รายละเอียดเพิ่มเติม</label>
+                                {{ form.remarks }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-4 text-center">
+                        <div class="p-4 rounded-5 h-100 shadow-sm border border-2 border-dashed d-flex flex-column align-items-center justify-content-center text-center" style="background: #f8fafc;">
+                            <h6 class="fw-bold mb-4 text-slate-700">รูปถ่ายสัตว์เลี้ยง</h6>
+                            
+                            <div class="avatar-upload-wrapper">
+                                <div class="avatar-preview-container" id="avatarContainer">
+                                    <img id="image-preview" 
+                                         src="https://ui-avatars.com/api/?name=Pet&background=random&size=200" 
+                                         alt="Pet Profile">
+                                    
+                                    <label for="{{ form.image.id_for_label }}" class="avatar-edit-overlay">
+                                        <i class="fas fa-camera"></i>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="d-none">
+                                {{ form.image }}
+                            </div>
+                            
+                            <p class="small text-muted mt-4">
+                                คลิกที่รูปเพื่อเลือกไฟล์ <br>
+                                แนะนำภาพที่เห็นใบหน้าสัตว์ชัดเจน
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-3 mt-5 pt-4 border-top">
+                    <a href="{% url 'client_dashboard' %}" class="btn btn-light px-5 py-2 fw-bold rounded-4">ยกเลิก</a>
+                    <button type="submit" class="btn btn-primary px-5 py-2 fw-bold rounded-4 shadow-sm">
+                        <i class="fas fa-check-circle me-2"></i>บันทึกและลงทะเบียน
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Cropper Modal -->
+<div class="modal fade" id="cropModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content text-start">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="fw-bold"><i class="fas fa-crop-alt me-2 text-primary"></i>ปรับขนาดรูปภาพ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="img-container rounded-4 mb-3">
+                    <img id="cropImage" src="" alt="To crop" style="max-width: 100%;">
+                </div>
+                <div class="d-flex justify-content-center gap-2">
+                    <button class="btn btn-light rounded-pill px-3" onclick="cropper.rotate(-90)"><i class="fas fa-undo"></i> หมุนซ้าย</button>
+                    <button class="btn btn-light rounded-pill px-3" onclick="cropper.rotate(90)"><i class="fas fa-redo"></i> หมุนขวา</button>
+                    <button class="btn btn-light rounded-pill px-3" onclick="cropper.zoom(0.1)"><i class="fas fa-search-plus"></i></button>
+                    <button class="btn btn-light rounded-pill px-3" onclick="cropper.zoom(-0.1)"><i class="fas fa-search-minus"></i></button>
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-light px-4 rounded-pill" data-bs-dismiss="modal">ยกเลิก</button>
+                <button type="button" class="btn btn-primary px-4 rounded-pill" id="cropBtn">ใช้รูปนี้</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+<script>
+    let cropper;
+    const imageInput = document.getElementById('{{ form.image.id_for_label }}');
+    const imagePreview = document.getElementById('image-preview');
+    const cropModalEl = document.getElementById('cropModal');
+    const cropModal = new bootstrap.Modal(cropModalEl);
+    const cropImage = document.getElementById('cropImage');
+
+    if(imageInput) {
+        imageInput.addEventListener('change', function(e) {
+            const files = e.target.files;
+            if (files && files.length > 0) {
+                // Ignore internal events from DataTransfer
+                if(e.detail && e.detail.fromCropper) return;
+
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    cropImage.src = event.target.result;
+                    cropModal.show();
+                };
+                reader.readAsDataURL(files[0]);
+            }
+        });
+    }
+
+    cropModalEl.addEventListener('shown.bs.modal', function() {
+        cropper = new Cropper(cropImage, {
+            aspectRatio: 1,
+            viewMode: 2,
+            dragMode: 'move',
+            autoCropArea: 1,
+            restore: false,
+            guides: true,
+            center: true,
+            highlight: false,
+            cropBoxMovable: true,
+            cropBoxResizable: true,
+            toggleDragModeOnDblclick: false,
+        });
+    });
+
+    cropModalEl.addEventListener('hidden.bs.modal', function() {
+        if (cropper) {
+            cropper.destroy();
+            cropper = null;
+        }
+    });
+
+    document.getElementById('cropBtn').addEventListener('click', function() {
+        const canvas = cropper.getCroppedCanvas({
+            width: 800,
+            height: 800,
+        });
+
+        canvas.toBlob(function(blob) {
+            const url = URL.createObjectURL(blob);
+            imagePreview.src = url;
+            
+            // Create a new File object
+            const file = new File([blob], "pet_photo.jpg", { type: "image/jpeg" });
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            imageInput.files = dataTransfer.files;
+
+            // Signal that this change came from cropper to avoid loop
+            imageInput.dispatchEvent(new CustomEvent('change', { detail: { fromCropper: true } }));
+            
+            cropModal.hide();
+        }, 'image/jpeg');
+    });
+</script>
+{% endblock %}

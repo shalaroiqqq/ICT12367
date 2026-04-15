@@ -1,0 +1,193 @@
+{% extends 'myapp/core/base.html' %}
+
+{% block title %}สมัครสมาชิก - VetCare Premium{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Premium SaaS Modern Register Style */
+    .register-wrapper {
+        min-height: calc(100vh - 100px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: radial-gradient(circle at 50% 50%, rgba(241, 245, 249, 1) 0%, rgba(226, 232, 240, 0.5) 100%);
+        padding: 40px 20px;
+    }
+
+    .premium-card {
+        width: 100%;
+        max-width: 520px; /* Slightly wider for registration */
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        border-radius: 1.5rem;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
+        overflow: hidden;
+    }
+
+    .card-header-premium {
+        padding: 2rem 2rem 1rem 2rem;
+        text-align: center;
+        background: transparent;
+    }
+
+    .brand-icon {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        border-radius: 0.8rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.2rem;
+        color: white;
+        font-size: 1.5rem;
+        box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.2);
+    }
+
+    .form-floating-custom {
+        position: relative;
+        margin-bottom: 1rem;
+    }
+
+    .form-floating-custom i {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+        z-index: 10;
+    }
+
+    .form-floating-custom .form-control {
+        padding-left: 2.8rem;
+        border-radius: 1rem;
+        border: 1px solid #e2e8f0;
+        height: 3rem;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-floating-custom .form-control:focus {
+        border-color: #10b981;
+        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+    }
+
+    .btn-premium {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        border: none;
+        border-radius: 1rem;
+        padding: 0.8rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        color: #fff;
+    }
+
+    .btn-premium:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3);
+        color: #fff;
+    }
+
+    .footer-links {
+        padding: 1.5rem 2rem 2rem 2rem;
+        text-align: center;
+        font-size: 0.9rem;
+    }
+
+    .footer-links a {
+        color: #10b981;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .alert-premium {
+        border-radius: 1rem;
+        padding: 0.8rem;
+        font-size: 0.85rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="register-wrapper">
+    <div class="premium-card fade-in">
+        <div class="card-header-premium">
+            <div class="brand-icon">
+                <i class="fas fa-user-plus"></i>
+            </div>
+            <h4 class="fw-bold text-dark mb-1">เข้าร่วมครอบครัว VetCare</h4>
+            <p class="text-muted small">สร้างบัญชีใหม่เพื่อจัดการสัตว์เลี้ยงของคุณ 🐶</p>
+        </div>
+
+        <div class="card-body px-4 pt-0">
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger alert-premium mb-3">
+                    <i class="fas fa-exclamation-circle me-2"></i> {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <div class="form-floating-custom">
+                            <i class="fas fa-id-card"></i>
+                            <input type="text" name="first_name" class="form-control {% if form.first_name.errors %}is-invalid{% endif %}" placeholder="ชื่อจริง" value="{{ form.first_name.value|default:'' }}" required>
+                            {% if form.first_name.errors %}
+                                <div class="invalid-feedback small ps-2">{{ form.first_name.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating-custom">
+                            <i class="fas fa-id-card"></i>
+                            <input type="text" name="last_name" class="form-control {% if form.last_name.errors %}is-invalid{% endif %}" placeholder="นามสกุล" value="{{ form.last_name.value|default:'' }}" required>
+                            {% if form.last_name.errors %}
+                                <div class="invalid-feedback small ps-2">{{ form.last_name.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-floating-custom">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" name="email" class="form-control {% if form.email.errors %}is-invalid{% endif %}" placeholder="อีเมล" value="{{ form.email.value|default:'' }}" required>
+                    {% if form.email.errors %}
+                        <div class="invalid-feedback small ps-2">{{ form.email.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-floating-custom">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" name="password1" class="form-control {% if form.password1.errors %}is-invalid{% endif %}" placeholder="รหัสผ่าน (8 ตัวขึ้นไป)" required>
+                    {% if form.password1.errors %}
+                        <div class="invalid-feedback small ps-2">{{ form.password1.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-floating-custom">
+                    <i class="fas fa-check-circle"></i>
+                    <input type="password" name="password2" class="form-control {% if form.password2.errors %}is-invalid{% endif %}" placeholder="ยืนยันรหัสผ่าน" required>
+                    {% if form.password2.errors %}
+                        <div class="invalid-feedback small ps-2">{{ form.password2.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="d-grid mt-4">
+                    <button type="submit" class="btn btn-premium">
+                        สมัครสมาชิกทันที <i class="fas fa-paper-plane ms-2"></i>
+                    </button>
+                </div>
+            </form>
+
+            <div class="footer-links">
+                <p class="mb-0 text-muted">มีบัญชีอยู่แล้ว? <a href="{% url 'login' %}">เข้าสู่ระบบที่นี่</a></p>
+                <div class="mt-3">
+                    <a href="{% url 'dashboard' %}" class="text-secondary small"><i class="fas fa-arrow-left me-1"></i> กลับหน้าหลัก</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

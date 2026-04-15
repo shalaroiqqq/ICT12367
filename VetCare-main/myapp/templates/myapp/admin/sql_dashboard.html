@@ -1,0 +1,1407 @@
+{% extends 'myapp/core/base.html' %}
+{% load static %}
+
+{% block content %}
+
+<style>
+    /* Add Tom Select CSS via CDN */
+    @import url('https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css');
+
+    /* Fix TomSelect clipping in Quick Registry */
+    #quickRegForm .ts-wrapper.form-control {
+        padding: 0 !important;
+        height: auto !important;
+        border: none !important;
+    }
+    #quickRegForm .ts-wrapper .ts-control {
+        min-height: 38px;
+        display: flex;
+        align-items: center;
+        background-color: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0.375rem 0.75rem;
+    }
+    #quickRegForm .ts-wrapper .ts-control input {
+        line-height: 1.5;
+        font-size: 1rem;
+    }
+
+    :root {
+        --primary-teal: #0d9488;
+        --secondary-slate: #475569;
+        --bg-soft: #f1f5f9;
+        --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+
+    body {
+        background-color: var(--bg-soft);
+        font-family: 'Kanit', sans-serif;
+        color: #1e293b;
+    }
+
+    .nav-pills .nav-link {
+        color: var(--secondary-slate);
+        font-weight: 500;
+        border-radius: 12px;
+        padding: 0.75rem 1.25rem;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        border: 1px solid transparent;
+        white-space: nowrap;
+    }
+
+    .nav-pills .nav-link i {
+        font-size: 1rem;
+        margin-right: 8px;
+    }
+
+    .nav-pills .nav-link:hover {
+        background-color: #f8fafc;
+        color: var(--primary-teal);
+    }
+
+    .nav-pills .nav-link.active {
+        background-color: var(--primary-teal);
+        box-shadow: 0 4px 12px rgba(13, 148, 136, 0.2);
+        color: white;
+        border-color: var(--primary-teal);
+    }
+
+    .top-nav-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: var(--card-shadow);
+        padding: 0.75rem;
+        margin-bottom: 2rem;
+        border: 1px solid #e2e8f0;
+    }
+
+    .btn-home {
+        border-radius: 12px;
+        padding: 0.75rem 1.25rem;
+        transition: all 0.2s;
+        border: 1px solid #e2e8f0;
+        color: var(--secondary-slate);
+        font-weight: 600;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        background: white;
+        line-height: 1.4;
+    }
+
+    .btn-home:hover {
+        background: #f1f5f9;
+        color: #0f172a;
+    }
+
+    .stat-card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: var(--card-shadow);
+        transition: transform 0.2s;
+        background: white;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .premium-card {
+        border: none;
+        border-radius: 20px;
+        box-shadow: var(--card-shadow);
+        background: #ffffff;
+        overflow: hidden;
+    }
+
+    .card-header-premium {
+        background: #ffffff;
+        border-bottom: 1px solid #f1f5f9;
+        padding: 1.5rem;
+    }
+
+    .table-premium thead th {
+        background-color: #f8fafc;
+        color: #64748b;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
+        padding: 1rem;
+        border: none;
+    }
+
+    .table-premium tbody td {
+        padding: 1rem;
+        vertical-align: middle;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .btn-premium {
+        border-radius: 14px;
+        font-weight: 600;
+        padding: 0.7rem 1.6rem;
+        transition: all 0.3s ease;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .btn-premium:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 15px -3px rgba(0, 0, 0, 0.1);
+        filter: brightness(1.05);
+    }
+
+    .btn-premium:active {
+        transform: translateY(0);
+    }
+
+    .btn-teal {
+        background: linear-gradient(135deg, #0d9488, #0f766e);
+        color: white !important;
+    }
+
+    .btn-primary-premium {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        color: white !important;
+    }
+
+    .form-control-premium {
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        padding: 0.6rem 1rem;
+        transition: all 0.2s;
+    }
+
+    .form-control-premium:focus {
+        border-color: var(--primary-teal);
+        box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
+        outline: none;
+    }
+
+    .badge-pill {
+        border-radius: 50rem;
+        padding: 0.4rem 0.8rem;
+    }
+
+    .icon-shape {
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+    }
+
+    .text-thai {
+        font-family: 'Kanit', sans-serif;
+    }
+</style>
+
+<div class="container-fluid py-4">
+    
+    <div class="top-nav-card text-thai animate__animated animate__fadeInDown">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="nav nav-pills flex-nowrap overflow-auto pb-1" id="v-pills-tab" role="tablist">
+                    <button class="nav-link active" id="v-pills-overview-tab" data-bs-toggle="pill" data-bs-target="#v-pills-overview" type="button" role="tab">
+                        <i class="fas fa-chart-line"></i> <span>ภาพรวม</span>
+                    </button>
+                    <button class="nav-link" id="v-pills-treatment-tab" data-bs-toggle="pill" data-bs-target="#v-pills-treatment" type="button" role="tab">
+                        <i class="fas fa-stethoscope"></i> <span>เวชระเบียน</span>
+                    </button>
+                    <button class="nav-link" id="v-pills-registry-tab" data-bs-toggle="pill" data-bs-target="#v-pills-registry" type="button" role="tab">
+                        <i class="fas fa-address-book"></i> <span>ทะเบียน</span>
+                    </button>
+                    <button class="nav-link" id="v-pills-inventory-tab" data-bs-toggle="pill" data-bs-target="#v-pills-inventory" type="button" role="tab">
+                        <i class="fas fa-box-open"></i> <span>คลังยา</span>
+                    </button>
+                    <button class="nav-link" id="v-pills-system-tab" data-bs-toggle="pill" data-bs-target="#v-pills-system" type="button" role="tab">
+                        <i class="fas fa-cogs"></i> <span>ระบบ</span>
+                    </button>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    
+    <div class="row">
+        <div class="col-12">
+            
+            <div class="tab-content" id="v-pills-tabContent">
+                
+                
+                <div class="tab-pane fade show active" id="v-pills-overview" role="tabpanel">
+                    
+                    <div class="row g-4 mb-4 text-thai">
+                        <div class="col-md-6">
+                            <div class="card stat-card p-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="icon-shape bg-info bg-opacity-10 text-info me-3">
+                                        <i class="fas fa-capsules fa-lg"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-muted mb-0 small fw-bold text-uppercase">มูลค่าสต็อกยาล่าสุด</p>
+                                        <h3 class="fw-bold mb-1" id="kpi_stock_value">฿{{ clinic_total_stock_value|default:"0.00" }}</h3>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card stat-card p-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="icon-shape bg-success bg-opacity-10 text-success me-3">
+                                        <i class="fas fa-hand-holding-usd fa-lg"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-muted mb-0 small fw-bold text-uppercase">รายได้รวมของคลินิก</p>
+                                        <h3 class="fw-bold mb-1" id="kpi_total_revenue">฿{{ clinic_total_revenue|default:"0.00" }}</h3>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="premium-card mb-4 text-thai">
+                        <div class="card-header-premium">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="fw-bold mb-0"><i class="fas fa-table me-2 text-primary"></i> ข้อมูลสรุปการรักษา (Clinic History)</h5>
+                                <div class="text-end"></div>
+                            </div>
+                            
+                            <div class="input-group search-group shadow-sm rounded-pill overflow-hidden border">
+                                <span class="input-group-text bg-white border-0 ps-3">
+                                    <i class="fas fa-search text-muted"></i>
+                                </span>
+                                <input type="text" id="clinicSearchInput" class="form-control border-0 py-2 ps-2" placeholder="ค้นหาชื่อสัตว์เลี้ยง, เจ้าของ หรือสัตวแพทย์..." onkeyup="filterClinicTable()">
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table-premium w-100" id="clinicTable">
+                                <thead>
+                                    <tr>
+                                        <th>ข้อมูลสัตว์เลี้ยง</th>
+                                        <th>เจ้าของ</th>
+                                        <th>สัตวแพทย์</th>
+                                        <th class="text-end">ค่าใช้จ่าย (฿)</th>
+                                        <th>อายุสัตว์</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="clinicTableBody">
+                                    {% for row in clinic_data %}
+                                    <tr class="clinic-row">
+                                        <td class="search-cell">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div id="pet_name_display_{{ forloop.index }}" class="fw-bold">{{ row.PetName|default:row.PetNameFormatted }}</div>
+                                                <button class="btn btn-sm btn-outline-secondary border-0 p-0 edit-pet-btn" 
+                                                        style="font-size: 0.65rem;" 
+                                                        title="แก้ไขชื่อสัตว์ผ่าน View Trigger"
+                                                        data-pet-id="{{ row.PetInternalID }}"
+                                                        data-pet-name="{{ row.PetName|default:row.PetNameFormatted }}"
+                                                        data-result-id="pet_name_display_{{ forloop.index }}">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                            </div>
+                                            <div class="text-muted small">ID: {{ row.PetID|default:"N/A" }}</div>
+                                        </td>
+                                        <td class="search-cell">
+                                            <div class="fw-medium">{{ row.OwnerName }}</div>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div id="phone_display_{{ forloop.index }}" class="small text-muted">{{ row.OwnerPhone|default:"-" }}</div>
+                                                <button class="btn btn-sm btn-outline-secondary border-0 p-0 edit-phone-btn" 
+                                                        style="font-size: 0.65rem;" 
+                                                        title="แก้ไขเบอร์โทรผ่าน View Trigger"
+                                                        data-owner-id="{{ row.OwnerID }}"
+                                                        data-owner-name="{{ row.OwnerName }}"
+                                                        data-phone="{{ row.OwnerPhone }}"
+                                                        data-result-id="phone_display_{{ forloop.index }}">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                        <td class="search-cell">
+                                            <span class="badge badge-pill bg-light text-dark border">
+                                                <i class="fas fa-user-md me-1 text-teal"></i> น.สพ. {{ row.VetName }}
+                                            </span>
+                                        </td>
+                                        <td class="text-end fw-bold text-success">{{ row.TreatmentCost }}</td>
+                                        <td>
+                                            <div class="fw-bold text-teal d-block" style="font-size: 1.1rem;">{{ row.PetAge }}</div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div class="tab-pane fade" id="v-pills-treatment" role="tabpanel text-thai">
+                    <div class="row g-4">
+                        <div class="col-md-7">
+                            <div class="premium-card h-100 shadow-lg border-top border-teal border-4">
+                                <div class="card-header-premium">
+                                    <h5 class="fw-bold mb-0">บันทึกการรักษาด่วน</h5>
+                                </div>
+                                <div class="card-body p-4">
+                                    <form action="{% url 'quick_record_treatment' %}" method="post">
+                                        {% csrf_token %}
+                                        <div class="row g-3">
+                                            <div class="col-6">
+                                                <div class="form-floating">
+                                                    <select name="pet_name" class="form-select border-0 bg-light" required>
+                                                        {% for p in pets %}<option value="{{ p.name }}">{{ p.name }}</option>{% endfor %}
+                                                    </select>
+                                                    <label>เลือกชื่อสัตว์เลี้ยง</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="form-floating">
+                                                    <select name="vet_first_name" class="form-select border-0 bg-light" required>
+                                                        {% for v in vets %}<option value="{{ v.first_name }}">น.สพ. {{ v.first_name }}</option>{% endfor %}
+                                                    </select>
+                                                    <label>สัตวแพทย์ผู้ตรวจ</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-12">
+                                                <div class="form-floating">
+                                                    <select name="medicine_id" class="form-select border-0 bg-light" required>
+                                                        {% for m in medicines %}<option value="{{ m.id }}">{{ m.name }}</option>{% endfor %}
+                                                    </select>
+                                                    <label>ระบุยาที่สั่งจ่าย</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-12">
+                                                <div class="input-group">
+                                                    <span class="input-group-text border-0 bg-light">฿</span>
+                                                    <div class="form-floating flex-grow-1">
+                                                        <input type="number" name="total_cost" class="form-control border-0 bg-light" placeholder="Cost" step="0.01" value="500.00" required>
+                                                        <label>ค่ารักษาพยาบาล</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-12 pt-3">
+                                                <button type="submit" class="btn btn-teal w-100 text-white btn-premium py-3 shadow">
+                                                    <i class="fas fa-file-medical me-2"></i> ลงบันทึกประวัติทันที (Stored Proc)
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="premium-card shadow-sm">
+                                <div class="card-header-premium">
+                                    <h5 class="fw-bold mb-0 text-danger"><i class="far fa-calendar-check me-2"></i> คิวนัดหมายวันนี้</h5>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="list-group list-group-flush">
+                                        {% for apt in todays_appointments %}
+                                        <div class="list-group-item p-3 border-0 border-bottom">
+                                            <div class="d-flex justify-content-between align-items-center gap-3">
+                                                <div class="flex-grow-1">
+                                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                                        <span class="fw-bold text-dark">{{ apt.PetName }}</span>
+                                                        <span class="badge bg-light text-muted border small">{{ apt.service_type|default:"ทั่วไป" }}</span>
+                                                        {% if apt.status == 'Completed' %}
+                                                            <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 small">เสร็จแล้ว</span>
+                                                        {% elif apt.status == 'Confirmed' %}
+                                                            <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 small">ยืนยันแล้ว</span>
+                                                        {% else %}
+                                                            <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 small">รอดำเนินการ</span>
+                                                        {% endif %}
+                                                    </div>
+                                                    <div class="small text-muted">
+                                                        <i class="fas fa-user-md me-1"></i> น.สพ. {{ apt.VetName }}
+                                                        &nbsp;|&nbsp;
+                                                        <i class="far fa-clock me-1"></i> {{ apt.appointment_time|time:"H:i" }} น.
+                                                    </div>
+                                                </div>
+                                        <div class="ms-auto flex-shrink-0">
+                                            {% if apt.status != 'Completed' %}
+                                            <form action="{% url 'sql_update_appointment_status' %}" method="post">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="appointment_id" value="{{ apt.appointment_id }}">
+                                                <button type="submit" name="new_status" value="Completed" class="btn btn-teal btn-premium py-2 px-3 shadow">
+                                                    <i class="fas fa-check-double"></i> <span>จบการรักษา</span>
+                                                </button>
+                                            </form>
+                                            {% else %}
+                                            <span class="text-success small fw-bold"><i class="fas fa-check-circle me-1"></i>เสร็จสิ้น</span>
+                                            {% endif %}
+                                        </div>
+                                            </div>
+                                        </div>
+
+                                        {% empty %}
+                                        <div class="p-5 text-center text-muted small">
+                                            <i class="fas fa-calendar-minus fa-3x opacity-25 mb-3 d-block"></i>
+                                            ยังไม่มีคิวนัดที่ค้างอยู่ในระบบ
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        
+                        <div class="col-12 mt-2">
+                            <div class="premium-card shadow-sm border-top border-primary border-4">
+                                <div class="card-header-premium d-flex justify-content-between align-items-center">
+                                    <h5 class="fw-bold mb-0 text-primary"><i class="fas fa-user-md me-2"></i> ภาระงานและสถานะสัตวแพทย์ (Vet Workload)</h5>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table-premium w-100">
+                                            <thead>
+                                                <tr>
+                                                    <th>สัตวแพทย์</th>
+                                                    <th>ตารางปฏิบัติงาน (Working Hours)</th>
+                                                    <th class="text-center">จำนวนเคสทั้งหมด</th>
+                                                    <th class="text-center">สถานะการทำงาน</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for v in vet_workload %}
+                                                <tr>
+                                                    <td class="fw-bold text-dark">น.สพ. {{ v.first_name }} {{ v.last_name }}</td>
+                                                    <td>
+                                                        <div class="d-flex align-items-center gap-2">
+                                                            <div id="vet_hours_{{ forloop.index }}" class="small">{{ v.working_hours|default:"ไม่ได้ระบุ" }}</div>
+                                                            <button class="btn btn-sm btn-outline-primary border-0 p-0 edit-vet-btn" 
+                                                                    title="แก้ไขเวลาเข้างานผ่าน View Trigger"
+                                                                    data-vet-id="{{ v.vet_id }}"
+                                                                    data-hours="{{ v.working_hours }}"
+                                                                    data-result-id="vet_hours_{{ forloop.index }}">
+                                                                <i class="fas fa-edit"></i>
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                    <td class="text-center fw-bold">{{ v.TotalCases }}</td>
+                                                    <td class="text-center">
+                                                        {% if v.TotalCases > 5 %}
+                                                            <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-10 px-3 rounded-pill">งานล้น (Busy)</span>
+                                                        {% else %}
+                                                            <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-10 px-3 rounded-pill">ว่าง (Available)</span>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                
+                <div class="tab-pane fade" id="v-pills-registry" role="tabpanel">
+                    <div class="premium-card text-thai">
+                        <div class="card-header-premium">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="fw-bold mb-0">ระบบลงทะเบียนคนไข้และเจ้าของ</h5>
+                                <button class="btn btn-primary-premium btn-premium py-2 px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#quickRegModal">
+                                    <i class="fas fa-plus me-2"></i> ลงทะเบียนด่วน
+                                </button>
+                            </div>
+                            
+                            <div class="input-group search-group shadow-sm rounded-pill overflow-hidden border">
+                                <span class="input-group-text bg-white border-0 ps-3">
+                                    <i class="fas fa-search text-muted"></i>
+                                </span>
+                                <input type="text" id="registrySearchInput" class="form-control border-0 py-2 ps-2" placeholder="ค้นหาชื่อสัตว์เลี้ยง หรือ ชื่อเจ้าของ..." onkeyup="filterRegistryTable()">
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                             <table class="table-premium w-100" id="registryTable">
+                                <thead>
+                                    <tr>
+                                        <th>ข้อมูลสัตว์เลี้ยง</th>
+                                        <th>เจ้าของ / เบอร์โทร</th>
+                                        <th class="text-end">ยอดรวมจ่าย</th>
+                                        <th class="text-center">จำนวนครั้ง</th>
+                                        <th>อายุสัตว์</th>
+                                        <th class="text-center">จัดการ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="registryTableBody">
+                                    {% for p in pets %}
+                                    <tr class="registry-row">
+                                        <td class="reg-search-cell fw-bold">{{ p.name }} <span class="text-muted small">({{ p.species }})</span></td>
+                                        <td class="reg-search-cell">{{ p.owner.first_name }} | {{ p.owner.phone }}</td>
+                                        <td class="text-end fw-bold text-success">{{ p.total_spending|default:"0.00" }}</td>
+                                        <td class="text-center fw-bold">{{ p.visit_count|default:"0" }}</td>
+                                        <td class="reg-search-cell">
+                                            <div class="fw-bold text-teal" style="font-size: 1.1rem;">{{ p.pet_age|default:"N/A" }}</div>
+                                        </td>
+                                        <td class="text-center">
+                                            <a href="{% url 'pet_update' p.id %}" class="btn btn-sm btn-light border shadow-sm rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" title="แก้ไขข้อมูลสัตว์เลี้ยง"><i class="fas fa-edit text-primary"></i></a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                             </table>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div class="tab-pane fade" id="v-pills-inventory" role="tabpanel">
+                    <div class="premium-card text-thai">
+                        <div class="card-header-premium bg-light bg-opacity-50">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="fw-bold mb-0 text-dark"><i class="fas fa-boxes me-2"></i> คลังเวชภัณฑ์และสต็อกยา</h5>
+                            </div>
+                            
+                            <div class="input-group search-group shadow-sm rounded-pill overflow-hidden border">
+                                <span class="input-group-text bg-white border-0 ps-3">
+                                    <i class="fas fa-search text-muted"></i>
+                                </span>
+                                <input type="text" id="inventorySearchInput" class="form-control border-0 py-2 ps-2" placeholder="ค้นหาชื่อเวชภัณฑ์..." onkeyup="filterInventoryTable()">
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table-premium w-100" id="inventoryTable">
+                                <thead>
+                                    <tr>
+                                        <th>ชื่อยา/เวชภัณฑ์</th>
+                                        <th style="width: 300px;">จำนวนคงเหลือ</th>
+                                        <th>สถานะความเสี่ยง</th>
+                                        <th>จัดการสต็อก</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="inventoryTableBody">
+                                    {% for m in medicines %}
+                                    <tr class="inventory-row">
+                                        <td class="fw-bold text-dark">{{ m.name }}</td>
+                                        <td>
+                                            <div class="py-1">
+                                                {% if m.is_low_stock_sql %}
+                                                    <div class="h3 fw-bold mb-0 text-warning" style="color: #f59e0b !important;">{{ m.stock }}</div>
+                                                    <span class="badge bg-warning bg-opacity-25 text-warning border-0 px-3 rounded-pill mt-1" style="color: #d97706 !important;">
+                                                        <i class="fas fa-eye me-1"></i> เฝ้าระวัง
+                                                    </span>
+                                                {% else %}
+                                                    <div class="h3 fw-bold mb-0 text-teal">{{ m.stock }}</div>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% if m.is_low_stock_sql %}
+                                                <div class="d-flex align-items-center text-danger small fw-bold">
+                                                    <i class="fas fa-exclamation-circle me-2"></i> ของใกล้หมด
+                                                </div>
+                                            {% else %}
+                                                <div class="d-flex align-items-center text-success small fw-bold">
+                                                    <i class="fas fa-check-circle me-2"></i> สถานะปกติ
+                                                </div>
+                                            {% endif %}
+                                        </td>
+                                        <td id="stock_manager_{{ m.id }}">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <input type="number" id="input_stock_{{ m.id }}" value="{{ m.stock }}" class="form-control form-control-sm border bg-light fw-bold text-center" style="width: 55px; border-radius: 10px;">
+                                                <button class="btn btn-teal p-0 shadow-sm d-flex align-items-center justify-content-center save-stock-btn" 
+                                                        style="border-radius: 10px; width: 32px; height: 32px;"
+                                                        data-medicine-id="{{ m.id }}">
+                                                    <i class="fas fa-save" style="font-size: 0.85rem;"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div class="tab-pane fade" id="v-pills-system" role="tabpanel">
+                    <div class="row g-4 text-thai">
+                        <div class="col-md-6 text-thai">
+                            <div class="premium-card p-4 h-100 shadow border-0">
+                                <h6 class="fw-bold mb-0 text-primary"><i class="fas fa-chart-pie me-2"></i> สรุปรายได้รายเดือน</h6>
+                                <div class="row g-3">
+                                    <div class="col-6">
+                                        <div class="form-floating">
+                                            <input type="number" id="revenue_year" class="form-control border-0 bg-light" value="2026" style="border-radius: 12px;">
+                                            <label>ปี ค.ศ. (เช่น 2026)</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="form-floating">
+                                            <input type="number" id="revenue_month" class="form-control border-0 bg-light" min="1" max="12" placeholder="1-12" value="2" style="border-radius: 12px;">
+                                            <label>เดือน (1-12)</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 text-center" id="revenue_result_container">
+                                        
+                                    </div>
+                                    <div class="col-12">
+                                        <button id="runRevenueBtn" class="btn btn-primary w-100 btn-premium py-3 shadow-sm border-0" style="background: linear-gradient(135deg, #2563eb, #1d4ed8);">
+                                            <i class="fas fa-calculator me-2"></i> ประมวลผลรายได้ (SQL Proc)
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="premium-card border border-danger border-opacity-10 h-100 shadow" style="background-color: #fffafb;">
+                                <div class="p-4">
+                                    <h6 class="fw-bold mb-2 text-danger"><i class="fas fa-broom me-2"></i> ระบบซ่อมบำรุงฐานข้อมูล</h6>
+                                    <p class="text-muted small">ย้าย/ลบ Log Audit ข้อมูลเก่าเพื่อเพิ่มประสิทธิภาพ</p>
+                                    <div class="input-group mb-4 shadow-sm rounded overflow-hidden border">
+                                        <span class="input-group-text border-0 bg-white text-muted small">ลบข้อมูลที่เก่ากว่า</span>
+                                        <input type="number" id="cleanup_days" value="30" class="form-control border-0 bg-white text-center fw-bold">
+                                        <span class="input-group-text border-0 bg-white text-muted small">วันขึ้นไป</span>
+                                    </div>
+                                    <div id="cleanup_result_container" class="mb-3"></div>
+                                    <div class="mt-3">
+                                        <button type="button" class="btn btn-danger w-100 btn-premium py-3 shadow" 
+                                                data-bs-toggle="modal" data-bs-target="#confirmCleanupModal">
+                                            <i class="fas fa-trash-alt me-2"></i> สั่งรันกระบวนการ Cleanup
+                                        </button>
+                                    </div>
+
+                                    
+                                    <div class="modal fade" id="confirmCleanupModal" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+                                                <div class="modal-body p-5 text-center">
+                                                    <div class="mb-4">
+                                                        <i class="fas fa-exclamation-triangle text-danger fa-4x animate__animated animate__pulse animate__infinite"></i>
+                                                    </div>
+                                                    <h4 class="fw-bold mb-3">ยืนยันการทำลายข้อมูล Log?</h4>
+                                                    <p class="text-muted mb-4">ข้อมูล Log Audit ย้อนหลังจะถูกลบออกจากฐานข้อมูลอย่างถาวร (เพิ่มพื้นที่และประสิทธิภาพ) คุณแน่ใจใช่ไหม?</p>
+                                                    <div class="row g-3">
+                                                        <div class="col-6">
+                                                            <button type="button" class="btn btn-light w-100 py-3 fw-bold" data-bs-dismiss="modal" style="border-radius: 12px;">ยกเลิก</button>
+                                                        </div>
+                                                        <div class="col-6">
+                                                            <button type="button" class="btn btn-danger w-100 py-3 fw-bold" onclick="executeDatabaseCleanup()" style="border-radius: 12px;">
+                                                                <i class="fas fa-check-circle me-2"></i> ใช่, เริ่ม Cleanup!
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        
+                        <div class="col-12 mt-2">
+                            <div class="premium-card p-4 h-100 shadow-lg border-0 bg-white">
+                                <h6 class="fw-bold text-dark mb-4"><i class="fas fa-percentage text-success me-2"></i> คำนวณส่วนลดสมาชิกอัตโนมัติ</h6>
+                                
+                                <form action="{% url 'sql_sp_apply_member_discount' %}" method="post" class="mt-2 text-thai">
+                                    {% csrf_token %}
+                                    <div class="row g-3 mb-4">
+                                        <div class="col-md-8">
+                                            <label class="form-label small fw-bold text-muted mb-2">ระบุเลขรหัสเจ้าของสัตว์ (Owner ID)</label>
+                                            <div class="input-group input-group-lg shadow-sm rounded-4 overflow-hidden border">
+                                                <span class="input-group-text bg-light border-0 px-4">
+                                                    <i class="fas fa-id-card text-success"></i>
+                                                </span>
+                                                <input type="text" name="customer_id" class="form-control border-0 bg-light fw-bold" placeholder="ตัวอย่าง: OWN0000105" required>
+                                            </div>
+                                            <div class="form-text ps-2 mt-2">ระบบจะคำนวณส่วนลดให้ทุกรายการรักษาของเจ้าของรายนี้</div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label small fw-bold text-muted mb-2">ระบุเปอร์เซ็นต์ส่วนลด (%)</label>
+                                            <div class="input-group input-group-lg shadow-sm rounded-4 overflow-hidden border">
+                                                <input type="number" name="discount_percent" class="form-control border-0 bg-light fw-bold text-center" value="10" min="1" max="100">
+                                                <span class="input-group-text bg-light border-0 px-3 fw-bold text-success">%</span>
+                                            </div>
+                                            <div class="form-text ps-2 mt-2 text-center text-muted small">ระบุส่วนลดที่ต้องการ (เช่น 10%)</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <button type="submit" class="btn btn-success w-100 btn-premium py-4 shadow-lg text-thai" style="background: linear-gradient(135deg, #10b981, #059669); border-radius: 20px;">
+                                        <i class="fas fa-magic me-2"></i> กดเพื่อคำนวณส่วนลดสมาชิกย้อนหลัง
+                                    </button>
+                                </form>
+                                
+                                <div class="mt-4 pt-3 border-top">
+                                    <p class="small text-muted"><i class="fas fa-shield-alt me-1"></i> ระบบจะทำการ Audit ทุกครั้งที่มีการปรับปรุงราคาผ่าน Stored Procedure นี้</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="quickRegModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered text-thai">
+        <div class="modal-content border-0 rounded-4 shadow-lg">
+            <div class="modal-header border-bottom p-4">
+                <h5 class="modal-title fw-bold"><i class="fas fa-user-plus text-primary me-2"></i> ลงทะเบียนสัตว์เลี้ยงและเจ้าของด่วน</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="quickRegForm" action="{% url 'quick_register_patient' %}" method="post">
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted ps-1 mb-1">ชื่อเจ้าของ</label>
+                            <input type="text" name="owner_first_name" class="form-control bg-light border-0 shadow-sm" placeholder="ระบุชื่อเจ้าของ" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted ps-1 mb-1">นามสกุล</label>
+                            <input type="text" name="owner_last_name" class="form-control bg-light border-0 shadow-sm" placeholder="ระบุนามสกุล" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold text-muted ps-1 mb-1">เบอร์โทรศัพท์ติดต่อ</label>
+                            <input type="tel" name="owner_phone" class="form-control bg-light border-0 shadow-sm" placeholder="08XXXXXXXX" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10)" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted ps-1 mb-1">ชื่อสัตว์เลี้ยง</label>
+                            <input type="text" name="pet_name" class="form-control bg-light border-0 shadow-sm" placeholder="ชื่อสัตว์เลี้ยง" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted ps-1 mb-1">ประเภทสัตว์</label>
+                            <select id="quick_pet_species" name="pet_species" class="form-control bg-light border-0 shadow-sm" required>
+                                <option value="" selected disabled>เลือกประเภทสัตว์</option>
+                                <option value="สุนัข (Dog)">สุนัข (Dog)</option>
+                                <option value="แมว (Cat)">แมว (Cat)</option>
+                                <option value="นก (Bird)">นก (Bird)</option>
+                                <option value="ปลา (Fish)">ปลา (Fish)</option>
+                                <option value="สัตว์ขนาดเล็ก (Small Animal)">สัตว์ขนาดเล็ก (Small Animal)</option>
+                                <option value="สัตว์เลื้อยคลาน (Reptile)">สัตว์เลื้อยคลาน (Reptile)</option>
+                                <option value="สัตว์ป่า (Exotic)">สัตว์ป่า (Exotic)</option>
+                                <option value="อื่นๆ (Other)">อื่นๆ (Other)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted ps-1 mb-1">สายพันธุ์</label>
+                            <input type="text" id="quick_pet_breed" name="pet_breed" class="form-control bg-light border-0 shadow-sm" placeholder="เลือกสายพันธุ์..." required>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary w-100 btn-premium py-3 shadow">
+                            <i class="fas fa-save me-2"></i> บันทึกเข้าระบบ (Atomic Commit)
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="editPhoneModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered text-thai">
+        <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
+            <div class="modal-header border-0 bg-dark text-white p-4">
+                <h5 class="modal-title fw-bold"><i class="fas fa-edit me-2"></i> แก้ไขเบอร์โทรศัพท์ (ผ่าน View)</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="mb-4">
+                    <label class="form-label small text-muted fw-bold">ชื่อเจ้าของสัตว์</label>
+                    <div id="modalOwnerName" class="form-control bg-light border-0 fw-bold"></div>
+                </div>
+                <div class="mb-4">
+                    <label for="modalPhoneInput" class="form-label small text-muted fw-bold">เบอร์โทรศัพท์ติดต่อใหม่</label>
+                    <input type="tel" id="modalPhoneInput" class="form-control form-control-lg border bg-white rounded-3 shadow-sm" placeholder="ระบุเบอร์โทรศัพท์ 10 หลัก" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10)">
+                </div>
+                <input type="hidden" id="modalResultElId">
+                <button onclick="savePhoneUpdate()" class="btn btn-primary w-100 btn-premium py-3 shadow">
+                    <i class="fas fa-save me-2"></i> บันทึกข้อมูล (ผ่าน View Trigger)
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="editPetModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered text-thai">
+        <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
+            <div class="modal-header border-0 bg-primary text-white p-4">
+                <h5 class="modal-title fw-bold"><i class="fas fa-paw me-2"></i> แก้ไขชื่อสัตว์เลี้ยง (ผ่าน View)</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="mb-4">
+                    <label class="form-label small text-muted fw-bold">Pet ID:</label>
+                    <div id="modalPetID" class="form-control bg-light border-0 fw-bold"></div>
+                </div>
+                <div class="mb-4">
+                    <label for="modalPetNameInput" class="form-label small text-muted fw-bold">ชื่อสัตว์เลี้ยงใหม่</label>
+                    <input type="text" id="modalPetNameInput" class="form-control form-control-lg border bg-white rounded-3 shadow-sm" placeholder="ระบุชื่อสัตว์เลี้ยง">
+                </div>
+                <input type="hidden" id="modalPetResultElId">
+                <button onclick="savePetUpdate()" class="btn btn-primary w-100 btn-premium py-3 shadow">
+                    <i class="fas fa-save me-2"></i> อัปเดตข้อมูลสัตว์ (ผ่าน View Trigger)
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="editVetHoursModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered text-thai">
+        <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
+            <div class="modal-header border-0 bg-teal text-white p-4">
+                <h5 class="modal-title fw-bold"><i class="fas fa-clock me-2"></i> แก้ไขเวลาปฏิบัติงาน (ผ่าน View)</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="mb-4 text-center">
+                    <i class="fas fa-user-md fa-3x text-teal mb-3 opacity-25"></i>
+                    <h6 class="fw-bold mb-1">สัตวแพทย์ที่เลือก</h6>
+                    <div id="modalVetIDDisplay" class="text-muted small"></div>
+                </div>
+                <div class="mb-4">
+                    <label for="modalVetHoursInput" class="form-label small text-muted fw-bold">ชั่วโมงปฏิบัติงานใหม่ (Working Hours)</label>
+                    <textarea id="modalVetHoursInput" class="form-control border bg-white rounded-3 shadow-sm" rows="3" placeholder="เช่น 09:00 - 17:00"></textarea>
+                </div>
+                <input type="hidden" id="modalVetID">
+                <input type="hidden" id="modalVetResultElId">
+                <button id="saveVetHoursBtn" class="btn btn-teal w-100 btn-premium py-3 shadow">
+                    <i class="fas fa-save me-2"></i> บันทึกข้อมูลผ่าน View Trigger
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="offcanvas offcanvas-end text-thai" tabindex="-1" id="devNotes">
+    <div class="offcanvas-header bg-dark text-white p-4">
+        <h5 class="offcanvas-title fw-bold">SQL Architecture Specs</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body p-4">
+        <div class="p-4 mb-4 rounded-4 bg-light border-start border-4 border-primary shadow-sm small">
+            <h6 class="fw-bold text-dark">Database Programmability</h6>
+            <p class="text-muted mb-0">หน้าแดชบอร์ดนี้เชื่อมต่อตรงกับ SQL Server Objects โดยลดการใช้ Django ORM ในส่วนที่ต้องการความเร็วหรือ Transaction ระดับสูง</p>
+        </div>
+        <div class="list-group list-group-flush">
+            <div class="list-group-item d-flex justify-content-between align-items-center py-3">
+                <span class="fw-bold"><i class="fas fa-table text-muted me-2"></i> Views</span>
+                <span class="badge bg-primary rounded-pill">3 Objects</span>
+            </div>
+            <div class="list-group-item d-flex justify-content-between align-items-center py-3">
+                <span class="fw-bold"><i class="fas fa-magic text-muted me-2"></i> Stored Procedures</span>
+                <span class="badge bg-success rounded-pill">5 Procs</span>
+            </div>
+            <div class="list-group-item d-flex justify-content-between align-items-center py-3">
+                <span class="fw-bold"><i class="fas fa-bolt text-muted me-2"></i> Instead Of Triggers</span>
+                <span class="badge bg-warning text-dark rounded-pill px-3">Active</span>
+            </div>
+        </div>
+        <div class="mt-5 text-center opacity-50">
+            <i class="fas fa-database fa-4x mb-3"></i>
+            <p class="small">Clinic Management Dashboard v2.0</p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<!-- Add Tom Select JS -->
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+<!-- Add SweetAlert2 for nice alerts -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const quickPetSpeciesSelect = document.getElementById('quick_pet_species');
+        const quickPetBreedInput = document.getElementById('quick_pet_breed');
+        const quickRegForm = document.getElementById('quickRegForm');
+
+        if (quickPetBreedInput) {
+            const tomSelect = new TomSelect(quickPetBreedInput, {
+                create: true,
+                maxItems: 1,
+                placeholder: 'ระบุสายพันธุ์...',
+                createFilter: function(input) {
+                    input = input.trim();
+                    if(input.length === 0) return false;
+                    const regex = /^[a-zA-Zก-๙0-9\s]+$/;
+                    return regex.test(input);
+                },
+                render: {
+                    option_create: function(data, escape) {
+                        return '<div class="create text-success fw-bold p-2"><i class="fas fa-plus me-1"></i> + ใช้สายพันธุ์ใหม่: <strong>' + escape(data.input) + '</strong></div>';
+                    },
+                    no_results: function(data, escape) {
+                        return '<div class="no-results p-2 text-muted small">ไม่พบสายพันธุ์ในระบบ พิมพ์ต่อเพื่อเพิ่มใหม่</div>';
+                    }
+                },
+                onChange: function(value) {
+                    const tsControl = quickPetBreedInput.parentElement.querySelector('.ts-control');
+                    if (value && value.trim() !== '') {
+                        tsControl.classList.remove('is-invalid', 'border-danger');
+                        tsControl.classList.add('is-valid', 'border-success');
+                        tsControl.style.borderWidth = '2px';
+                    } else {
+                        tsControl.classList.remove('is-valid', 'border-success');
+                    }
+                }
+            });
+
+            // Function to load breeds based on selected species
+            const loadBreeds = (speciesName) => {
+                tomSelect.clearOptions();
+                tomSelect.clear();
+                
+                if (speciesName) {
+                    fetch(`/ajax/get-breeds/?species=${encodeURIComponent(speciesName)}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.breeds && data.breeds.length > 0) {
+                                const newOptions = data.breeds.map(breed => ({ value: breed, text: breed }));
+                                tomSelect.addOptions(newOptions);
+                            }
+                        })
+                        .catch(err => console.error('Error fetching breeds:', err));
+                }
+            };
+
+            if (quickPetSpeciesSelect) {
+                quickPetSpeciesSelect.addEventListener('change', function(e) {
+                    loadBreeds(e.target.value);
+                });
+            }
+        }
+
+        // Intercept form submission to apply atomic validation constraint
+        if(quickRegForm) {
+            quickRegForm.addEventListener('submit', function(e) {
+                // Ensure species and breed are not empty
+                const speciesVal = quickPetSpeciesSelect ? quickPetSpeciesSelect.value : '';
+                const breedVal = quickPetBreedInput ? quickPetBreedInput.value : '';
+                
+                if (!speciesVal || !breedVal || breedVal.trim() === '') {
+                    e.preventDefault();
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'ข้อมูลไม่ครบถ้วน',
+                        text: 'กรุณาระบุรายละเอียด "ประเภทสัตว์" และ "สายพันธุ์" ให้ครบถ้วน'
+                    });
+                    
+                    const tsControl = quickPetBreedInput.parentElement.querySelector('.ts-control');
+                    if(tsControl && (!breedVal || breedVal.trim() === '')) {
+                        tsControl.classList.add('is-invalid', 'border-danger');
+                        tsControl.style.borderWidth = '2px';
+                    }
+                } else {
+                    // Trim value before submitting for data integrity
+                    quickRegForm.querySelector('input[name="pet_breed"]').value = breedVal.trim();
+                }
+            });
+        }
+    });
+
+    // 0. Primary Management Functions (High priority)
+    function executeDatabaseCleanup() {
+        // Close modal first
+        const modalEl = document.getElementById('confirmCleanupModal');
+        const modalInstance = bootstrap.Modal.getInstance(modalEl);
+        if (modalInstance) modalInstance.hide();
+
+        const daysInput = document.getElementById('cleanup_days');
+        const days = daysInput ? daysInput.value : 30;
+        const container = document.getElementById('cleanup_result_container');
+        
+        // Find CSRF token manually if needed, or use a general one
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+        if (container) container.innerHTML = '<div class="alert alert-info py-2 small"><i class="fas fa-spinner fa-spin me-2"></i> กำลังลบข้อมูล Log เก่า...</div>';
+        
+        const formData = new URLSearchParams();
+        formData.append('days_old', days);
+        
+        fetch("{% url 'cleanup_old_logs' %}", {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/x-www-form-urlencoded', 
+                'X-CSRFToken': csrfToken, 
+                'X-Requested-With': 'XMLHttpRequest' 
+            },
+            body: formData.toString()
+        })
+        .then(response => response.json())
+        .then(json => {
+            if(json.success) {
+                if (container) container.innerHTML = `<div class="alert alert-success py-2 small animate__animated animate__fadeIn"><i class="fas fa-check-circle me-2"></i> ${json.message}</div>`;
+            } else {
+                if (container) container.innerHTML = `<div class="alert alert-danger py-2 small"><i class="fas fa-times-circle me-2"></i> ${json.error}</div>`;
+            }
+        })
+        .catch(err => {
+            if (container) container.innerHTML = `<div class="alert alert-danger py-2 small"><i class="fas fa-exclamation-triangle me-2"></i> Error: ${err.message}</div>`;
+        });
+    }
+
+    // Legacy Aliases
+    function triggerDatabaseCleanup() { executeDatabaseCleanup(); }
+    function runDatabaseCleanup() { executeDatabaseCleanup(); }
+
+    // Initialize tooltips (Safe mode)
+    try {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+    } catch(e) { console.warn("Tooltips failed to init:", e); }
+
+    // 1. Centralized Event Listener for Dashboard Actions
+    document.addEventListener('click', function(e) {
+        // Edit Phone Button
+        let phoneBtn = e.target.closest('.edit-phone-btn');
+        if (phoneBtn) {
+            const ownerId = phoneBtn.getAttribute('data-owner-id');
+            const ownerName = phoneBtn.getAttribute('data-owner-name');
+            const currentPhone = phoneBtn.getAttribute('data-phone');
+            const resultId = phoneBtn.getAttribute('data-result-id');
+
+            document.getElementById('modalOwnerName').innerText = ownerName + " (ID: " + ownerId + ")";
+            document.getElementById('modalPhoneInput').value = currentPhone;
+            document.getElementById('modalResultElId').value = resultId;
+            document.getElementById('editPhoneModal').setAttribute('data-target-id', ownerId);
+            
+            new bootstrap.Modal(document.getElementById('editPhoneModal')).show();
+            return;
+        }
+
+        // Edit Pet Button
+        let petBtn = e.target.closest('.edit-pet-btn');
+        if (petBtn) {
+            const petId = petBtn.getAttribute('data-pet-id');
+            const petName = petBtn.getAttribute('data-pet-name');
+            const resultId = petBtn.getAttribute('data-result-id');
+
+            document.getElementById('modalPetID').innerText = petId;
+            document.getElementById('modalPetNameInput').value = petName;
+            document.getElementById('modalPetResultElId').value = resultId;
+            document.getElementById('editPetModal').setAttribute('data-target-id', petId);
+            
+            new bootstrap.Modal(document.getElementById('editPetModal')).show();
+            return;
+        }
+
+        // Refresh Age Button
+        let ageBtn = e.target.closest('.refresh-age-btn');
+        if (ageBtn) {
+            const func = ageBtn.getAttribute('data-func');
+            const birthDate = ageBtn.getAttribute('data-birth-date');
+            const resultId = ageBtn.getAttribute('data-result-id');
+            executeScalar(func, {birth_date: birthDate}, resultId);
+            return;
+        }
+
+        // Save Stock Button
+        let stockBtn = e.target.closest('.save-stock-btn');
+        if (stockBtn) {
+            const medId = stockBtn.getAttribute('data-medicine-id');
+            updateStockAJAX(medId);
+            return;
+        }
+        // Edit Vet Button
+        let vetBtn = e.target.closest('.edit-vet-btn');
+        if (vetBtn) {
+            const vetId = vetBtn.getAttribute('data-vet-id');
+            const currentHours = vetBtn.getAttribute('data-hours');
+            const resultId = vetBtn.getAttribute('data-result-id');
+
+            document.getElementById('modalVetID').value = vetId;
+            document.getElementById('modalVetIDDisplay').innerText = "รหัสสัตวแพทย์: " + vetId;
+            document.getElementById('modalVetHoursInput').value = currentHours;
+            document.getElementById('modalVetResultElId').value = resultId;
+            
+            new bootstrap.Modal(document.getElementById('editVetHoursModal')).show();
+            return;
+        }
+
+        // Cleanup Button (Maintenance) - Handled by Modal + executeDatabaseCleanup()
+
+        // Revenue Report Button
+        let revenueBtn = e.target.closest('#runRevenueBtn');
+        if (revenueBtn) {
+            runRevenueReport();
+            return;
+        }
+
+        // Save Vet Hours Button (Modal)
+        let saveVetBtn = e.target.closest('#saveVetHoursBtn');
+        if (saveVetBtn) {
+            saveVetHoursUpdate();
+            return;
+        }
+    });
+
+    function filterInventoryTable() {
+        const filter = document.getElementById("inventorySearchInput").value.toLowerCase();
+        document.querySelectorAll(".inventory-row").forEach(row => {
+            const text = row.innerText.toLowerCase();
+            row.style.display = text.indexOf(filter) > -1 ? "" : "none";
+        });
+    }
+
+    // 2. Specialized Filters (Called directly or via input)
+
+    // 3. Core functions for Dashboard Actions
+    function savePhoneUpdate() {
+        try {
+            const ownerId = document.getElementById('editPhoneModal').getAttribute('data-target-id');
+            const newPhoneInput = document.getElementById('modalPhoneInput');
+            const newPhone = newPhoneInput ? newPhoneInput.value : '';
+            
+            let csrfToken = '';
+            const csrfEl = document.querySelector('[name=csrfmiddlewaretoken]');
+            if (csrfEl) { csrfToken = csrfEl.value; }
+            else { throw new Error("ไม่พบ Token ความปลอดภัย (CSRF Token) ในหน้าเว็บ"); }
+            
+            if(!ownerId) { 
+                Swal.fire('ข้อผิดพลาด', 'ไม่พบรหัสเจ้าของสัตว์ (OwnerID)', 'error');
+                return; 
+            }
+            if(!newPhone || newPhone.trim() === '') {
+                Swal.fire('แจ้งเตือน', 'กรุณาระบุเบอร์โทรศัพท์ใหม่', 'warning');
+                return;
+            }
+
+            // Show loading state
+            Swal.fire({
+                title: 'กำลังเชื่อมต่อฐานข้อมูล...',
+                html: 'อัปเดตเบอร์โทรศัพท์ผ่าน View Trigger',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            const formData = new URLSearchParams();
+            formData.append('func_name', 'update_phone_via_view');
+            formData.append('owner_id', ownerId);
+            formData.append('new_phone', newPhone);
+
+            fetch("{% url 'ajax_execute_scalar' %}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': csrfToken },
+                body: formData
+            })
+            .then(response => {
+                if(!response.ok) throw new Error("HTTP Status " + response.status);
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) { 
+                    Swal.fire('สำเร็จ!', data.message || 'อัปเดตเบอร์โทรลสำเร็จ', 'success').then(() => {
+                        location.reload(); 
+                    });
+                } else { 
+                    Swal.fire('เกิดข้อผิดพลาดจากฐานข้อมูล', data.error || 'Unknown Error', 'error');
+                }
+            })
+            .catch(err => {
+                console.error("Fetch Error:", err);
+                Swal.fire('การเชื่อมต่อล้มเหลว', err.toString(), 'error');
+            });
+        } catch (e) {
+            console.error("Sync Error in savePhoneUpdate:", e);
+            Swal.fire('ข้อผิดพลาดของระบบ', e.toString(), 'error');
+        }
+    }
+
+    function savePetUpdate() {
+        const petId = document.getElementById('editPetModal').getAttribute('data-target-id');
+        const newName = document.getElementById('modalPetNameInput').value;
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+        console.log("Saving pet name update for PetID:", petId, "New Name:", newName);
+        if(!petId) { alert("Error: No PetID selected"); return; }
+
+        const formData = new URLSearchParams();
+        formData.append('func_name', 'update_pet_name_via_view');
+        formData.append('pet_id', petId);
+        formData.append('new_pet_name', newName);
+
+        fetch("{% url 'ajax_execute_scalar' %}", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': csrfToken },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) { location.reload(); } 
+            else { alert("Error: " + data.error); }
+        })
+        .catch(err => alert("Connection error"));
+    }
+
+    function saveVetHoursUpdate() {
+        const vetId = document.getElementById('modalVetID').value;
+        const newHours = document.getElementById('modalVetHoursInput').value;
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+        const formData = new URLSearchParams();
+        formData.append('func_name', 'update_vet_hours_via_view');
+        formData.append('vet_id', vetId);
+        formData.append('new_hours', newHours);
+
+        fetch("{% url 'ajax_execute_scalar' %}", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': csrfToken },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) { location.reload(); } 
+            else { alert("Error: " + data.error); }
+        })
+        .catch(err => alert("Connection error"));
+    }
+
+    function executeScalar(funcName, data, resultElId) {
+        const resEl = document.getElementById(resultElId);
+        if(!resEl) return;
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const formData = new URLSearchParams();
+        formData.append('func_name', funcName);
+        for(let key in data) formData.append(key, data[key]);
+
+        resEl.innerHTML = '<span class="spinner-border spinner-border-sm text-muted"></span>';
+        
+        fetch("{% url 'ajax_execute_scalar' %}", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': csrfToken },
+            body: formData.toString()
+        })
+        .then(response => response.json())
+        .then(json => {
+            if(json.success) {
+                let displayResult = json.result || '0';
+                if(funcName.includes('Value') || funcName.includes('Spending') || funcName.includes('Revenue')) {
+                    const num = parseFloat(displayResult.toString().replace(/,/g, ''));
+                    if (!isNaN(num)) {
+                        displayResult = '฿' + num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    } else if (!displayResult.toString().includes('฿')) {
+                        displayResult = '฿' + displayResult;
+                    }
+                }
+                resEl.innerHTML = displayResult;
+                resEl.className = 'fw-bold text-success animate__animated animate__fadeIn';
+            } else {
+                resEl.innerHTML = 'Error';
+            }
+        })
+        .catch(err => { resEl.innerHTML = 'Failed'; });
+    }
+
+    // Cleanup Logic Moved to Top
+
+    function runRevenueReport() {
+        const year = document.getElementById('revenue_year').value;
+        const month = document.getElementById('revenue_month').value;
+        const container = document.getElementById('revenue_result_container');
+        
+        if(!month) { alert('กรุณาระบุเดือน'); return; }
+        
+        container.innerHTML = '<div class="alert alert-info py-2 small"><i class="fas fa-calculator fa-spin me-2"></i> กำลังประมวลผล T-SQL...</div>';
+        
+        executeScalar('sp_GetMonthlyRevenue', {year: year, month: month}, 'revenue_result_container');
+    }
+
+    function updateStockAJAX(medicineId) {
+        const newStock = document.getElementById('input_stock_' + medicineId).value;
+        const container = document.getElementById('stock_manager_' + medicineId);
+        const originalContent = container.innerHTML;
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+        container.innerHTML = '<i class="fas fa-spinner fa-spin text-teal"></i>';
+        
+        const formData = new URLSearchParams();
+        formData.append('medicine_id', medicineId);
+        formData.append('new_stock', newStock);
+
+        // Timeout 8 วินาที
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
+        
+        fetch("{% url 'sql_update_stock' %}", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': csrfToken, 'X-Requested-With': 'XMLHttpRequest' },
+            body: formData.toString(),
+            signal: controller.signal
+        })
+        .then(response => response.json())
+        .then(json => {
+            clearTimeout(timeoutId);
+            if(json.success) {
+                container.innerHTML = '<i class="fas fa-check-circle text-success animate__animated animate__bounceIn"></i>';
+                setTimeout(() => {
+                    location.reload();
+                }, 800);
+            } else {
+                alert('Error: ' + json.error);
+                container.innerHTML = originalContent;
+            }
+        })
+        .catch(err => {
+            clearTimeout(timeoutId);
+            const msg = err.name === 'AbortError' ? 'หมดเวลา (Timeout)' : 'เชื่อมต่อไม่ได้';
+            container.innerHTML = `<span class="text-danger small"><i class="fas fa-exclamation-circle me-1"></i>${msg}</span>`;
+            setTimeout(() => { container.innerHTML = originalContent; }, 3000);
+        });
+    }
+
+
+    // 4. Filtering Functions
+    function filterClinicTable() {
+        const filter = document.getElementById("clinicSearchInput").value.toLowerCase();
+        document.querySelectorAll(".clinic-row").forEach(row => {
+            const text = row.innerText.toLowerCase();
+            row.style.display = text.indexOf(filter) > -1 ? "" : "none";
+        });
+    }
+
+    function filterRegistryTable() {
+        const filter = document.getElementById("registrySearchInput").value.toLowerCase();
+        document.querySelectorAll(".registry-row").forEach(row => {
+            const text = row.innerText.toLowerCase();
+            row.style.display = text.indexOf(filter) > -1 ? "" : "none";
+        });
+    }
+
+    function filterMedicineList() {
+        const filter = document.getElementById("medicineSearchInput").value.toLowerCase();
+        document.querySelectorAll(".medicine-item-card").forEach(card => {
+            const text = card.innerText.toLowerCase();
+            card.style.display = text.indexOf(filter) > -1 ? "" : "none";
+        });
+    }
+
+    // Auto-load values when document is ready
+    document.addEventListener("DOMContentLoaded", function() {
+        setTimeout(() => {
+            // Initial KPIs are now pre-rendered by Django for instant load
+            // Only keeping if manual refresh is needed, but removing automatic delay on load
+            // executeScalar('fn_GetMedicineStockValue', {}, 'kpi_stock_value');
+            // executeScalar('fn_GetTotalClinicRevenue', {}, 'kpi_total_revenue');
+        }, 500);
+    });
+</script>
+{% endblock %}

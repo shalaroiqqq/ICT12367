@@ -1,0 +1,579 @@
+{% extends 'myapp/core/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<style>
+    .section-header {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #2e5a27;
+        border-left: 5px solid #a8df8e;
+        padding-left: 12px;
+        margin-bottom: 20px;
+        margin-top: 10px;
+    }
+    .record-card {
+        background: #fff;
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        margin-bottom: 25px;
+    }
+    .stat-box {
+        background: #f8fff7;
+        border: 1px dashed #c3e6cb;
+        border-radius: 10px;
+        padding: 15px;
+    }
+    .form-label {
+        font-weight: 600;
+        color: #555;
+        font-size: 0.9rem;
+    }
+
+    /* ===== Dark Mode Overrides (Refined to match Image 3) ===== */
+    [data-bs-theme="dark"] .record-card {
+        background: #1e293b; /* Dark Navy Slate */
+        box-shadow: 0 10px 25px -5px rgba(0,0,0,0.4) !important;
+        border: 1px solid rgba(255,255,255,0.08);
+    }
+    [data-bs-theme="dark"] .stat-box {
+        background: rgba(15, 23, 42, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    [data-bs-theme="dark"] .form-label,
+    [data-bs-theme="dark"] .form-check-label {
+        color: #94a3b8 !important; /* Soft Slate Gray */
+        letter-spacing: 0.5px;
+    }
+    [data-bs-theme="dark"] .section-header {
+        color: #10b981; /* Emerald Green */
+        border-left: 4px solid #10b981;
+        background: rgba(16, 185, 129, 0.05);
+        padding: 5px 15px;
+        border-radius: 0 8px 8px 0;
+    }
+    [data-bs-theme="dark"] .form-control, 
+    [data-bs-theme="dark"] .form-select,
+    [data-bs-theme="dark"] .input-group-text {
+        background-color: #0f172a !important; /* Deep Navy */
+        color: #f1f5f9 !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 10px;
+    }
+    [data-bs-theme="dark"] .form-control:focus,
+    [data-bs-theme="dark"] .form-select:focus {
+        border-color: #10b981 !important;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2) !important;
+    }
+    [data-bs-theme="dark"] .input-group-text {
+        background-color: #1e293b !important;
+        border-right-color: transparent !important;
+    }
+    [data-bs-theme="dark"] .btn-link { color: #94a3b8 !important; }
+
+    /* Select2 Dark Mode (Image 3 Style) */
+    [data-bs-theme="dark"] .select2-container--default .select2-selection--single {
+        background-color: #0f172a !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 10px;
+        height: 44px;
+    }
+    [data-bs-theme="dark"] .select2-container--default .select2-selection--single .select2-selection__rendered {
+        color: var(--text-heading) !important;
+        line-height: 40px;
+        padding-left: 12px;
+    }
+    [data-bs-theme="dark"] .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 40px;
+    }
+    [data-bs-theme="dark"] .select2-dropdown {
+        background-color: #1f2937 !important;
+        border: 1px solid var(--border-color) !important;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+    }
+    [data-bs-theme="dark"] .select2-results__option { 
+        color: #e2e8f0 !important; 
+        padding: 8px 12px;
+    }
+    [data-bs-theme="dark"] .select2-results__option--highlighted[aria-selected] { 
+        background-color: #10b981 !important; 
+        color: #ffffff !important; 
+    }
+    [data-bs-theme="dark"] .select2-search__field {
+        background-color: #111827 !important;
+        color: #fff !important;
+        border: 1px solid var(--border-color) !important;
+    }
+
+    /* Minimal Scrollbar for Meds */
+    .med-scroll-box {
+        max-height: 240px;
+        overflow-y: auto;
+    }
+    .med-scroll-box::-webkit-scrollbar { width: 6px; }
+    .med-scroll-box::-webkit-scrollbar-track { background: transparent; }
+    .med-scroll-box::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    [data-bs-theme="dark"] .med-scroll-box::-webkit-scrollbar-thumb { background: #475569; }
+
+    /* Custom Checkbox */
+    .custom-med-check { border: 1px solid transparent; transition: all 0.2s ease; }
+    .custom-med-check:hover { background: rgba(34, 197, 94, 0.05); border-color: rgba(34, 197, 94, 0.2); }
+    .custom-med-check input[type="checkbox"] { transform: scale(1.3); margin-top: 0.35rem; margin-left: -1.2rem; cursor: pointer; }
+    
+    .med-item.selected-item .custom-med-check {
+        background: rgba(34, 197, 94, 0.1);
+        border-color: #22c55e;
+    }
+</style>
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-success">📝 {{ title }}</h2>
+        <a href="{% url 'medical_record_list' %}" class="btn btn-outline-secondary rounded-pill px-4">
+            <i class="fas fa-arrow-left me-2"></i>ย้อนกลับ
+        </a>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="row">
+            
+            <div class="col-lg-8">
+                <div class="record-card p-4">
+                    <div class="section-header">🐾 ข้อมูลการเข้ารักษา</div>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label">สัตว์เลี้ยง (Pet Name)</label>
+                            {{ form.pet }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">สัตวแพทย์ผู้ดูแล (Vet)</label>
+                            {{ form.vet }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">วันที่รับบริการ</label>
+                            {{ form.visit_date }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">ประเภทการรับบริการ</label>
+                            {{ form.visit_type }}
+                        </div>
+                    </div>
+
+                    <div class="section-header">🩺 การตรวจวินิจฉัย</div>
+                    <div class="mb-3">
+                        <label class="form-label">อาการที่พบ (Symptoms)</label>
+                        {{ form.symptoms }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">ผลการวินิจฉัย (Diagnosis)</label>
+                        {{ form.diagnosis }}
+                    </div>
+                </div>
+
+                <div class="record-card p-4">
+                    <div class="section-header">💊 แผนการรักษาและยาที่ใช้</div>
+                    <div class="mb-3">
+                        <label class="form-label">วิธีการรักษา (Treatment Plan)</label>
+                        {{ form.treatment }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label d-block mb-2">ยาและเวชภัณฑ์ที่ใช้</label>
+                        
+                        
+                        <div class="mb-3">
+                            <div class="input-group input-group-sm mb-2 shadow-sm rounded-pill overflow-hidden border" style="background:var(--input-bg)">
+                                <span class="input-group-text border-0 bg-transparent text-muted px-3"><i class="fas fa-search"></i></span>
+                                <input type="text" id="medSearchInput" class="form-control border-0 bg-transparent shadow-none py-2" placeholder="🔎 พิมพ์ค้นหาชื่อยา เช่น Spectra, Nexgard...">
+                            </div>
+                            
+                            <div id="selectedMedsBadges" class="d-flex flex-wrap gap-2"></div>
+                        </div>
+
+                        
+                        <div class="p-3 rounded border med-scroll-box" id="medCheckboxesContainer" style="background: var(--card-bg); border-color: rgba(255,255,255,0.05) !important;">
+                            <div class="row">
+                                {% for checkbox in form.medicines %}
+                                <div class="col-md-6 mb-2 med-item" data-name="{{ checkbox.choice_label|lower }}">
+                                    <div class="form-check custom-med-check p-2 rounded">
+                                        {{ checkbox.tag }}
+                                        <label class="form-check-label w-100 ps-2" for="{{ checkbox.id_for_label }}" style="cursor:pointer; font-size:0.9rem;">
+                                            {{ checkbox.choice_label }}
+                                        </label>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            
+            <div class="col-lg-4">
+                <div class="record-card p-4">
+                    <div class="section-header">📊 ข้อมูลสุขภาพพื้นฐาน</div>
+                    <div class="stat-box mb-4">
+                        <div class="mb-3">
+                            <label class="form-label">น้ำหนัก (Weight)</label>
+                            <div class="input-group">
+                                {{ form.weight }}
+                                <span class="input-group-text">กก.</span>
+                            </div>
+                        </div>
+                        <div class="mb-0">
+                            <label class="form-label">อุณหภูมิ (Temp)</label>
+                            <div class="input-group">
+                                {{ form.temperature }}
+                                <span class="input-group-text">°C</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-header">💰 รายละเอียดค่าใช้จ่าย</div>
+                    <div class="stat-box mb-4">
+                        <div class="mb-3">
+                            <label class="form-label text-muted small"><i class="fas fa-pills me-1"></i> รวมค่ายาและเวชภัณฑ์ (Meds Total)</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text border-0 bg-transparent ps-0">฿</span>
+                                <input type="text" id="id_medicine_cost" class="form-control border-0 bg-transparent shadow-none fw-bold" readonly value="0.00" style="color: #64748b; pointer-events: none;">
+                            </div>
+                        </div>
+                        <div class="mb-3 pt-2 border-top border-muted border-opacity-10">
+                            <label class="form-label text-primary small"><i class="fas fa-hand-holding-medical me-1"></i> ค่าบริการ/ราคารักษา (Service Fee)</label>
+                            <div class="input-group input-group-sm shadow-sm">
+                                <span class="input-group-text bg-light text-muted border-0">฿</span>
+                                <input type="number" id="id_treatment_price" class="form-control border-0 shadow-none fw-bold text-primary" step="0.01" value="0.00" placeholder="0.00">
+                            </div>
+                        </div>
+                        <div class="mb-0 pt-3 border-top border-primary border-opacity-25 mt-3">
+                            <label class="form-label fw-bold text-success mb-1 fs-6">ยอดรวมสุทธิ (Grand Total)</label>
+                            <div class="input-group input-group-lg shadow-sm rounded overflow-hidden">
+                                <span class="input-group-text border-0 bg-success text-white px-3 fw-bold">฿</span>
+                                {{ form.cost }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-header">📅 การติดตามผล</div>
+                    <div class="mb-3">
+                        <label class="form-label">วันนัดครั้งต่อไป</label>
+                        {{ form.next_visit }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">หมายเหตุเพิ่มเติม</label>
+                        {{ form.notes }}
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2 mb-5">
+                    <button type="submit" class="btn btn-success btn-lg shadow-sm rounded-pill py-3 fw-bold" style="background: #10b981; border: none;">
+                        <i class="fas fa-save me-2"></i>บันทึกประวัติการรักษา
+                    </button>
+                    <a href="{% url 'medical_record_list' %}" class="btn btn-link text-decoration-none small">ยกเลิกข้อมูล</a>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+    // Prepare extended pet data for Select2
+    const petsData = {
+        {% for p in form.fields.pet.queryset %}
+        "{{ p.id }}": {
+            id: "{{ p.id }}",
+            text: "{{ p.customer_id|default:p.id|escapejs }} - {{ p.name|escapejs }}",
+            pet_id_display: "{{ p.customer_id|default:p.id|escapejs }}",
+            name: "{{ p.name|escapejs }}",
+            owner_name: "{{ p.owner.first_name|escapejs }} {{ p.owner.last_name|escapejs }}",
+            owner_phone: "{{ p.owner.phone|escapejs }}",
+            species: "{{ p.species|escapejs }}"
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    };
+
+    // Prepare extended vet data for Select2
+    const vetsData = {
+        {% for v in form.fields.vet.queryset %}
+        "{{ v.id }}": {
+            id: "{{ v.id }}",
+            text: "{{ v.doctor_id|default:v.id|escapejs }} - {{ v.first_name|escapejs }} {{ v.last_name|escapejs }}",
+            vet_id_display: "{{ v.doctor_id|default:v.id|escapejs }}",
+            name: "{{ v.first_name|escapejs }} {{ v.last_name|escapejs }}",
+            role: "{{ v.role_level|escapejs }}",
+            spec: "{{ v.specialization|default:'ทั่วไป'|escapejs }}",
+            license: "{{ v.license_no|escapejs }}"
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    };
+
+    $(document).ready(function() {
+        
+        // --- 1. Pet Selection (Advanced Custom Template) ---
+        const $petSelect = $('#id_pet');
+        
+        // Add a placeholder for Quick Info Badge below the select
+        $petSelect.parent().append('<div id="petQuickInfo"></div>');
+        
+        // Format the selected result (Input display)
+        function formatPetSelection(data) {
+            if (!data.id) return data.text; // placeholder
+            const p = petsData[data.id];
+            if (!p) return data.text;
+            return $('<span><i class="fas fa-paw me-2 text-success"></i>' + p.pet_id_display + ' - ' + p.name + '</span>');
+        }
+
+        // Format dropdown options (List display)
+        function formatPetResult(data) {
+            if (!data.id) return data.text;
+            const p = petsData[data.id];
+            if (!p) return data.text;
+            
+            const template = `
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="fw-bold text-success mb-1">${p.pet_id_display} - ${p.name}</div>
+                        <div class="small text-muted" style="font-size:0.8rem;">
+                            <i class="fas fa-user ms-1 me-1"></i>${p.owner_name}
+                            <i class="fas fa-phone ms-2 me-1"></i>${p.owner_phone}
+                        </div>
+                    </div>
+                    <div class="badge bg-light text-dark shadow-sm border">${p.species}</div>
+                </div>
+            `;
+            return $(template);
+        }
+
+        // Custom search filtering
+        function customPetMatcher(params, data) {
+            if ($.trim(params.term) === '') return data;
+            if (!data.id) return null;
+            
+            const p = petsData[data.id];
+            if (!p) return null;
+
+            const term = params.term.toLowerCase();
+            if (p.pet_id_display.toLowerCase().includes(term) ||
+                p.name.toLowerCase().includes(term) ||
+                p.owner_name.toLowerCase().includes(term) ||
+                p.owner_phone.includes(term)) {
+                return data;
+            }
+            return null;
+        }
+
+        // Quick Info badge populator
+        function updatePetQuickInfo(petId) {
+            const p = petsData[petId];
+            const badgeContainer = $('#petQuickInfo');
+            if (!p) {
+                badgeContainer.html('');
+                return;
+            }
+            badgeContainer.html(`
+                <div class="mt-2 p-2 rounded shadow-sm d-inline-flex align-items-center" style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.2);">
+                    <span class="small fw-bold text-success me-3"><i class="fas fa-user-circle me-1"></i>เจ้าของ: ${p.owner_name}</span>
+                    <span class="small text-muted"><i class="fas fa-paw me-1"></i>สายพันธุ์: ${p.species}</span>
+                </div>
+            `);
+        }
+
+        $petSelect.select2({
+            width: '100%',
+            placeholder: '🔎 ค้นหารหัส, ชื่อสัตว์, ชื่อ หรือเบอร์โทรเจ้าของ...',
+            language: { noResults: () => "ไม่พบข้อมูลสัตว์เลี้ยง" },
+            matcher: customPetMatcher,
+            templateResult: formatPetResult,
+            templateSelection: formatPetSelection,
+            escapeMarkup: function(m) { return m; }
+        }).on('change', function() {
+            updatePetQuickInfo($(this).val());
+        });
+
+        // Initialize display if pre-filled
+        if ($petSelect.val()) { updatePetQuickInfo($petSelect.val()); }
+
+        // --- 2. Vet Selection (Advanced Custom Template) ---
+        const $vetSelect = $('#id_vet');
+        $vetSelect.parent().append('<div id="vetQuickInfo"></div>');
+
+        function formatVetSelection(data) {
+            if (!data.id) return data.text;
+            const v = vetsData[data.id];
+            if (!v) return data.text;
+            return $('<span><i class="fas fa-user-md me-2 text-primary"></i>' + v.vet_id_display + ' - ' + v.name + '</span>');
+        }
+
+        function formatVetResult(data) {
+            if (!data.id) return data.text;
+            const v = vetsData[data.id];
+            if (!v) return data.text;
+            
+            const template = `
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="fw-bold text-primary mb-1">${v.vet_id_display} - ${v.name}</div>
+                        <div class="small text-muted" style="font-size:0.8rem;">
+                            <i class="fas fa-stethoscope ms-1 me-1"></i>${v.role}
+                            <i class="fas fa-id-card ms-2 me-1"></i>ใบอนุญาต: ${v.license}
+                        </div>
+                    </div>
+                    <div class="badge bg-light text-dark shadow-sm border">${v.spec}</div>
+                </div>
+            `;
+            return $(template);
+        }
+
+        function customVetMatcher(params, data) {
+            if ($.trim(params.term) === '') return data;
+            if (!data.id) return null;
+            
+            const v = vetsData[data.id];
+            if (!v) return null;
+
+            const term = params.term.toLowerCase();
+            if (v.vet_id_display.toLowerCase().includes(term) ||
+                v.name.toLowerCase().includes(term) ||
+                v.spec.toLowerCase().includes(term) ||
+                v.license.toLowerCase().includes(term)) {
+                return data;
+            }
+            return null;
+        }
+
+        function updateVetQuickInfo(vetId) {
+            const v = vetsData[vetId];
+            const badgeContainer = $('#vetQuickInfo');
+            if (!v) {
+                badgeContainer.html('');
+                return;
+            }
+            badgeContainer.html(`
+                <div class="mt-2 p-2 rounded shadow-sm d-inline-flex align-items-center" style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2);">
+                    <span class="small fw-bold text-primary me-3"><i class="fas fa-stethoscope me-1"></i>${v.role}</span>
+                    <span class="small text-muted"><i class="fas fa-award me-1"></i>ความเชี่ยวชาญ: ${v.spec}</span>
+                </div>
+            `);
+        }
+
+        $vetSelect.select2({
+            width: '100%',
+            placeholder: '🔎 ค้นหารหัส, ชื่อแพทย์, เลขใบอนุญาต หรือสาขา...',
+            language: { noResults: () => "ไม่พบข้อมูลสัตวแพทย์" },
+            matcher: customVetMatcher,
+            templateResult: formatVetResult,
+            templateSelection: formatVetSelection,
+            escapeMarkup: function(m) { return m; }
+        }).on('change', function() {
+            updateVetQuickInfo($(this).val());
+        });
+
+        if ($vetSelect.val()) { updateVetQuickInfo($vetSelect.val()); }
+    });
+
+    // --- 3. Auto-Calculate Cost Logic ---
+    const medicinePrices = {{ medicine_prices_json|safe }};
+    const $costInput = $('#id_cost');
+    const $medsLabel = $('#id_medicine_cost');
+    const $treatmentInput = $('#id_treatment_price');
+
+    function updateCalculatedCost() {
+        let totalMedsPrice = 0;
+        
+        // 1. คำนวณค่ายาและเวชภัณฑ์
+        $('.med-item input[type="checkbox"]:checked').each(function() {
+            const medId = $(this).val();
+            if (medicinePrices[medId]) {
+                totalMedsPrice += parseFloat(medicinePrices[medId]);
+            }
+        });
+        
+        // โชว์ยอดค่ายาในช่องสีเทา
+        $medsLabel.val(totalMedsPrice.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+
+        // 2. ดึงค่าบริการ/ค่ารักษา
+        let treatmentPrice = parseFloat($treatmentInput.val()) || 0;
+
+        // 3. รวมยอดสุทธิ
+        let grandTotal = totalMedsPrice + treatmentPrice;
+        $costInput.val(grandTotal.toFixed(2));
+    }
+
+    // เมื่อมีการเปลี่ยนค่ารักษา ให้คำนวณใหม่ทันที
+    $treatmentInput.on('input', updateCalculatedCost);
+
+    // Smart Checkbox Filter Logic
+    document.addEventListener('DOMContentLoaded', () => {
+        const medSearchInput = document.getElementById('medSearchInput');
+        const medItems = document.querySelectorAll('.med-item');
+        const badgesContainer = document.getElementById('selectedMedsBadges');
+
+        // 1. Live Text Search Filter
+        if(medSearchInput) {
+            medSearchInput.addEventListener('input', (e) => {
+                const query = e.target.value.toLowerCase().trim();
+                medItems.forEach(item => {
+                    const name = item.dataset.name;
+                    if(name.includes(query)) {
+                        item.style.display = '';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+        }
+
+        // 2. Map Checkboxes and generate Green Badges
+        const updateBadges = () => {
+            badgesContainer.innerHTML = '';
+            medItems.forEach(item => {
+                const label = item.querySelector('label').textContent.trim();
+                const actualCheckbox = item.querySelector('input[type="checkbox"]');
+
+                if (actualCheckbox.checked) {
+                    item.classList.add('selected-item');
+                    
+                    const badge = document.createElement('span');
+                    badge.className = 'badge bg-success rounded-pill px-3 py-2 fw-normal d-flex align-items-center shadow-sm';
+                    badge.innerHTML = `<i class="fas fa-check-circle me-1"></i>${label} 
+                                       <i class="fas fa-times ms-2 ms-cursor-pointer btn-remove" style="cursor:pointer; opacity:0.8" title="นำออก"></i>`;
+                    
+                    // Click the X to uncheck
+                    badge.querySelector('.btn-remove').addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        actualCheckbox.checked = false;
+                        actualCheckbox.dispatchEvent(new Event('change'));
+                    });
+                    badgesContainer.appendChild(badge);
+                } else {
+                    item.classList.remove('selected-item');
+                }
+            });
+            
+            updateCalculatedCost();
+        };
+
+        // Attach event listener to all checkboxes
+        medItems.forEach(item => {
+            const checkbox = item.querySelector('input[type="checkbox"]');
+            if(checkbox) {
+                checkbox.classList.add('form-check-input');
+                checkbox.addEventListener('change', updateBadges);
+            }
+        });
+        
+        // ตั้งค่าตั้งต้น (ถ้าเปิดหน้า Edit มาแล้วมีราคายารวมอยู่แล้ว)
+        updateCalculatedCost();
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,362 @@
+{% extends 'myapp/core/base.html' %}
+{% load static %}
+
+{% block title %}รายละเอียดการนัดหมาย | Modern POS{% endblock %}
+
+{% block content %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap');
+
+    :root {
+        --deep-navy: #0f172a;
+        --card-navy: #1e293b;
+        --green-pastel: #4ade80;
+        --soft-emerald: #10b981;
+        --warning-gold: #f59e0b;
+        
+        /* Theme Aware Variables */
+        --card-bg-custom: #ffffff;
+        --item-bg-custom: #f8fafc;
+        --text-main-custom: #1e293b;
+        --text-dim-custom: #64748b;
+        --border-custom: #eef2f6;
+    }
+
+    [data-bs-theme="dark"] {
+        --card-bg-custom: #1e293b;
+        --item-bg-custom: #0f172a;
+        --text-main-custom: #f8fafc;
+        --text-dim-custom: #94a3b8;
+        --border-custom: rgba(255, 255, 255, 0.08);
+    }
+
+    body {
+        font-family: 'Kanit', sans-serif;
+    }
+
+    .appointment-detail-wrapper {
+        max-width: 900px;
+        margin: 3rem auto;
+        padding: 0 1.5rem;
+    }
+
+    /* Modern Card Layout */
+    .modern-detail-card {
+        background: var(--card-bg-custom);
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(15, 23, 42, 0.08);
+        overflow: hidden;
+        position: relative;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    [data-bs-theme="dark"] .modern-detail-card {
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .modern-detail-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 50px rgba(15, 23, 42, 0.12);
+    }
+
+    /* Card Header */
+    .modern-card-header {
+        background: var(--deep-navy);
+        padding: 1.75rem 2.5rem;
+        color: white;
+        position: relative;
+    }
+
+    .modern-card-header h3 {
+        font-weight: 700;
+        font-size: 1.4rem;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+    }
+
+    .modern-card-header h3 i {
+        color: var(--green-pastel);
+    }
+
+    /* Status Badge in Header */
+    .status-badge-float {
+        position: absolute;
+        top: 50%;
+        right: 2.5rem;
+        transform: translateY(-50%);
+        padding: 0.6rem 1.25rem;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    }
+
+    /* Body Content */
+    .modern-card-body {
+        padding: 2.5rem;
+    }
+
+    /* Grid layout for data */
+    .data-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+    }
+
+    .data-item {
+        background: var(--item-bg-custom);
+        border: 1px solid var(--border-custom);
+        padding: 1.25rem;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        gap: 1.1rem;
+        transition: all 0.2s;
+    }
+
+    .data-item:hover {
+        background: var(--card-bg-custom);
+        border-color: var(--green-pastel);
+        box-shadow: 0 5px 15px rgba(16, 185, 129, 0.08);
+    }
+
+    .data-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 14px;
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--soft-emerald);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.35rem;
+        flex-shrink: 0;
+    }
+
+    .data-content label {
+        display: block;
+        color: var(--text-dim-custom);
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-bottom: 0.2rem;
+    }
+
+    .data-content span {
+        font-weight: 700;
+        font-size: 1rem;
+        color: var(--text-main-custom);
+    }
+
+    .highlight-green {
+        color: var(--soft-emerald) !important;
+    }
+
+    /* Reason Box */
+    .modern-reason-container {
+        margin-top: 2rem;
+    }
+
+    .modern-reason-box {
+        background: var(--item-bg-custom);
+        padding: 1.5rem;
+        border-radius: 18px;
+        border-left: 5px solid var(--green-pastel);
+    }
+
+    .modern-reason-box label {
+        display: block;
+        color: var(--soft-emerald);
+        font-weight: 700;
+        margin-bottom: 0.6rem;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .reason-content {
+        color: var(--text-main-custom);
+        line-height: 1.7;
+        font-size: 0.95rem;
+        opacity: 0.9;
+    }
+
+    /* Action Toolbar */
+    .action-toolbar {
+        margin-top: 2.5rem;
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+    }
+
+    .btn-ghost {
+        background: var(--item-bg-custom);
+        color: var(--text-dim-custom);
+        border: 2px solid var(--border-custom);
+        padding: 0.75rem 1.75rem;
+        border-radius: 14px;
+        font-weight: 600;
+        transition: all 0.2s;
+        text-decoration: none;
+    }
+
+    .btn-ghost:hover {
+        background: var(--card-bg-custom);
+        color: var(--text-main-custom);
+        border-color: var(--text-dim-custom);
+    }
+
+    .btn-action-green {
+        background: var(--soft-emerald);
+        color: white;
+        border: none;
+        padding: 0.75rem 2rem;
+        border-radius: 14px;
+        font-weight: 700;
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.25);
+        transition: all 0.3s;
+        text-decoration: none;
+    }
+
+    .btn-action-green:hover {
+        background: #059669;
+        color: white;
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-action-warm {
+        background: var(--warning-gold);
+        color: white;
+        border: none;
+        padding: 0.75rem 2rem;
+        border-radius: 14px;
+        font-weight: 700;
+        box-shadow: 0 4px 15px rgba(245, 158, 11, 0.25);
+        transition: all 0.3s;
+        text-decoration: none;
+    }
+
+    .btn-action-warm:hover {
+        background: #d97706;
+        color: white;
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(245, 158, 11, 0.3);
+    }
+
+    /* Status Colors */
+    .bg-pending { background: #fef3c7; color: #d97706; border: 1px solid #fde68a; }
+    .bg-confirmed { background: #d1fae5; color: #059669; border: 1px solid #a7f3d0; }
+    .bg-in-progress { background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; }
+    .bg-completed { background: #dbeafe; color: #2563eb; border: 1px solid #bfdbfe; }
+    .bg-cancelled { background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; }
+
+    @media (max-width: 768px) {
+        .data-grid { grid-template-columns: 1fr; }
+        .action-toolbar { flex-direction: column; width: 100%; }
+        .btn-ghost, .btn-action-green, .btn-action-warm { width: 100%; text-align: center; }
+        .status-badge-float { position: static; transform: none; margin-top: 1rem; display: inline-block; }
+        .modern-card-header { text-align: center; padding: 2rem 1.5rem; }
+        .modern-card-header h3 { justify-content: center; }
+    }
+
+    @media print {
+        .action-toolbar, .btn-ghost { display: none !important; }
+        .modern-detail-card { box-shadow: none; border: 1px solid #ddd; }
+        body { background: white; }
+    }
+</style>
+
+<div class="appointment-detail-wrapper">
+    <div class="modern-detail-card">
+        
+        <header class="modern-card-header">
+            <h3><i class="fas fa-calendar-check"></i> ข้อมูลการนัดหมาย</h3>
+            
+            <span class="status-badge-float 
+                {% if object.status == 'pending' %}bg-pending
+                {% elif object.status == 'confirmed' %}bg-confirmed
+                {% elif object.status == 'in_progress' %}bg-in-progress
+                {% elif object.status == 'completed' %}bg-completed
+                {% else %}bg-cancelled{% endif %}">
+                <i class="fas {% if object.status == 'confirmed' %}fa-check-circle{% elif object.status == 'pending' %}fa-clock{% elif object.status == 'in_progress' %}fa-stethoscope{% elif object.status == 'completed' %}fa-check-double{% else %}fa-times-circle{% endif %} me-1"></i>
+                {{ object.get_status_display }}
+            </span>
+        </header>
+
+        <div class="modern-card-body">
+            <div class="data-grid">
+                
+                <div class="data-item">
+                    <div class="data-icon"><i class="fas fa-paw"></i></div>
+                    <div class="data-content">
+                        <label>สัตว์เลี้ยง</label>
+                        <span class="highlight-green">{{ object.pet.name }}</span>
+                    </div>
+                </div>
+
+                
+                <div class="data-item">
+                    <div class="data-icon"><i class="fas fa-user-md"></i></div>
+                    <div class="data-content">
+                        <label>สัตวแพทย์</label>
+                        <span>น.สพ. {{ object.vet.first_name }} {{ object.vet.last_name }}</span>
+                    </div>
+                </div>
+
+                
+                <div class="data-item">
+                    <div class="data-icon"><i class="fas fa-notes-medical"></i></div>
+                    <div class="data-content">
+                        <label>ประเภทบริการ</label>
+                        <span>{{ object.get_service_type_display|default:"ตรวจรักษาทั่วไป" }}</span>
+                    </div>
+                </div>
+
+                
+                <div class="data-item">
+                    <div class="data-icon"><i class="far fa-clock"></i></div>
+                    <div class="data-content">
+                        <label>วันนัดและเวลา</label>
+                        <span>{{ object.appointment_date|date:"d M Y" }} @ {{ object.appointment_time|time:"H:i" }} น.</span>
+                    </div>
+                </div>
+            </div>
+
+            
+            <div class="modern-reason-container">
+                <div class="modern-reason-box">
+                    <label><i class="fas fa-comment-medical"></i> เหตุผลการนัดหมาย</label>
+                    <div class="reason-content">
+                        {{ object.reason|default:"ไม่มีระบุรายละเอียดเพิ่มเติม" }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-5">
+                <p class="text-muted small"><i class="fas fa-info-circle me-1"></i> กรุณามาก่อนเวลานัด 15 นาที เพื่อเข้ารับการบริการอย่างรวดเร็ว</p>
+            </div>
+        </div>
+    </div>
+
+    
+    <div class="action-toolbar">
+        <a href="{% url 'appointment_list' %}" class="btn-ghost">
+            <i class="fas fa-arrow-left me-2"></i>ย้อนกลับ
+        </a>
+        
+        <button onclick="window.print()" class="btn-action-green">
+            <i class="fas fa-print me-2"></i>พิมพ์ใบนัด
+        </button>
+
+        <a href="{% url 'appointment_update' object.pk %}" class="btn-action-warm">
+            <i class="fas fa-edit me-2"></i>แก้ไขการนัดหมาย
+        </a>
+    </div>
+</div>
+{% endblock %}

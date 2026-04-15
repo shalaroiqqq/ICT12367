@@ -1,0 +1,358 @@
+{% extends 'myapp/core/base.html' %}
+{% load static %}
+
+{% block title %}ข้อมูลเจ้าของสัตว์: {{ object.first_name }}{% endblock %}
+
+{% block content %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap');
+
+    :root {
+        --deep-navy: #0f172a;
+        --card-navy: #1e293b;
+        --green-pastel: #4ade80;
+        --soft-emerald: #10b981;
+        --warning-gold: #f59e0b;
+        --danger-soft: #ef4444;
+        
+        /* Theme Aware Variables */
+        --card-bg-custom: #ffffff;
+        --item-bg-custom: #f8fafc;
+        --text-main-custom: #1e293b;
+        --text-dim-custom: #64748b;
+        --border-custom: #eef2f6;
+        --pet-card-bg: #f8fafc;
+    }
+
+    [data-bs-theme="dark"] {
+        --card-bg-custom: #1e293b;
+        --item-bg-custom: #0f172a;
+        --text-main-custom: #f8fafc;
+        --text-dim-custom: #94a3b8;
+        --border-custom: rgba(255, 255, 255, 0.08);
+        --pet-card-bg: rgba(15, 23, 42, 0.4);
+    }
+
+    body {
+        font-family: 'Kanit', sans-serif;
+    }
+
+    .detail-container {
+        max-width: 1100px;
+        margin: 2rem auto;
+        padding: 0 1.5rem;
+    }
+
+    /* Modern Card UI */
+    .modern-card {
+        background: var(--card-bg-custom);
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 8px 30px rgba(15, 23, 42, 0.08);
+        overflow: hidden;
+        margin-bottom: 2rem;
+        transition: transform 0.3s ease;
+    }
+
+    [data-bs-theme="dark"] .modern-card {
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .modern-card:hover {
+        transform: translateY(-5px);
+    }
+
+    /* Card Headers */
+    .modern-header-main {
+        background: var(--deep-navy);
+        padding: 1.50rem 2rem;
+        color: white;
+    }
+
+    .modern-header-info {
+        background: #0ea5e9; /* Slightly more vibrant blue */
+        padding: 1.25rem 2rem;
+        color: white;
+    }
+
+    .header-title {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        margin: 0;
+        font-weight: 700;
+        font-size: 1.25rem;
+    }
+
+    .header-title i {
+        color: var(--green-pastel);
+    }
+
+    /* Card Body & Info Grid */
+    .modern-body {
+        padding: 2rem;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+    }
+
+    .info-item {
+        background: var(--item-bg-custom);
+        border: 1px solid var(--border-custom);
+        padding: 1.25rem;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        gap: 1.1rem;
+        transition: all 0.2s;
+    }
+
+    .info-item:hover {
+        background: var(--card-bg-custom);
+        border-color: var(--green-pastel);
+        box-shadow: 0 5px 15px rgba(16, 185, 129, 0.08);
+    }
+
+    .info-icon {
+        width: 46px;
+        height: 46px;
+        border-radius: 12px;
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--soft-emerald);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        flex-shrink: 0;
+    }
+
+    .info-content label {
+        display: block;
+        color: var(--text-dim-custom);
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-bottom: 0.1rem;
+    }
+
+    .info-content .value {
+        font-weight: 700;
+        font-size: 1rem;
+        color: var(--text-main-custom);
+        margin: 0;
+    }
+
+    /* Pet List Styling */
+    .pet-card-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .pet-inline-card {
+        background: var(--pet-card-bg);
+        border: 1px solid var(--border-custom);
+        padding: 1rem 1.5rem;
+        border-radius: 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.2s;
+    }
+    
+    .pet-inline-card:hover {
+        border-color: #0ea5e9;
+        transform: scale(1.01);
+    }
+
+    .pet-name-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .pet-icon-bg {
+        width: 40px;
+        height: 40px;
+        background: var(--card-bg-custom);
+        border: 1px solid var(--border-custom);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--soft-emerald);
+    }
+
+    /* Sidebar Buttons */
+    .action-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 0.85rem;
+    }
+
+    .btn-action {
+        padding: 0.85rem;
+        border-radius: 14px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.6rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        text-decoration: none;
+        border: none;
+    }
+
+    .btn-edit {
+        background: var(--warning-gold);
+        color: white;
+        box-shadow: 0 4px 10px rgba(245, 158, 11, 0.2);
+    }
+
+    .btn-edit:hover {
+        background: #d97706;
+        color: white;
+        transform: translateY(-3px);
+        box-shadow: 0 8px 15px rgba(245, 158, 11, 0.3);
+    }
+
+    .btn-delete {
+        background: #fee2e2;
+        color: var(--danger-soft);
+        border: 1px solid #fecaca;
+    }
+    
+    [data-bs-theme="dark"] .btn-delete {
+        background: rgba(239, 68, 68, 0.1);
+        border-color: rgba(239, 68, 68, 0.2);
+    }
+
+    .btn-delete:hover {
+        background: var(--danger-soft);
+        color: white;
+        transform: translateY(-3px);
+        box-shadow: 0 8px 15px rgba(239, 68, 68, 0.25);
+    }
+
+    .btn-back {
+        background: var(--item-bg-custom);
+        color: var(--text-dim-custom);
+        border: 2px solid var(--border-custom);
+    }
+
+    .btn-back:hover {
+        background: var(--card-bg-custom);
+        color: var(--text-main-custom);
+        border-color: #cbd5e1;
+    }
+
+    @media (max-width: 768px) {
+        .info-grid { grid-template-columns: 1fr; }
+        .detail-container { margin-top: 1rem; }
+    }
+</style>
+
+<div class="detail-container">
+    <div class="row g-4">
+        
+        <div class="col-lg-8">
+            
+            <div class="modern-card">
+                <header class="modern-header-main">
+                    <h4 class="header-title"><i class="fas fa-user-circle"></i> ข้อมูลเจ้าของสัตว์</h4>
+                </header>
+                <div class="modern-body">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-icon"><i class="fas fa-id-badge"></i></div>
+                            <div class="info-content">
+                                <label>ชื่อ - สกุล</label>
+                                <p class="value">{{ object.first_name }} {{ object.last_name }}</p>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-icon"><i class="fas fa-phone-alt"></i></div>
+                            <div class="info-content">
+                                <label>เบอร์โทรศัพท์</label>
+                                <p class="value text-success">{{ object.phone }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="info-item mt-3 w-100">
+                        <div class="info-icon"><i class="fas fa-map-marked-alt"></i></div>
+                        <div class="info-content">
+                            <label>ที่อยู่</label>
+                            <p class="value" style="font-size: 0.95rem;">{{ object.address }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            
+            <div class="modern-card">
+                <header class="modern-header-info">
+                    <h5 class="header-title"><i class="fas fa-paw"></i> สัตว์เลี้ยงของ {{ object.first_name }}</h5>
+                </header>
+                <div class="modern-body">
+                    {% if object.pets.all %}
+                        <div class="pet-card-list">
+                            {% for pet in object.pets.all %}
+                            <div class="pet-inline-card">
+                                <div class="pet-name-info">
+                                    <div class="pet-icon-bg"><i class="fas {% if pet.species == 'สุนัข' %}fa-dog{% elif pet.species == 'แมว' %}fa-cat{% else %}fa-paw{% endif %}"></i></div>
+                                    <div>
+                                        <span class="fw-bold d-block" style="font-size: 1.1rem; color: var(--text-main-custom);">{{ pet.name }}</span>
+                                        <span class="text-muted small">สายพันธุ์: {{ pet.breed|default:pet.species }}</span>
+                                    </div>
+                                </div>
+                                <a href="{% url 'pet_detail' pet.pk %}" class="btn btn-sm btn-outline-info rounded-pill px-3 shadow-sm">รายละเอียด</a>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4 bg-light rounded-4" style="border: 2px dashed #e2e8f0;">
+                            <p class="text-muted mb-0">ยังไม่มีประวัติสัตว์เลี้ยงในระบบ</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        
+        <div class="col-lg-4">
+            <div class="modern-card">
+                <div class="modern-body">
+                    <h6 class="text-muted mb-3 small text-uppercase fw-bold">การจัดการข้อมูล</h6>
+                    <div class="action-panel">
+                        {% if request.user.is_superuser or request.user.is_staff or object.first_name == request.user.first_name and object.last_name == request.user.last_name %}
+                        <a href="{% url 'owner_update' object.pk %}" class="btn-action btn-edit">
+                            <i class="fas fa-edit"></i> แก้ไขข้อมูลเจ้าของ
+                        </a>
+                        <a href="{% url 'owner_delete' object.pk %}" class="btn-action btn-delete">
+                            <i class="fas fa-trash-alt"></i> ลบรายการนี้
+                        </a>
+                        {% endif %}
+                        <a href="{% url 'owner_list' %}" class="btn-action btn-back">
+                            <i class="fas fa-arrow-left"></i> ย้อนกลับไปหน้ารวม
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            
+            <div class="modern-card" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: white;">
+                <div class="modern-body text-center py-4">
+                    <div class="display-6 fw-bold text-success">{{ object.pets.count }}</div>
+                    <div class="small opacity-75">สัตว์เลี้ยงทั้งหมด</div>
+                    <hr class="opacity-25 my-3">
+                    <i class="fas fa-shield-alt text-success opacity-50 mb-2"></i>
+                    <p class="small mb-0 opacity-75">ข้อมูลถูกบันทึกในระบบฐานข้อมูลกลาง</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

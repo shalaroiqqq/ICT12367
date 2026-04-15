@@ -1,0 +1,188 @@
+{% extends 'myapp/core/base.html' %}
+
+{% block title %}รายละเอียดประวัติการรักษา - {{ record.pet.name }}{% endblock %}
+
+{% block content %}
+<style>
+    @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); } 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); } }
+</style>
+
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold"><i class="fas fa-file-medical-alt text-success me-2"></i>รายละเอียดประวัติ</h2>
+        <div class="gap-2 d-flex">
+            <a href="{% url 'medical_record_list' %}" class="btn btn-light rounded-pill px-4">ย้อนกลับ</a>
+            <a href="{% url 'medical_record_update' record.pk %}" class="btn btn-warning rounded-pill px-4">แก้ไขข้อมูล</a>
+            <button onclick="window.print()" class="btn btn-outline-primary rounded-pill px-4"><i class="fas fa-print"></i></button>
+        </div>
+    </div>
+
+    <div class="card detail-card shadow-sm border-0 rounded-4 overflow-hidden" style="background-color: var(--card-bg);">
+        
+        <div class="detail-header text-white p-4 p-md-5 position-relative" style="background: linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%); overflow: hidden;">
+            
+            <div class="position-absolute top-0 end-0 opacity-25 p-4" style="font-size: 8rem; line-height: 1; transform: translate(20%, -20%); pointer-events: none;">
+                <i class="fas fa-paw"></i>
+            </div>
+            
+            <div class="row align-items-center position-relative z-index-1">
+                <div class="col-md-8">
+                    <span class="badge bg-white text-primary rounded-pill px-3 py-2 mb-3 fw-bold shadow-sm" style="font-size: 0.9rem;">
+                        <i class="fas fa-stethoscope me-1"></i> {{ record.visit_type|default:"บันทึกการรักษา" }}
+                    </span>
+                    <h1 class="display-5 fw-bold mb-1">{{ record.pet.name }} <span class="fs-4 fw-normal opacity-75">({{ record.pet.species|default:"ระบุไม่ได้" }})</span></h1>
+                    
+                    <div class="d-flex align-items-center flex-wrap gap-3 mt-3" style="font-size: 1.05rem; text-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+                        <div><i class="fas fa-user-circle me-1"></i> เจ้าของ: <strong class="text-white">{{ record.pet.owner.first_name }} {{ record.pet.owner.last_name }}</strong></div>
+                        <div class="vr bg-white opacity-100" style="width: 2px;"></div>
+                        <div><i class="fas fa-id-card me-1"></i> ID: <strong class="text-white">{{ record.ref_no }}</strong></div>
+                        <div class="vr bg-white opacity-100" style="width: 2px;"></div>
+                        <div>
+                            <i class="far fa-calendar-alt me-1"></i> วันที่: 
+                            <strong class="text-white">
+                                {% if record.visit_date %}
+                                    {{ record.visit_date|date:"d F Y" }}
+                                {% else %}
+                                    {{ record.created_at|date:"d F Y" }}
+                                {% endif %}
+                            </strong>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4 text-md-end mt-4 mt-md-0">
+                    <div class="text-white mb-1 text-uppercase fw-bold" style="letter-spacing: 1px; font-size: 0.85rem; text-shadow: 0 1px 2px rgba(0,0,0,0.1);">ค่ารักษาพยาบาล</div>
+                    <div class="display-5 fw-bold mb-3 text-white" style="text-shadow: 0 2px 4px rgba(0,0,0,0.1);">฿{{ record.cost|floatformat:2 }}</div>
+                    
+                    {% if record.cost > 0 %}
+                        {% if record.is_paid %}
+                            <div class="badge bg-white text-success rounded-pill px-3 py-2 shadow-sm fs-6">
+                                <i class="fas fa-check-circle me-1"></i> ชำระค่าบริการแล้ว
+                            </div>
+                        {% else %}
+                            <a href="{% url 'pos' %}?pet_id={{ record.pet.id }}" class="btn btn-danger rounded-pill px-4 py-2 fw-bold shadow-sm" style="animation: pulse-red 2s infinite;">
+                                <i class="fas fa-wallet me-1"></i> นำไปชำระเงินที่ POS
+                            </a>
+                        {% endif %}
+                    {% else %}
+                        <div class="badge bg-white text-dark rounded-pill px-3 py-2 shadow-sm fs-6">
+                            ไม่มีค่าบริการ
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body p-4 p-md-5">
+            <div class="row g-5">
+                
+                <div class="col-lg-4">
+                    <h5 class="fw-bold text-success mb-4 pb-2 border-bottom border-success border-opacity-25 border-2">
+                        <i class="fas fa-clipboard-list me-2"></i> ข้อมูลเบื้องต้น
+                    </h5>
+                    
+                    <div class="row g-3 mb-4">
+                        <div class="col-6">
+                            <div class="p-3 text-center rounded-4 h-100" style="background-color: var(--badge-bg); border: 1px solid var(--border-color);">
+                                <div class="text-muted small text-uppercase fw-bold mb-1">น้ำหนัก</div>
+                                <div class="fs-4 fw-bold" style="color: var(--text-heading);">
+                                    {{ record.weight|default:"—" }} <span class="fs-6 fw-normal text-muted">กก.</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 text-center rounded-4 h-100" style="background-color: var(--badge-bg); border: 1px solid var(--border-color);">
+                                <div class="text-muted small text-uppercase fw-bold mb-1">อุณหภูมิ</div>
+                                <div class="fs-4 fw-bold" style="color: var(--text-heading);">
+                                    {{ record.temperature|default:"—" }} <span class="fs-6 fw-normal text-muted">°C</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="text-muted small text-uppercase fw-bold mb-1">สัตวแพทย์ผู้รักษา</div>
+                        <div class="fs-5 fw-bold" style="color: var(--text-heading);">
+                            <i class="fas fa-user-md text-primary me-2"></i>หมอ{{ record.vet.first_name }} {{ record.vet.last_name }}
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="text-muted small text-uppercase fw-bold mb-1">สายพันธุ์</div>
+                        <div class="fw-bold fs-6" style="color: var(--text-heading);">{{ record.pet.breed|default:"ไม่ระบุ" }}</div>
+                    </div>
+
+                    {% if record.next_visit %}
+                    <div class="mb-4 p-3 rounded-4" style="background-color: rgba(239, 68, 68, 0.1); border: 1px dashed rgba(239, 68, 68, 0.3);">
+                        <div class="text-danger small text-uppercase fw-bold mb-1"><i class="far fa-calendar-alt me-1"></i> วันนัดหมายครั้งต่อไป</div>
+                        <div class="fs-5 fw-bold text-danger">{{ record.next_visit|date:"d F Y" }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                
+                <div class="col-lg-8">
+                    <div class="mb-5">
+                        <h5 class="fw-bold text-success mb-4 pb-2 border-bottom border-success border-opacity-25 border-2">
+                            <i class="fas fa-stethoscope me-2"></i> สมุดบันทึกคลินิก
+                        </h5>
+                        
+                        <div class="mb-4">
+                            <h6 class="text-muted small text-uppercase fw-bold mb-2">อาการเริ่มแรกที่พบ</h6>
+                            <div class="card border-0 rounded-4 p-4 shadow-sm" style="background-color: var(--badge-bg); border: 1px solid var(--border-color) !important;">
+                                <p class="mb-0 text-break fw-medium" style="color: var(--text-heading);">{{ record.symptoms|default:"ไม่ได้ระบุอาการเริ่มแรก"|linebreaksbr }}</p>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <h6 class="text-muted small text-uppercase fw-bold mb-2">ผลการวินิจฉัยโรค (Diagnosis)</h6>
+                            <div class="card border border-primary border-opacity-50 rounded-4 p-4 shadow-sm" style="background-color: rgba(59, 130, 246, 0.08);">
+                                <p class="mb-0 fw-bold text-primary text-break fs-5">{{ record.diagnosis|linebreaksbr }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-5">
+                        <h5 class="fw-bold text-success mb-4 pb-2 border-bottom border-success border-opacity-25 border-2">
+                            <i class="fas fa-briefcase-medical me-2"></i> การรักษาและจ่ายยา
+                        </h5>
+                        
+                        <div class="mb-4">
+                            <h6 class="text-muted small text-uppercase fw-bold mb-2">รายการยาที่สั่งจ่าย</h6>
+                            <div class="d-flex flex-wrap gap-2">
+                                {% for medicine in record.medicines.all %}
+                                    <span class="badge rounded-pill px-3 py-2 border shadow-sm" style="background-color: var(--card-bg); color: var(--text-heading); font-size: 0.9rem;">
+                                        <i class="fas fa-capsules text-warning me-1"></i> {{ medicine.name }}
+                                    </span>
+                                {% empty %}
+                                    <div class="text-muted fst-italic"><i class="fas fa-ban me-1"></i> ไม่มีการสั่งจ่ายยาในครั้งนี้</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <h6 class="text-muted small text-uppercase fw-bold mb-2">ขั้นตอนการรักษา (Treatment Plan)</h6>
+                            <div class="card border-0 rounded-4 p-4 shadow-sm" style="background-color: var(--badge-bg); border: 1px solid var(--border-color) !important;">
+                                <p class="mb-0 text-break fw-medium" style="color: var(--text-heading); line-height: 1.6;">{{ record.treatment|linebreaksbr }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if record.notes %}
+                    <div>
+                        <h5 class="fw-bold text-muted mb-3 pb-2 border-bottom border-opacity-25 border-2">
+                            <i class="fas fa-comment-dots me-2"></i> หมายเหตุเพิ่มเติม
+                        </h5>
+                        <p class="text-muted" style="font-size: 0.95rem; line-height: 1.6;">{{ record.notes|linebreaksbr }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="card-footer p-4 text-center text-muted small" style="background-color: var(--badge-bg); border-top: 1px solid var(--border-color);">
+            <i class="fas fa-history me-1"></i> ข้อมูลบันทึกเข้าระบบเมื่อ: {{ record.created_at|date:"d M Y H:i:s" }}
+        </div>
+    </div>
+</div>
+{% endblock %}

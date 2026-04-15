@@ -1,0 +1,354 @@
+{% extends 'myapp/core/base.html' %}
+{% load static %}
+
+{% block title %}รายชื่อสัตวแพทย์ | Pet Clinic{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --deep-blue: #0f172a;
+        --card-bg: #ffffff;
+        --pastel-green: #d1fae5;
+        --text-header: #065f46;
+        --text-body: #334155;
+        --shadow-soft: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        --primary-green: #10b981;
+    }
+
+    /* ลบการล็อคสีพื้นหลัง body ออก เพื่อให้ใช้ตามโหมดหลัก */
+    .page-container {
+        padding: 2rem 0 5rem;
+    }
+
+    .page-header {
+        margin-bottom: 2.5rem;
+    }
+
+    /* Grid Layout */
+    .vet-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 350px));
+        justify-content: center;
+        gap: 2rem;
+    }
+
+    /* Modern Profile Card */
+    .vet-card {
+        background: var(--card-bg);
+        border-radius: 20px;
+        overflow: hidden;
+        border: none;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: relative;
+        box-shadow: var(--shadow-soft);
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .vet-card:hover {
+        transform: translateY(-12px);
+        box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Card Header Bar */
+    .card-header-bar {
+        background: var(--pastel-green);
+        padding: 0.85rem 1.25rem;
+        display: flex;
+        align-items: center;
+        border-bottom: 1px solid rgba(16, 185, 129, 0.1);
+    }
+
+    .card-header-bar h6 {
+        margin: 0;
+        color: var(--text-header);
+        font-weight: 800;
+        font-size: 1rem;
+    }
+
+    /* Minimal Action Icons (Top-Right) */
+    .card-actions {
+        position: absolute;
+        top: 0.75rem;
+        right: 1rem;
+        display: flex;
+        gap: 0.5rem;
+        opacity: 0; /* ซ่อนไว้ก่อน */
+        transition: all 0.3s;
+        z-index: 10;
+    }
+
+    .vet-card:hover .card-actions {
+        opacity: 1; /* แสดงเมื่อ Hover */
+    }
+
+    .action-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: white;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        transition: all 0.2s;
+        text-decoration: none;
+    }
+
+    .action-icon:hover {
+        transform: scale(1.1);
+    }
+
+    .icon-edit { color: #f59e0b; }
+    .icon-delete { color: #ef4444; }
+
+    /* Doctor Profile Body */
+    .card-profile-body {
+        padding: 1.75rem;
+        text-align: center;
+        flex-grow: 1;
+    }
+
+    .photo-frame {
+        width: 110px;
+        height: 110px;
+        margin-left: auto;
+        margin-right: auto;
+        margin-bottom: 1.5rem;
+        border-radius: 35px;
+        overflow: hidden;
+        background: #f8fafc;
+        border: 5px solid #ffffff;
+        box-shadow: 0 8px 15px rgba(0,0,0,0.08);
+    }
+
+    .photo-frame img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .photo-frame .empty-photo {
+        font-size: 3rem;
+        color: #cbd5e1;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Info Details */
+    .vet-details {
+        text-align: left;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .detail-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.85rem;
+    }
+
+    .detail-row i {
+        width: 30px;
+        height: 30px;
+        background: #f1f5f9;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary-green);
+        font-size: 0.85rem;
+        flex-shrink: 0;
+    }
+
+    .detail-text {
+        color: #64748b;
+        font-size: 0.85rem;
+        line-height: 1.4;
+    }
+
+    .detail-text b {
+        display: block;
+        color: #1e293b;
+        font-size: 0.95rem;
+        font-weight: 700;
+    }
+
+    /* Floating Action Button (FAB) */
+    .btn-fab {
+        position: fixed;
+        bottom: 2.5rem;
+        right: 2.5rem;
+        width: 68px;
+        height: 68px;
+        background: var(--primary-green);
+        color: white;
+        border-radius: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        box-shadow: 0 12px 20px -5px rgba(16, 185, 129, 0.5);
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        text-decoration: none;
+        z-index: 1000;
+        border: 5px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-fab:hover {
+        transform: scale(1.15) rotate(90deg);
+        background: #059669;
+        color: white;
+        box-shadow: 0 15px 25px -5px rgba(16, 185, 129, 0.6);
+    }
+
+    .badge-count {
+        background: rgba(16, 185, 129, 0.15);
+        color: var(--primary-green);
+        padding: 0.5rem 1rem;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 0.85rem;
+    }
+    /* ===== DARK MODE OVERRIDES ===== */
+    /* ===== DARK MODE OVERRIDES ===== */
+    [data-bs-theme="dark"] .vet-card {
+        background-color: #1e293b !important; /* บังคับเป็นสีน้ำเงินเข้ม */
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+    }
+    
+    [data-bs-theme="dark"] .card-header-bar {
+        background-color: rgba(16, 185, 129, 0.15) !important;
+        border-bottom-color: rgba(255, 255, 255, 0.1) !important;
+    }
+
+    [data-bs-theme="dark"] .card-header-bar h6 {
+        color: #34d399 !important; /* สีเขียวสว่างให้มองเห็นชัดบนพื้นมืด */
+    }
+
+    [data-bs-theme="dark"] .photo-frame {
+        background-color: #0f172a !important; /* สีกรมท่า */
+        border-color: #334155 !important;
+    }
+
+    [data-bs-theme="dark"] .detail-row i {
+        background-color: rgba(255, 255, 255, 0.05) !important;
+    }
+
+    [data-bs-theme="dark"] .detail-text {
+        color: #94a3b8 !important; /* Slate color */
+    }
+
+    [data-bs-theme="dark"] .detail-text b {
+        color: #f1f5f9 !important; /* White color */
+    }
+
+    [data-bs-theme="dark"] .btn-outline-dark {
+        color: #f1f5f9 !important;
+        border-color: #475569 !important;
+    }
+
+    [data-bs-theme="dark"] .btn-outline-dark:hover {
+        background-color: #475569 !important;
+        color: white !important;
+    }
+
+    [data-bs-theme="dark"] .action-icon {
+        background-color: #0f172a !important;
+        border: 1px solid #334155 !important;
+    }
+</style>
+
+<div class="container page-container">
+    
+    <div class="page-header d-flex justify-content-between align-items-end">
+        <div>
+            <h1 class="fw-bold mb-2">👨‍⚕️ สัตวแพทย์ของเรา</h1>
+            <p class="text-secondary mb-0">ทีมแพทย์ผู้เชี่ยวชาญพร้อมดูแลสัตว์เลี้ยงที่คุณรัก</p>
+        </div>
+        <div class="badge-count">
+            <i class="fas fa-users me-2"></i>ทั้งหมด {{ vets|length }} ท่าน
+        </div>
+    </div>
+
+    
+    <div class="vet-grid">
+        {% for vet in vets %}
+        <div class="vet-card">
+            
+            <div class="card-actions">
+                <a href="{% url 'vet_update' vet.pk %}" class="action-icon icon-edit shadow-sm" title="แก้ไขข้อมูล">
+                    <i class="fas fa-pen"></i>
+                </a>
+                <a href="{% url 'vet_delete' vet.pk %}" class="action-icon icon-delete shadow-sm" title="ลบรายชื่อ">
+                    <i class="fas fa-trash"></i>
+                </a>
+            </div>
+
+            
+            <div class="card-header-bar">
+                <h6>🩺 สัตวแพทย์ หมอ{{ vet.first_name }}</h6>
+            </div>
+
+            <div class="card-profile-body">
+                
+                <div class="d-flex justify-content-center w-100 mb-4">
+                    <div class="photo-frame shadow-sm" style="margin: 0 !important;">
+                        {% if vet.image %}
+                            <img src="{{ vet.image.url }}" alt="{{ vet.first_name }}">
+                        {% else %}
+                            <div class="empty-photo">
+                                <i class="fas fa-user-md"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                
+                <div class="vet-details">
+                    <div class="detail-row">
+                        <i class="fas fa-id-badge"></i>
+                        <span class="detail-text">
+                            เลขใบอนุญาต
+                            <b>ว.ส.{{ vet.license_no|default:"5XXX" }}</b>
+                        </span>
+                    </div>
+
+                    <div class="detail-row">
+                        <i class="fas fa-award"></i>
+                        <span class="detail-text">
+                            วุฒิการศึกษา
+                            <b>{{ vet.degree|default:"สพ.บ. (สัตวแพทยศาสตรบัณฑิต)" }}</b>
+                        </span>
+                    </div>
+
+                    <div class="detail-row">
+                        <i class="fas fa-star text-warning"></i>
+                        <span class="detail-text">
+                            ความเชี่ยวชาญ
+                            <b class="text-primary">{{ vet.specialization|default:"อายุรกรรมทั่วไป" }}</b>
+                        </span>
+                    </div>
+                </div>
+
+                
+                <a href="{% url 'vet_detail' vet.pk %}" class="btn btn-outline-dark w-100 mt-4 border-2 fw-bold rounded-3 py-2 btn-sm">
+                    ดูประวัติการรักษา
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+
+<a href="{% url 'vet_create' %}" class="btn-fab shadow-lg" title="เพิ่มสัตวแพทย์ใหม่">
+    <i class="fas fa-plus"></i>
+</a>
+{% endblock %}

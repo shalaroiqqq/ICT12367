@@ -1,0 +1,167 @@
+{% extends 'myapp/core/base.html' %}
+
+{% block title %}{{ vet.first_name }} {{ vet.last_name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <div class="card shadow-lg border-0" style="border-radius: 20px; overflow: hidden; background: var(--card-bg);">
+        
+        <div class="card-header" style="background-color: #d1fae5; border-bottom: 3px solid #10b981; border-left: 6px solid #059669;">
+            <div class="d-flex justify-content-between align-items-center py-2">
+                <h4 class="mb-0 fw-bold" style="color: #064e3b;"><i class="fas fa-user-md me-2"></i>ข้อมูลแพทย์สัตว์</h4>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'vet_update' vet.pk %}" class="btn btn-warning btn-sm fw-bold px-3 rounded-pill"><i class="fas fa-edit me-1"></i> แก้ไข</a>
+                    <a href="{% url 'vet_delete' vet.pk %}" class="btn btn-danger btn-sm fw-bold px-3 rounded-pill"><i class="fas fa-trash me-1"></i> ลบ</a>
+                    <a href="{% url 'vet_list' %}" class="btn btn-secondary btn-sm fw-bold px-3 rounded-pill"><i class="fas fa-arrow-left me-1"></i> ย้อนกลับ</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body p-4" style="background-color: var(--card-bg);">
+            <div class="row g-4">
+                
+                <div class="col-md-8">
+
+                    
+                    <div class="row mb-4 p-3 border rounded-4 shadow-sm stats-row">
+                        <div class="col-md-4">
+                            <small class="text-primary fw-bold"><i class="fas fa-id-card me-1"></i> รหัสแพทย์</small>
+                            <p class="mb-0 fw-bold text-white-custom fs-5">{{ vet.doctor_id|default:"-" }}</p>
+                        </div>
+                        <div class="col-md-4 border-start border-primary border-opacity-25">
+                            <small class="text-primary fw-bold"><i class="fas fa-file-contract me-1"></i> เลขใบอนุญาต</small>
+                            <p class="mb-0 fw-bold text-white-custom fs-5">{{ vet.license_no|default:"-" }}</p>
+                        </div>
+                        <div class="col-md-4 border-start border-primary border-opacity-25">
+                            <small class="text-primary fw-bold"><i class="fas fa-medal me-1"></i> ระดับตำแหน่ง</small>
+                            <p class="mb-0"><span class="badge bg-success px-3 rounded-pill">{{ vet.role_level|default:"-" }}</span></p>
+                        </div>
+                    </div>
+
+                    
+                    <h5 class="text-primary border-bottom border-primary border-2 pb-2 mb-3 fw-bold"><i class="fas fa-user-circle me-2"></i>ข้อมูลแพทย์</h5>
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <small class="text-muted-custom fw-bold">ชื่อ</small>
+                            <p class="mb-0 text-white-custom">{{ vet.first_name|default:"-" }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <small class="text-muted-custom fw-bold">นามสกุล</small>
+                            <p class="mb-0 text-white-custom">{{ vet.last_name|default:"-" }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <small class="text-muted-custom fw-bold">เลขประจำตัวประชาชน</small>
+                            <p class="mb-0 text-white-custom">{{ vet.national_id|default:"-" }}</p>
+                        </div>
+                    </div>
+
+                    
+                    <h5 class="text-primary border-bottom border-primary border-2 pb-2 mb-3 fw-bold"><i class="fas fa-graduation-cap me-2"></i>ข้อมูลวิชาชีพ</h5>
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <small class="text-muted-custom fw-bold">สาขาความเชี่ยวชาญ</small>
+                            <p class="mb-0 text-white-custom">{{ vet.specialization|default:"-" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <small class="text-muted-custom fw-bold">วันหมดอายุใบอนุญาต</small>
+                            <p class="mb-0 text-white-custom">{{ vet.license_expiry|default:"-" }}</p>
+                        </div>
+                        <div class="col-md-6 mt-3">
+                            <small class="text-muted-custom fw-bold">วุฒิการศึกษา</small>
+                            <p class="mb-0 text-white-custom">{{ vet.degree|default:"-" }}</p>
+                        </div>
+                        <div class="col-md-6 mt-3">
+                            <small class="text-muted-custom fw-bold">มหาวิทยาลัย</small>
+                            <p class="mb-0 text-white-custom">{{ vet.university|default:"-" }}</p>
+                        </div>
+                    </div>
+
+                    
+                    <h5 class="text-primary border-bottom border-primary border-2 pb-2 mb-3 fw-bold"><i class="fas fa-address-book me-2"></i>ข้อมูลติดต่อ</h5>
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <small class="text-muted-custom fw-bold">ที่อยู่</small>
+                            <p class="mb-0 text-white-custom">{{ vet.address_1|default:"" }} {{ vet.address_2|default:"" }}</p>
+                        </div>
+                    </div>
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <small class="text-muted-custom fw-bold">📱 เบอร์มือถือ</small>
+                            <p class="mb-0 text-white-custom">{{ vet.phone|default:"-" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <small class="text-muted-custom fw-bold">✉️ อีเมล</small>
+                            <p class="mb-0 text-white-custom">{{ vet.email|default:"-" }}</p>
+                        </div>
+                    </div>
+
+                    
+                    <h5 class="text-primary border-bottom border-primary border-2 pb-2 mb-3 fw-bold"><i class="fas fa-calendar-alt me-2"></i>ตารางปฏิบัติงาน</h5>
+                    <p class="mb-4 text-white-custom">{{ vet.working_hours|default:"-" }}</p>
+
+                    
+                    {% if vet.remarks %}
+                    <h5 class="text-primary border-bottom border-primary border-2 pb-2 mb-3 fw-bold"><i class="fas fa-sticky-note me-2"></i>หมายเหตุ</h5>
+                    <p class="text-white-custom">{{ vet.remarks }}</p>
+                    {% endif %}
+                </div>
+
+                
+                <div class="col-md-4">
+                    <h5 class="text-primary border-bottom border-primary border-2 pb-2 mb-3 fw-bold text-center"><i class="fas fa-camera me-2"></i>รูปถ่ายแพทย์</h5>
+                    <div class="text-center p-3 rounded-4 shadow-lg border stats-row">
+                        {% if vet.image %}
+                            <img src="{{ vet.image.url }}" class="img-fluid rounded-3" style="max-height:350px; object-fit:cover; width:100%;" alt="vet photo">
+                        {% else %}
+                            <div class="d-flex flex-column align-items-center justify-content-center rounded-3 bg-secondary bg-opacity-10" style="height:300px;">
+                                <div class="text-primary opacity-25" style="font-size: 6rem;"><i class="fas fa-user-md"></i></div>
+                                <span class="text-muted mt-2 fw-bold">ไม่มีรูปถ่าย</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+    /* Universal Colors that adapt to Light/Dark */
+    .text-muted-custom { color: #64748b !important; } /* Slate 500 for Light */
+    .text-white-custom { color: #1e293b !important; } /* Slate 800 for Light */
+    
+    [data-bs-theme="dark"] .text-muted-custom { color: #94a3b8 !important; } /* Gray 400 for Dark */
+    [data-bs-theme="dark"] .text-white-custom { color: #f1f5f9 !important; } /* Gray 100 for Dark */
+    
+    [data-bs-theme="dark"] .text-primary { color: #60a5fa !important; }
+    [data-bs-theme="dark"] .border-primary { border-color: #3b82f6 !important; }
+    
+    .row.shadow-sm {
+        transition: all 0.3s ease;
+    }
+    .row.shadow-sm:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+    }
+    [data-bs-theme="dark"] .row.shadow-sm:hover {
+        box-shadow: 0 10px 20px rgba(0,0,0,0.4) !important;
+    }
+    
+    /* Light Mode Card Body Background Override */
+    .card-body {
+        background-color: #ffffff !important;
+    }
+    [data-bs-theme="dark"] .card-body {
+        background-color: var(--card-bg) !important;
+    }
+    
+    /* Stats Row Background Fix */
+    .stats-row {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+    }
+    [data-bs-theme="dark"] .stats-row {
+        background: var(--input-bg) !important;
+        border: 1px solid var(--border-color) !important;
+    }
+</style>
+{% endblock %}

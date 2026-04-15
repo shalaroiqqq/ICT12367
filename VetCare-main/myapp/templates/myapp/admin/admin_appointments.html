@@ -1,0 +1,46 @@
+{% extends 'myapp/core/base.html' %}
+
+{% block title %}จัดการการนัดหมาย - Admin{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>📅 จัดการการนัดหมาย</h2>
+    <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary">ย้อนกลับ</a>
+</div>
+
+{% include 'myapp/includes/messages.html' %}
+
+{% if appointments %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>สัตว์เลี้ยง</th>
+                    <th>เจ้าของ</th>
+                    <th>แพทย์</th>
+                    <th>วันที่และเวลา</th>
+                    <th>เหตุผล</th>
+                    <th>การกระทำ</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for app in appointments %}
+                <tr>
+                    <td class="fw-bold">{{ app.pet_summary_name|default:app.pet.name }}</td>
+                    <td>{{ app.pet.owner.first_name }} {{ app.pet.owner.last_name }}</td>
+                    <td>{{ app.vet.name }}</td>
+                    <td>{{ app.date_time|date:"d/m/Y H:i" }}</td>
+                    <td>{{ app.reason|truncatewords:10 }}</td>
+                    <td>
+                        <a href="{% url 'appointment_detail' app.pk %}" class="btn btn-sm btn-info">📖 ดู</a>
+                        <a href="{% url 'admin_appointment_delete' app.pk %}" class="btn btn-sm btn-danger">🗑️ ลบ</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    {% include 'myapp/includes/empty_state.html' with title='ไม่มีข้อมูล' message='ไม่มีข้อมูลการนัดหมาย' %}
+{% endif %}
+{% endblock %}

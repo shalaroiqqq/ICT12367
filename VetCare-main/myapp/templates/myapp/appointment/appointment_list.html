@@ -1,0 +1,402 @@
+{% extends 'myapp/core/base.html' %}
+{% load static %}
+
+{% block title %}รายการนัดหมาย | Pet Clinic{% endblock %}
+
+{% block content %}
+
+<link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js'></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/th.js"></script>
+
+<style>
+    /* Responsive Table to Card layout */
+    @media (max-width: 768px) {
+        .mobile-card-list thead { display: none; }
+        .mobile-card-list tbody, .mobile-card-list tr, .mobile-card-list td { display: block; width: 100%; }
+        .mobile-card-list tr {
+            margin-bottom: 1rem; border: 1px solid var(--border-color) !important;
+            border-radius: 12px; padding: 10px; background: var(--card-bg); box-shadow: var(--card-shadow);
+        }
+        .mobile-card-list td {
+            text-align: right; padding: 8px 10px !important; border-bottom: 1px dashed var(--border-color);
+            display: flex; justify-content: space-between; align-items: center; margin-top: 5px;
+            background-color: transparent !important;
+        }
+        .mobile-card-list.table-hover > tbody > tr:hover > td,
+        .mobile-card-list.table-hover > tbody > tr:hover > th {
+            box-shadow: none !important;
+            background-color: transparent !important;
+        }
+        .mobile-card-list td:last-child { border-bottom: 0; justify-content: flex-end; }
+        .mobile-card-list td::before {
+            content: attr(data-label); font-weight: bold; color: var(--text-muted); text-align: left; margin-right: 10px;
+        }
+        .mobile-card-list td.item-main {
+            display: flex; justify-content: flex-start; text-align: left;
+            border-bottom: 1px solid var(--border-color); padding-bottom: 12px !important; margin-bottom: 5px;
+        }
+        .mobile-card-list td.item-main::before { display: none; }
+        .mobile-card-list td.item-main .d-flex { width: 100%; }
+    }
+</style>
+
+<div class="container py-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold text-success mb-1">📅 รายการนัดหมาย</h2>
+            <p class="text-muted small mb-0">ตารางการนัดหมายและสถานะการเข้ารับบริการ</p>
+        </div>
+        <div class="d-flex flex-wrap align-items-center gap-2 w-100 w-md-auto">
+            
+            <div class="d-flex rounded-pill border p-1 bg-white shadow-sm">
+                <a href="?mode=list{% if q %}&q={{ q }}{% endif %}{% if current_date %}&date={{ current_date|date:'Y-m-d' }}{% endif %}" class="btn btn-sm {% if mode == 'list' %}btn-success{% else %}btn-white text-muted border-0{% endif %} rounded-pill px-3 text-nowrap">
+                    <i class="fas fa-list me-1"></i> รายการ
+                </a>
+                <a href="?mode=calendar{% if q %}&q={{ q }}{% endif %}{% if current_date %}&date={{ current_date|date:'Y-m-d' }}{% endif %}" class="btn btn-sm {% if mode == 'calendar' %}btn-success{% else %}btn-white text-muted border-0{% endif %} rounded-pill px-3 text-nowrap">
+                    <i class="fas fa-calendar-alt me-1"></i> ปฏิทิน
+                </a>
+            </div>
+            <a href="{% url 'appointment_create' %}" class="btn btn-success rounded-pill px-4 shadow-sm text-nowrap flex-grow-1 flex-md-grow-0 text-center">
+                <i class="fas fa-plus me-2"></i>อัปเดตใหม่
+            </a>
+        </div>
+    </div>
+
+
+    
+    <div class="card border-0 shadow-sm rounded-4 p-4 mb-4" style="background: var(--card-bg);">
+        <form method="get" id="filterForm">
+            <input type="hidden" name="mode" value="{{ mode }}">
+            
+            <div class="row g-3 align-items-end">
+                
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold text-muted mb-2">เริ่มต้นวันที่</label>
+                    <div class="input-group rounded-3 overflow-hidden border" style="border-color: var(--border-color) !important;">
+                        <span class="input-group-text border-0 bg-transparent ps-3">
+                            <i class="fas fa-calendar-alt text-muted"></i>
+                        </span>
+                        <input type="text" name="start_date" id="startDateInput" value="{{ start_date }}" class="form-control border-0 py-2 shadow-none datepicker" style="background: transparent; color: var(--bs-body-color);" placeholder="เลือกวันที่...">
+                    </div>
+                </div>
+
+                
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold text-muted mb-2">สิ้นสุดวันที่</label>
+                    <div class="input-group rounded-3 overflow-hidden border" style="border-color: var(--border-color) !important;">
+                        <span class="input-group-text border-0 bg-transparent ps-3">
+                            <i class="fas fa-calendar-alt text-muted"></i>
+                        </span>
+                        <input type="text" name="end_date" id="endDateInput" value="{{ end_date }}" class="form-control border-0 py-2 shadow-none datepicker" style="background: transparent; color: var(--bs-body-color);" placeholder="เลือกวันที่...">
+                    </div>
+                </div>
+
+                
+                <div class="col-md-6">
+                    <label class="form-label small fw-bold text-muted mb-2">ค้นหาข้อมูล</label>
+                    <div class="input-group rounded-pill overflow-hidden border" style="border-color: var(--border-color) !important;">
+                        <span class="input-group-text border-0 bg-transparent ps-3">
+                            <i class="fas fa-search text-muted"></i>
+                        </span>
+                        <input type="text" name="q" id="searchInput" value="{{ q|default:'' }}" class="form-control border-0 py-2 shadow-none" style="background: transparent; color: var(--bs-body-color);" placeholder="ชื่อสัตว์, บริการ, แพทย์...">
+                        <button type="submit" class="btn btn-success px-4 fw-bold">กรองข้อมูล</button>
+                        {% if q or start_date or end_date %}
+                            <a href="?mode={{ mode }}" class="btn btn-outline-secondary border-0 d-flex align-items-center px-3" style="background: transparent;">
+                                <i class="fas fa-times"></i>
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div id="resultsContainer">
+    {% if mode == 'calendar' %}
+    
+    <div class="card border-0 shadow-sm rounded-4 p-4 mb-4" style="background: var(--card-bg);">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
+            <h5 class="fw-bold text-heading mb-0"><i class="fas fa-calendar-check text-success me-2"></i>ตารางนัดหมายรวม</h5>
+            <div class="d-flex flex-wrap justify-content-center gap-2">
+                <span class="badge rounded-pill px-3 py-2 fw-semibold" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2);">
+                    <i class="fas fa-circle me-1 small"></i> รอยืนยัน
+                </span>
+                <span class="badge rounded-pill px-3 py-2 fw-semibold" style="background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2);">
+                    <i class="fas fa-circle me-1 small"></i> ยืนยันแล้ว
+                </span>
+                <span class="badge rounded-pill px-3 py-2 fw-semibold" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.2);">
+                    <i class="fas fa-circle me-1 small"></i> เสร็จสิ้น
+                </span>
+                <span class="badge rounded-pill px-3 py-2 fw-semibold" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2);">
+                    <i class="fas fa-circle me-1 small"></i> ยกเลิก
+                </span>
+            </div>
+        </div>
+        <div id='calendar' class="rounded-3 px-1"></div>
+    </div>
+    {% else %}
+    
+    {% if appointments %}
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden" style="background: var(--card-bg);">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 mobile-card-list">
+                <thead class="text-nowrap" style="background: var(--bg-body); color: var(--text-heading);">
+                    <tr>
+                        <th class="ps-4">วัน-เวลา</th>
+                        <th>สัตว์เลี้ยง</th>
+                        <th>ประเภทบริการ</th>
+                        <th>สัตวแพทย์</th>
+                        <th class="text-center">สถานะ</th>
+                        <th class="text-end pe-4">การจัดการ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for apt in appointments %}
+                    <tr>
+                        <td class="ps-md-4 item-main" data-label="">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-light rounded-circle me-3 border flex-shrink-0" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                                    {% if apt.pet.image %}
+                                        <img src="{{ apt.pet.image.url }}" alt="{{ apt.pet.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                    {% else %}
+                                        <i class="fas fa-paw text-success fs-5"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="text-start">
+                                    <strong class="text-heading d-block fs-6 mb-1">{{ apt.pet.name }}</strong>
+                                    <div class="small fw-bold text-success">{{ apt.appointment_date|date:"d M Y" }}</div>
+                                    <div class="small text-muted"><i class="far fa-clock me-1 opacity-50"></i>{{ apt.appointment_time|time:"H:i" }} น.</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td data-label="สัตว์เลี้ยง:" class="d-none d-md-table-cell text-start">
+                            <span class="fw-bold">{{ apt.pet.name }}</span>
+                        </td>
+                        <td data-label="บริการ:" class="text-end text-md-start">
+                            <span class="small fw-semibold badge bg-light text-secondary border px-3 py-1 rounded-pill">{{ apt.get_service_type_display }}</span>
+                        </td>
+                        <td data-label="หมอ:" class="text-end text-md-start">
+                            <div class="small fw-bold text-heading">หมอ{{ apt.vet.first_name }}</div>
+                            <div class="small text-muted">{{ apt.vet.specialty|default:"ตรวจทั่วไป" }}</div>
+                        </td>
+                        <td class="text-end text-md-center" data-label="สถานะ:">
+                            {% if apt.status == 'pending' %}
+                                <span class="badge bg-warning-subtle text-warning px-3 py-2 rounded-pill fw-bold border-warning-subtle border">
+                                    <i class="fas fa-clock me-1"></i> รอยืนยัน
+                                </span>
+                            {% elif apt.status == 'confirmed' %}
+                                <span class="badge bg-success-subtle text-success px-3 py-2 rounded-pill fw-bold border-success-subtle border">
+                                    <i class="fas fa-check-circle me-1"></i> ยืนยันแล้ว
+                                </span>
+                            {% elif apt.status == 'in_progress' %}
+                                <span class="badge bg-info-subtle text-info px-3 py-2 rounded-pill fw-bold border-info-subtle border">
+                                    <i class="fas fa-stethoscope me-1"></i> กำลังตรวจ
+                                </span>
+                            {% elif apt.status == 'cancelled' %}
+                                <span class="badge bg-danger-subtle text-danger px-3 py-2 rounded-pill fw-bold border-danger-subtle border">
+                                    <i class="fas fa-times-circle me-1"></i> ยกเลิก
+                                </span>
+                            {% elif apt.status == 'completed' %}
+                                <span class="badge bg-primary-subtle text-primary px-3 py-2 rounded-pill fw-bold border-primary-subtle border">
+                                    <i class="fas fa-check-double me-1"></i> เสร็จสิ้น
+                                </span>
+                            {% else %}
+                                <span class="badge bg-secondary-subtle text-secondary px-3 py-2 rounded-pill border">{{ apt.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="pe-md-4 mt-2 mt-md-0" data-label="จัดการ:">
+                            <div class="d-flex align-items-center justify-content-end gap-2">
+                                <a href="{% url 'appointment_detail' apt.pk %}" class="btn btn-sm btn-outline-success rounded-pill px-3 shadow-sm">
+                                    <i class="fas fa-eye d-md-none"></i><span class="d-none d-md-inline">รายละเอียด</span>
+                                </a>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-secondary rounded-circle shadow-sm" style="width: 32px; height: 32px;" type="button" data-bs-toggle="dropdown">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg z-3" style="border-radius: 12px;">
+                                        <li><a class="dropdown-item py-2" href="{% url 'appointment_update' apt.pk %}"><i class="fas fa-edit me-2 text-warning"></i>แก้ไขข้อมูล</a></li>
+                                        <li><hr class="dropdown-divider opacity-50"></li>
+                                        <li><a class="dropdown-item py-2 text-danger" href="{% url 'appointment_delete' apt.pk %}"><i class="fas fa-trash-alt me-2"></i>ยกเลิกนัด</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    
+    <div class="mt-4">
+        {% include 'myapp/includes/pagination.html' %}
+    </div>
+
+    {% else %}
+    
+    <div class="text-center py-5 bg-white rounded-4 shadow-sm border mt-4" style="border-style: dashed !important;">
+        <div class="display-1 text-muted opacity-25 mb-3"><i class="fas fa-calendar-alt"></i></div>
+        <h4 class="text-muted fw-bold">ไม่พบข้อมูลการนัดหมาย</h4>
+        <p class="text-muted">ลองค้นหาด้วยคำอื่น หรือสร้างตารางการนัดใหม่</p>
+        <a href="{% url 'appointment_create' %}" class="btn btn-success rounded-pill mt-3 px-4">สร้างนัดหมายใหม่</a>
+    </div>
+    {% endif %}
+    {% endif %}
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Flatpickr initialization
+        flatpickr(".datepicker", {
+            dateFormat: "Y-m-d",
+            locale: "th",
+            altInput: true,
+            altFormat: "j F Y",
+            allowInput: true,
+            disableMobile: "true",
+            onChange: function() { triggerSearch(); }
+        });
+
+        // AJAX Search Logic
+        const searchInput = document.getElementById('searchInput');
+        const startDateInput = document.getElementById('startDateInput');
+        const endDateInput = document.getElementById('endDateInput');
+        const resultsContainer = document.getElementById('resultsContainer');
+        let searchTimeout;
+
+        function triggerSearch() {
+            clearTimeout(searchTimeout);
+            const query = searchInput.value;
+            const start = startDateInput.value;
+            const end = endDateInput.value;
+            const mode = '{{ mode }}';
+
+            const url = new URL(window.location.href);
+            url.searchParams.set('q', query);
+            url.searchParams.set('start_date', start);
+            url.searchParams.set('end_date', end);
+
+            searchTimeout = setTimeout(() => {
+                fetch(url, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const newContent = doc.getElementById('resultsContainer');
+                    if (newContent) {
+                        resultsContainer.innerHTML = newContent.innerHTML;
+                        window.history.replaceState({path: url.toString()}, '', url.toString());
+                        
+                        // Re-initialize calendar if in calendar mode
+                        if (mode === 'calendar' && typeof initCalendar === 'function') {
+                            initCalendar();
+                        }
+                    }
+                })
+                .catch(error => console.error('Error fetching results:', error));
+            }, 300);
+        }
+
+        if (searchInput) searchInput.addEventListener('input', triggerSearch);
+
+        // Calendar Logic
+        {% if mode == 'calendar' %}
+        window.initCalendar = function() {
+            var calendarEl = document.getElementById('calendar');
+            if (!calendarEl) return;
+            
+            // Extract events from the newly loaded HTML if it's an AJAX call
+            // Or use the initial events_json
+            var eventsData = {{ events_json|safe }};
+            
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                initialDate: '{{ current_date|date:"Y-m-d" }}',
+                headerToolbar: {
+                    left: '',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                locale: 'th',
+                events: eventsData,
+                eventClick: function(info) {
+                    if (info.event.url) {
+                        window.location.href = info.event.url;
+                        info.jsEvent.preventDefault();
+                    }
+                }
+            });
+            calendar.render();
+        };
+        initCalendar();
+        {% endif %}
+    });
+</script>
+<style>
+    .fc { font-family: var(--bs-body-font-family); }
+    .fc-header-toolbar { 
+        margin-bottom: 2rem !important; 
+        padding: 0.5rem;
+    }
+    .fc-toolbar-title { 
+        font-size: 1.5rem !important; 
+        font-weight: 800 !important; 
+        color: var(--text-heading) !important;
+        letter-spacing: -0.5px;
+    }
+    
+    /* 🟢 Custom Themed Buttons */
+    .fc-button-primary { 
+        background-color: transparent !important;
+        border: 1px solid rgba(16, 185, 129, 0.3) !important;
+        color: #10b981 !important;
+        padding: 8px 20px !important;
+        border-radius: 12px !important;
+        font-weight: 600 !important;
+        transition: all 0.2s ease;
+        text-transform: capitalize;
+    }
+    .fc-button-primary:hover {
+        background-color: var(--bs-success) !important;
+        border-color: var(--bs-success) !important;
+        color: #fff !important;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+    }
+    .fc-button-active {
+        background-color: var(--bs-success) !important;
+        border-color: var(--bs-success) !important;
+        color: #fff !important;
+    }
+    
+    .fc-button-group > .fc-button:not(:last-child) {
+        margin-right: 8px !important;
+    }
+    
+    /* Event Styling */
+    .fc-v-event, .fc-h-event {
+        border-radius: 8px !important;
+        padding: 4px 8px !important;
+        border: none !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .fc-event-main {
+        padding: 2px 0;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+    
+    .fc-day-today {
+        background-color: rgba(16, 185, 129, 0.03) !important;
+    }
+    .fc-daygrid-day-number { font-weight: 700; color: #64748b; padding: 10px !important; }
+    .fc-col-header-cell-cushion { font-weight: 700; color: var(--text-heading); text-decoration: none; padding: 12px !important; }
+</style>
+{% endblock %}

@@ -1,0 +1,395 @@
+{% extends 'myapp/core/base.html' %}
+
+{% block title %}จัดการสิทธิ์ผู้ใช้งาน (Admin) - VetCare{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --admin-primary: #4f46e5;
+        --admin-bg: #f8fafc;
+        --card-border: #e2e8f0;
+    }
+
+    .admin-container {
+        padding: 1.5rem 2rem;
+        background-color: var(--admin-bg);
+        min-height: 100vh;
+    }
+
+    .page-title {
+        font-size: 2.2rem; /* Larger title */
+        font-weight: 800;
+        letter-spacing: -0.025em;
+        color: #1e293b;
+    }
+
+    .card-modern {
+        background: #ffffff;
+        border: 1px solid var(--card-border);
+        border-radius: 1.25rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        overflow: hidden;
+    }
+
+    .search-wrapper {
+        position: relative;
+        max-width: 450px;
+    }
+
+    .search-input-modern {
+        padding: 0.75rem 1rem 0.75rem 3rem;
+        border-radius: 1rem;
+        border: 1.5px solid #e2e8f0;
+        background: #ffffff;
+        transition: all 0.2s ease;
+        font-size: 0.95rem;
+    }
+
+    .search-input-modern:focus {
+        border-color: var(--admin-primary);
+        box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+        outline: none;
+    }
+
+    .search-icon-pos {
+        position: absolute;
+        left: 1.2rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+        pointer-events: none;
+    }
+
+    /* Table Styling */
+    .table-modern thead th {
+        background-color: #f1f5f9;
+        color: #64748b;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 1rem 1.5rem;
+        border-bottom: 2px solid #f1f5f9;
+    }
+
+    .table-modern tbody td {
+        padding: 1.25rem 1.5rem;
+        vertical-align: middle;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .table-modern tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .user-avatar-circle {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1.1rem;
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        color: white;
+        box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
+    }
+
+    .user-name-primary {
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 0.1rem;
+        font-size: 1.1rem; /* Larger font */
+    }
+
+    .user-email-secondary {
+        font-size: 0.95rem; /* Larger font */
+        color: #64748b;
+    }
+
+    /* Badge Aesthetics */
+    .badge-subtle {
+        padding: 0.6em 1em; /* More padding */
+        font-weight: 700;
+        font-size: 0.85rem; /* Larger font */
+        border-radius: 10px;
+    }
+
+    .bg-admin-subtle { background-color: #fef3c7; color: #92400e; }
+    .bg-staff-subtle { background-color: #e0f2fe; color: #075985; }
+    .bg-client-subtle { background-color: #f1f5f9; color: #475569; }
+
+    /* Custom Toggle Switch Style */
+    .form-check-input:checked {
+        background-color: var(--admin-primary);
+        border-color: var(--admin-primary);
+    }
+
+    .action-btn-group .btn {
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        transition: all 0.2s;
+    }
+
+    .btn-edit-modern {
+        background: #f1f5f9;
+        color: #475569;
+        border: none;
+    }
+
+    .btn-edit-modern:hover {
+        background: #e2e8f0;
+        color: #1e293b;
+    }
+
+    .btn-delete-modern {
+        background: #fff1f2;
+        color: #e11d48;
+        border: none;
+    }
+
+    .btn-delete-modern:hover {
+        background: #ffe4e6;
+        color: #be123c;
+    }
+
+    /* Empty State */
+    .empty-state-card {
+        padding: 4rem 2rem;
+        text-align: center;
+    }
+    .empty-state-icon {
+        font-size: 4rem;
+        color: #e2e8f0;
+        margin-bottom: 1.5rem;
+    }
+
+    /* Responsive Table to Card layout */
+    @media (max-width: 991.98px) {
+        .admin-container { padding: 1rem; }
+        .table-modern thead { display: none; }
+        .table-modern tbody tr {
+            display: block;
+            background: #ffffff;
+            border: 1px solid var(--card-border);
+            border-radius: 1.25rem;
+            margin-bottom: 1.25rem;
+            padding: 1.25rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .table-modern tbody tr:hover {
+            background-color: #ffffff !important;
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            border-color: var(--admin-primary);
+        }
+        .table-modern tbody td {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0.5rem !important;
+            border-bottom: 1px dashed #f1f5f9 !important;
+            text-align: right;
+        }
+        .table-modern tbody td:last-child {
+            border-bottom: none !important;
+        }
+        .table-modern tbody td::before {
+            content: attr(data-label);
+            font-weight: 700;
+            color: #64748b;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            text-align: left;
+        }
+        .table-modern tbody td.ps-4 {
+            padding-left: 0.5rem !important;
+            display: block;
+            text-align: left;
+            border-bottom: 2px solid #f1f5f9 !important;
+            margin-bottom: 0.5rem;
+        }
+        .table-modern tbody td.ps-4::before {
+            display: none;
+        }
+        .table-modern tbody td.ps-4 .d-flex {
+            justify-content: flex-start;
+        }
+        .user-avatar-circle {
+            width: 50px;
+            height: 50px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    
+    <!-- Header Section -->
+    <div class="row align-items-center mb-5 gy-4">
+        <div class="col-lg-6">
+            <h1 class="page-title mb-1">
+                <i class="fas fa-users-cog me-2 text-primary opacity-75"></i>จัดการยศและสิทธิ์ผู้ใช้งาน
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item small"><a href="{% url 'admin_dashboard' %}" class="text-decoration-none">แผงควบคุมระบบ</a></li>
+                    <li class="breadcrumb-item small active" aria-current="page">จัดการสิทธิ์ด้านความปลอดภัย</li>
+                </ol>
+            </nav>
+        </div>
+        <div class="col-lg-6">
+            <div class="d-flex flex-column flex-md-row justify-content-lg-end align-items-md-center gap-3">
+                <form method="GET" class="search-wrapper w-100 w-md-auto">
+                    <i class="fas fa-search search-icon-pos"></i>
+                    <input type="text" name="q" value="{{ q }}" 
+                           class="form-control search-input-modern" 
+                           placeholder="ค้นหาตามชื่อ, ชื่อผู้ใช้ หรืออีเมล...">
+                </form>
+                {% if q %}
+                <a href="{% url 'admin_user_management' %}" class="btn btn-link text-muted small p-0 text-decoration-none">
+                    <i class="fas fa-times-circle me-1"></i>ล้างการค้นหา
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Table Card -->
+    <div class="card-modern shadow-lg border-0 mb-5">
+        
+        <div class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center">
+            <div class="fw-bold text-slate-800"><i class="fas fa-list me-2 opacity-50"></i>รายชื่อผู้ใช้งานในระบบ</div>
+            <div class="badge bg-primary rounded-pill">ผู้ใช้ทั้งหมด {{ users.count }} ราย</div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-modern mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-4">ข้อมูลผู้ใช้งาน</th>
+                        <th>สถานะ / บทบาท</th>
+                        <th class="text-center">โหมดพนักงาน</th>
+                        <th class="text-center">สิทธิ์แอดมิน</th>
+                        <th class="text-center">ตัวเลือกจัดการ</th>
+                        <th class="text-end pe-4">วันที่เข้าร่วมระบบ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in users %}
+                    <tr class="align-middle">
+                        <td class="ps-4" data-label="ข้อมูลผู้ใช้งาน">
+                            <div class="d-flex align-items-center">
+                                <div class="user-avatar-circle me-3">
+                                    {{ u.first_name|default:u.username|make_list|first|upper }}
+                                </div>
+                                <div class="d-flex flex-column">
+                                    <span class="user-name-primary">{{ u.first_name }} {{ u.last_name|default:"" }}</span>
+                                    <span class="user-email-secondary">@{{ u.username }} • {{ u.email }}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td data-label="สถานะ / บทบาท">
+                            {% if u.is_superuser %}
+                                <span class="badge badge-subtle bg-admin-subtle">
+                                    <i class="fas fa-crown me-1"></i>แอดมิน
+                                </span>
+                            {% elif u.is_staff %}
+                                <span class="badge badge-subtle bg-staff-subtle">
+                                    <i class="fas fa-user-shield me-1"></i>พนักงาน
+                                </span>
+                            {% else %}
+                                <span class="badge badge-subtle bg-client-subtle text-muted">
+                                    <i class="fas fa-user me-1"></i>ลูกค้าทั่วไป
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center" data-label="โหมดพนักงาน">
+                             <div class="form-check form-switch d-inline-block p-0">
+                                <input class="form-check-input ms-0" type="checkbox" role="switch" id="staffToggle{{ u.id }}" 
+                                       {% if u.is_staff %}checked{% endif %}
+                                       onchange="toggleUserStatus('{% url 'admin_user_toggle_status' u.id 'staff' %}');">
+                            </div>
+                        </td>
+                        <td class="text-center" data-label="สิทธิ์แอดมิน">
+                            <div class="form-check form-switch d-inline-block p-0">
+                                <input class="form-check-input ms-0" type="checkbox" role="switch" id="adminToggle{{ u.id }}" 
+                                       {% if u.is_superuser %}checked{% endif %}
+                                       onchange="toggleUserStatus('{% url 'admin_user_toggle_status' u.id 'admin' %}');">
+                            </div>
+                        </td>
+                        <td class="text-center" data-label="ตัวเลือกจัดการ">
+                            <div class="d-flex justify-content-center gap-2 action-btn-group">
+                                <a href="{% url 'admin_user_edit' u.id %}" class="btn btn-edit-modern" title="แก้ไขข้อมูล">
+                                    <i class="fas fa-pen-nib"></i>
+                                </a>
+                                {% if u != request.user %}
+                                <button type="button" class="btn btn-delete-modern" title="ลบบัญชีนี้"
+                                        onclick="confirmDelete('{{ u.id }}', '{{ u.username|escapejs }}')">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="text-end pe-4" data-label="วันที่เข้าร่วม">
+                            <div class="user-email-secondary fw-medium">
+                                <i class="far fa-calendar-alt me-1 pe-0"></i>{{ u.date_joined|date:"d M Y" }}
+                            </div>
+                            <div class="x-small text-muted opacity-75">Member ID: #{{ u.pk }}</div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6">
+                            <div class="empty-state-card">
+                                <i class="fas fa-user-times empty-state-icon"></i>
+                                <h4 class="fw-bold text-slate-700">ไม่พบรายชื่อที่ค้นหา</h4>
+                                <p class="text-muted">ไม่พบข้อมูลผู้ใช้งานที่ตรงกับ "{{ q }}" โปรดตรวจสอบตัวสะกดหรือลองค้นหาด้วยคำอื่น</p>
+                                <a href="{% url 'admin_user_management' %}" class="btn btn-primary rounded-pill px-4 mt-2">ดูรายชื่อทั้งหมด</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Simple Scripts -->
+<script>
+    function toggleUserStatus(url) {
+        window.location.href = url;
+    }
+
+    function confirmDelete(userId, username) {
+        Swal.fire({
+            title: 'ยืนยันการลบบัญชีผู้ใช้?',
+            text: 'คุณต้องการลบบัญชีของ "' + username + '" ใช่หรือไม่? การกระทำนี้ไม่สามารถเรียกคืนข้อมูลได้!',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: '<i class="fas fa-trash-alt me-2"></i>ใช่, ลบทันที',
+            cancelButtonText: 'ยกเลิก',
+            customClass: {
+                popup: 'rounded-4 shadow-lg border-0',
+                confirmButton: 'px-4 py-2 fw-bold rounded-pill',
+                cancelButton: 'px-4 py-2 fw-bold rounded-pill'
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = "{% url 'admin_user_management' %}delete/" + userId + "/";
+            }
+        });
+    }
+</script>
+{% endblock %}

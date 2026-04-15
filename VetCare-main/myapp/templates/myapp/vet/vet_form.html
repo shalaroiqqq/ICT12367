@@ -1,0 +1,576 @@
+{% extends 'myapp/core/base.html' %}
+
+{% block title %}ทะเบียนแพทย์สัตว์{% endblock %}
+{% block extra_css %}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+<style>
+/* Profile Upload UI */
+.profile-upload-wrapper {
+    position: relative;
+    width: 180px;
+    height: 180px;
+    margin: 0 auto;
+}
+.profile-pic-container {
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    border: 4px solid var(--primary-green);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    overflow: hidden;
+    position: relative;
+    background-color: var(--input-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.profile-pic-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.upload-btn-cam {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    width: 45px;
+    height: 45px;
+    background-color: #10b981;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(16, 185, 129, 0.4);
+    transition: all 0.2s ease;
+    border: 3px solid white;
+    z-index: 5;
+}
+.upload-btn-cam:hover {
+    background-color: #059669;
+    transform: scale(1.1);
+}
+.clear-btn-trash {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    width: 45px;
+    height: 45px;
+    background-color: #ef4444;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(239, 68, 68, 0.4);
+    transition: all 0.2s ease;
+    border: 3px solid white;
+    z-index: 5;
+}
+.clear-btn-trash:hover {
+    background-color: #b91c1c;
+    transform: scale(1.1);
+}
+.image-to-be-cleared {
+    filter: grayscale(1) blur(2px);
+    opacity: 0.5;
+}
+
+/* Cropper Modal Customization */
+.cropper-container-wrapper {
+    width: 100%;
+    max-height: 400px;
+    overflow: hidden;
+    background-color: #f8fafc;
+    border-radius: 12px;
+}
+.modal-cropper .modal-dialog {
+    max-width: 600px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <div class="card shadow-lg border-0" style="border-radius: 20px; overflow: hidden; background: var(--card-bg);">
+        
+        <div class="card-header font-weight-bold" style="background-color: #d1fae5; border-bottom: 3px solid #10b981; border-left: 6px solid #059669;">
+            <h4 class="mb-0 py-2" style="color: #064e3b; font-weight: 800;">
+                <i class="fas fa-stethoscope me-2"></i>ทะเบียนแพทย์สัตว์ (Veterinarian Registration)
+            </h4>
+        </div>
+
+        <div class="card-body p-4" style="background-color: var(--card-bg);">
+            <form method="post" enctype="multipart/form-data" class="needs-validation" id="vetForm" novalidate>
+                {% csrf_token %}
+
+                
+                <div class="row align-items-end mb-4 p-3 border rounded-4 shadow-sm stats-row">
+                    <div class="col-md-4">
+                        <label class="form-label text-primary fw-bold small mb-1"><i class="fas fa-id-card me-1"></i> รหัสแพทย์ (Doctor ID)</label>
+                        {{ form.doctor_id }}
+                    </div>
+                    <div class="col-md-4 border-start border-primary border-opacity-10">
+                        <label class="form-label text-primary fw-bold small mb-1"><i class="fas fa-file-contract me-1"></i> เลขที่ใบอนุญาต (License No.)</label>
+                        {{ form.license_no }}
+                    </div>
+                    <div class="col-md-4 border-start border-primary border-opacity-10">
+                        <label class="form-label text-primary fw-bold small mb-1"><i class="fas fa-medal me-1"></i> ระดับตำแหน่ง</label>
+                        {{ form.role_level }}
+                    </div>
+                </div>
+
+                
+                <div class="row g-4 mb-4">
+                    
+                    <div class="col-md-8">
+                         
+                        <h5 class="text-primary border-bottom border-primary border-2 pb-2 mb-3 fw-bold"><i class="fas fa-user-md me-2"></i>ข้อมูลแพทย์ (Doctor Details)</h5>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted-custom fw-bold small mb-1">ชื่อ (First Name)</label>
+                                {{ form.first_name }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted-custom fw-bold small mb-1">นามสกุล (Last Name)</label>
+                                {{ form.last_name }}
+                            </div>
+                        </div>
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <label class="form-label text-muted-custom fw-bold small mb-1">🪪 เลขประจำตัวประชาชน (National ID)</label>
+                                {{ form.national_id }}
+                            </div>
+                        </div>
+
+                        
+                        <h5 class="text-primary border-bottom border-primary border-2 pb-2 mb-3 fw-bold"><i class="fas fa-briefcase me-2"></i>ข้อมูลวิชาชีพ (Professional Details)</h5>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted-custom fw-bold small mb-1">🔬 สาขาความเชี่ยวชาญ</label>
+                                {{ form.specialization }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted-custom fw-bold small mb-1">📅 วันหมดอายุใบอนุญาต</label>
+                                {{ form.license_expiry }}
+                            </div>
+                        </div>
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted-custom fw-bold small mb-1">🎓 วุฒิการศึกษา</label>
+                                {{ form.degree }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted-custom fw-bold small mb-1">🏫 มหาวิทยาลัย</label>
+                                {{ form.university }}
+                            </div>
+                        </div>
+                    </div>
+
+                    
+                    <div class="col-md-4 text-center">
+                        <h5 class="text-primary border-bottom border-primary border-2 pb-2 mb-4 fw-bold text-center">
+                            <i class="fas fa-camera me-2"></i>รูปถ่ายแพทย์
+                        </h5>
+                        
+                        <div class="profile-upload-wrapper">
+                            <div class="profile-pic-container" id="profile-container">
+                                {% if form.instance.image %}
+                                    <img id="image-preview" src="{{ form.instance.image.url }}" alt="Vet Profile" style="cursor: pointer;">
+                                {% else %}
+                                    <img id="image-preview" src="https://ui-avatars.com/api/?name=Vet&background=e2e8f0&color=64748b&size=180" alt="Vet Profile" style="cursor: pointer;">
+                                {% endif %}
+                                <div id="delete-placeholder" class="d-none bg-light d-flex align-items-center justify-content-center flex-column p-3" style="width: 100%; height: 100%; color: #ef4444; font-size: 0.8rem; text-align: center;">
+                                    <i class="fas fa-trash-alt fs-2 mb-2 opacity-50"></i>
+                                    <div class="fw-bold">รูปภาพจะถูกลบ</div>
+                                    <div class="small opacity-75">กดปุ่มสีเทาเพื่อเลิกลบ</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Control Buttons -->
+                            <label for="id_image" class="upload-btn-cam" id="upload-btn-trigger" title="เปลี่ยนรูป" style="z-index: 30;">
+                                <i class="fas fa-camera"></i>
+                            </label>
+
+                            <div class="clear-btn-trash" id="clear-photo-btn" title="ลบรูป" style="z-index: 30;">
+                                <i class="fas fa-trash-alt"></i>
+                            </div>
+                        </div>
+
+                        <div class="d-none">
+                            {{ form.image }}
+                            <input type="checkbox" name="image-clear" id="hidden-image-clear">
+                        </div>
+                        
+                        <div class="mt-4 p-2 bg-light rounded-3 border">
+                            <p class="small text-muted mb-0"><i class="fas fa-info-circle me-1"></i>คลิกกล้องเพื่อแต่งรูป หรือคลิกถังขยะเพื่อลบ</p>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <h5 class="text-primary border-bottom border-primary border-2 pb-2 mb-4 mt-2 fw-bold"><i class="fas fa-address-book me-2"></i>ข้อมูลติดต่อ (Contact Details)</h5>
+                
+                <div class="mb-4 pb-2">
+                    <label class="form-label text-muted-custom fw-bold small mb-2">ที่อยู่ บรรทัดที่ 1</label>
+                    {{ form.address_1 }}
+                </div>
+                
+                <div class="mb-4 pb-2">
+                    <label class="form-label text-muted-custom fw-bold small mb-2">ที่อยู่ บรรทัดที่ 2</label>
+                    {{ form.address_2 }}
+                </div>
+                
+                <div class="row g-4 mb-4 pb-2">
+                    <div class="col-md-6">
+                        <label class="form-label text-muted-custom fw-bold small mb-2">📱 เบอร์มือถือ (Mobile)</label>
+                        {{ form.phone }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-muted-custom fw-bold small mb-2">✉️ อีเมล (Email)</label>
+                        {{ form.email }}
+                    </div>
+                </div>
+
+                
+                <h5 class="text-primary border-bottom border-primary border-2 pb-2 mb-4 mt-5 fw-bold"><i class="fas fa-calendar-alt me-2"></i>ตารางปฏิบัติงาน (Working Hours)</h5>
+                <div class="mb-4">
+                    {{ form.working_hours }}
+                </div>
+
+                
+                <div class="mb-4 mt-5">
+                    <label class="form-label text-muted-custom fw-bold small mb-2">📝 หมายเหตุ (Remarks)</label>
+                    {{ form.remarks }}
+                </div>
+
+                
+                <div class="d-flex justify-content-end gap-2 mt-4 pt-4 border-top">
+                    <a href="{% url 'vet_list' %}" class="btn btn-danger px-5 fw-bold rounded-pill"><i class="fas fa-times me-2"></i> ยกเลิก</a>
+                    <button type="submit" id="btnSubmit" class="btn btn-success px-5 fw-bold rounded-pill"><i class="fas fa-save me-2"></i> บันทึก</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Cropper Modal -->
+<div class="modal fade modal-cropper" id="cropperModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0" style="border-radius: 20px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
+            <div class="modal-header bg-light border-0 px-4 py-3">
+                <h5 class="modal-title fw-bold" style="color: #10b981;">
+                    <i class="fas fa-crop-alt me-2"></i>ปรับแต่งรูปแพทย์
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 bg-white text-center">
+                <div class="cropper-container-wrapper mb-3 mx-auto">
+                    <img id="cropper-image" src="" alt="Cropper" style="max-width: 100%; display: block;">
+                </div>
+                
+                <div class="editor-controls bg-light p-3 rounded-4 mt-3">
+                    <div class="row align-items-center g-3">
+                        <div class="col-md-7 text-start">
+                            <label class="form-label small fw-bold text-muted mb-1"><i class="fas fa-search-plus me-1"></i>ซูม (Zoom)</label>
+                            <input type="range" class="form-range" id="zoom-range" min="0" max="3" step="0.1" value="0.5">
+                        </div>
+                        <div class="col-md-5 text-end">
+                            <label class="form-label small fw-bold text-muted mb-1 d-block"><i class="fas fa-sync-alt me-1"></i>หมุน (Rotate)</label>
+                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle me-1" id="rotate-left" style="width: 38px; height: 38px;">
+                                <i class="fas fa-undo"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle" id="rotate-right" style="width: 38px; height: 38px;">
+                                <i class="fas fa-redo"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-light border-0 px-4 py-3">
+                <button type="button" class="btn btn-light fw-bold px-4" data-bs-dismiss="modal" style="border-radius: 12px;">ยกเลิก</button>
+                <button type="button" class="btn btn-success fw-bold px-4" id="crop-and-save" style="border-radius: 12px; background-color: #10b981; border: none;">
+                    <i class="fas fa-check-circle me-2"></i>บันทึกและครอบตัด
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Universal Colors that adapt to Light/Dark */
+    .text-muted-custom { color: #64748b !important; }
+    .text-white-custom { color: #1e293b !important; }
+    
+    [data-bs-theme="dark"] .text-muted-custom { color: #94a3b8 !important; }
+    [data-bs-theme="dark"] .text-primary { color: #60a5fa !important; }
+    [data-bs-theme="dark"] .border-primary { border-color: #3b82f6 !important; }
+    [data-bs-theme="dark"] .form-label { color: #cbd5e1 !important; }
+
+    /* Fix hardcoded Light Mode Body */
+    .card-body { background-color: #ffffff !important; }
+    [data-bs-theme="dark"] .card-body { background-color: var(--card-bg) !important; }
+
+    .stats-row { background: #f8fafc; border: 1px solid #e2e8f0; }
+    [data-bs-theme="dark"] .stats-row { background: var(--input-bg) !important; border-color: var(--border-color) !important; }
+
+    /* Input styling */
+    .form-control, .form-select {
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 0.6rem 1rem;
+        background-color: var(--input-bg);
+        color: var(--text-heading);
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.25);
+    }
+
+    /* Custom File Input Styling for Django ClearableFileInput */
+    .custom-file-input-group {
+        font-size: 0.85rem;
+        color: #64748b;
+    }
+    .custom-file-input-group input[type="file"] {
+        margin-top: 5px;
+    }
+    .custom-file-input-group label[for="image-clear_id"] {
+        color: #dc3545;
+        font-weight: bold;
+        cursor: pointer;
+        padding: 2px 8px;
+        border-radius: 5px;
+        background: #fff5f5;
+        border: 1px solid #feb2b2;
+        margin-left: 5px;
+        transition: all 0.2s;
+    }
+    .custom-file-input-group label[for="image-clear_id"]:hover {
+        background: #fee2e2;
+    }
+    .custom-file-input-group input[type="checkbox"] {
+        cursor: pointer;
+        width: 16px;
+        height: 16px;
+        vertical-align: middle;
+        margin-right: 4px;
+    }
+</style>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const imageInput = document.querySelector('input[type="file"]');
+        const imagePreview = document.getElementById('image-preview');
+        const uploadBtnTrigger = document.getElementById('upload-btn-trigger');
+        
+        const cropperModalEl = document.getElementById('cropperModal');
+        const cropperModal = new bootstrap.Modal(cropperModalEl);
+        const cropperImage = document.getElementById('cropper-image');
+        let cropper = null;
+
+        const zoomRange = document.getElementById('zoom-range');
+        const btnRotateLeft = document.getElementById('rotate-left');
+        const btnRotateRight = document.getElementById('rotate-right');
+        const btnCropAndSave = document.getElementById('crop-and-save');
+
+        if (imagePreview) {
+            imagePreview.addEventListener('click', () => {
+                if(imageInput) imageInput.click();
+            });
+        }
+
+        if (imageInput) {
+            imageInput.addEventListener('change', function(e) {
+                if(e.detail && e.detail.fromCropper) return;
+                
+                if (e.target.files && e.target.files[0]) {
+                    const file = e.target.files[0];
+                    if(!file.type.match('image.*')) {
+                        alert('กรุณาเลือกไฟล์ภาพเท่านั้น');
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = function(evt) {
+                        cropperImage.src = evt.target.result;
+                        cropperModal.show();
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        cropperModalEl.addEventListener('shown.bs.modal', function () {
+            if (cropper) cropper.destroy();
+
+            cropper = new Cropper(cropperImage, {
+                aspectRatio: 1,
+                viewMode: 1,
+                dragMode: 'move',
+                autoCropArea: 0.9,
+                guides: false,
+                center: false,
+                highlight: false,
+                cropBoxMovable: false,
+                cropBoxResizable: false,
+                toggleDragModeOnDblclick: false,
+                ready: function () {
+                    const viewBox = document.querySelector('.cropper-view-box');
+                    if (viewBox) viewBox.style.borderRadius = '50%';
+                    zoomRange.value = 0.5;
+                }
+            });
+        });
+
+        cropperModalEl.addEventListener('hidden.bs.modal', function () {
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
+            }
+        });
+
+        zoomRange.addEventListener('input', function() {
+            if(cropper) cropper.zoomTo(Math.max(0.1, parseFloat(this.value))); 
+        });
+
+        btnRotateLeft.addEventListener('click', () => { if(cropper) cropper.rotate(-90); });
+        btnRotateRight.addEventListener('click', () => { if(cropper) cropper.rotate(90); });
+
+        btnCropAndSave.addEventListener('click', function() {
+            if (!cropper) return;
+            
+            const canvas = cropper.getCroppedCanvas({
+                width: 400,
+                height: 400,
+                fillColor: '#fff', 
+            });
+
+            imagePreview.src = canvas.toDataURL('image/jpeg', 0.9);
+
+            canvas.toBlob(function(blob) {
+                const dt = new DataTransfer();
+                const compiledImg = new File([blob], "vet_profile_" + Date.now() + ".jpg", { 
+                    type: "image/jpeg", 
+                    lastModified: Date.now() 
+                });
+                dt.items.add(compiledImg);
+                
+                if (imageInput) {
+                    imageInput.files = dt.files;
+                    imageInput.dispatchEvent(new CustomEvent('change', { detail: { fromCropper: true } }));
+                }
+                
+                cropperModal.hide();
+            }, 'image/jpeg', 0.9);
+        });
+
+        // Delete Original Image logic
+        const btnClearPhoto = document.getElementById('clear-photo-btn');
+        const hiddenClearCheckbox = document.getElementById('hidden-image-clear');
+        const deletePlaceholder = document.getElementById('delete-placeholder');
+        
+        if (btnClearPhoto) {
+            btnClearPhoto.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log("Trash clicked!"); // Debug
+                
+                if (hiddenClearCheckbox) {
+                    hiddenClearCheckbox.checked = !hiddenClearCheckbox.checked;
+                    
+                    if (hiddenClearCheckbox.checked) {
+                        imagePreview.classList.add('d-none');
+                        if(deletePlaceholder) deletePlaceholder.classList.remove('d-none');
+                        btnClearPhoto.innerHTML = '<i class="fas fa-undo"></i>';
+                        btnClearPhoto.style.backgroundColor = '#64748b';
+                        btnClearPhoto.title = "ยกเลิกการลบ";
+                    } else {
+                        imagePreview.classList.remove('d-none');
+                        if(deletePlaceholder) deletePlaceholder.classList.add('d-none');
+                        btnClearPhoto.innerHTML = '<i class="fas fa-trash-alt"></i>';
+                        btnClearPhoto.style.backgroundColor = '#ef4444';
+                        btnClearPhoto.title = "ลบรูป";
+                    }
+                }
+            });
+        }
+
+        // --- Client-Side Validation Logic ---
+        const vetForm = document.getElementById('vetForm');
+        const btnSubmit = document.getElementById('btnSubmit');
+
+        if (vetForm) {
+            vetForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                // Clear previous validation 
+                document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+                document.querySelectorAll('.invalid-feedback-custom').forEach(el => el.remove());
+
+                let isValid = true;
+                let firstErrorEl = null;
+
+                // Required Fields
+                const requiredFields = [
+                    { id: 'id_first_name', msg: 'กรุณากรอกชื่อสัตวแพทย์' },
+                    { id: 'id_last_name', msg: 'กรุณากรอกนามสกุล' },
+                    { id: 'id_license_no', msg: 'กรุณากรอกเลขที่ใบอนุญาต' },
+                    { id: 'id_role_level', msg: 'กรุณาเลือกระดับตำแหน่ง' },
+                    { id: 'id_specialization', msg: 'กรุณาเลือกสาขาความเชี่ยวชาญ' },
+                    { id: 'id_phone', msg: 'กรุณากรอกเบอร์มือถือ' }
+                ];
+
+                const showError = (inputEl, message) => {
+                    inputEl.classList.add('is-invalid');
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'invalid-feedback invalid-feedback-custom fw-bold small mt-1';
+                    errorDiv.innerHTML = `<i class="fas fa-exclamation-circle me-1"></i>${message}`;
+                    inputEl.parentNode.appendChild(errorDiv);
+                    if (!firstErrorEl) firstErrorEl = inputEl;
+                    isValid = false;
+                };
+
+                requiredFields.forEach(field => {
+                    const el = document.getElementById(field.id);
+                    if (el && !el.value.trim()) {
+                        showError(el, field.msg);
+                    }
+                });
+
+                if (!isValid) {
+                    if (firstErrorEl) {
+                        firstErrorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        if(firstErrorEl.focus) firstErrorEl.focus();
+                    }
+                } else {
+                    // Success -> Custom Alert & Loading
+                    btnSubmit.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>กำลังบันทึก...';
+                    btnSubmit.disabled = true;
+
+                    Swal.fire({
+                        title: 'บันทึกข้อมูลสำเร็จ!',
+                        text: 'ข้อมูลสัตวแพทย์ถูกเพิ่มเข้าสู่ระบบเรียบร้อยแล้ว',
+                        icon: 'success',
+                        confirmButtonColor: '#10b981',
+                        confirmButtonText: '<i class="fas fa-check me-1"></i> ตกลง',
+                        allowOutsideClick: false
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            vetForm.submit();
+                        }
+                    });
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

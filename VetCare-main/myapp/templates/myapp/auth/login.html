@@ -1,0 +1,221 @@
+{% extends 'myapp/core/base.html' %}
+
+{% block title %}เข้าสู่ระบบ - VetCare Premium{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Premium SaaS Modern Login Style */
+    .login-wrapper {
+        min-height: calc(100vh - 100px); /* Adjust based on navbar/sidebar */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: radial-gradient(circle at 50% 50%, rgba(241, 245, 249, 1) 0%, rgba(226, 232, 240, 0.5) 100%);
+        padding: 20px;
+    }
+
+    .premium-card {
+        width: 100%;
+        max-width: 420px;
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        border-radius: 1.5rem;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
+        overflow: hidden;
+        transition: transform 0.3s ease;
+    }
+
+    .card-header-premium {
+        padding: 2.5rem 2rem 1rem 2rem;
+        text-align: center;
+        background: transparent;
+        border: none;
+    }
+
+    .brand-icon {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);
+        border-radius: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        color: white;
+        font-size: 1.8rem;
+        box-shadow: 0 10px 15px -3px rgba(14, 165, 233, 0.3);
+    }
+
+    .form-floating-custom {
+        position: relative;
+        margin-bottom: 1.25rem;
+    }
+
+    .form-floating-custom i {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+        transition: color 0.3s ease;
+        z-index: 10;
+    }
+
+    .form-floating-custom .form-control {
+        padding-left: 2.8rem;
+        border-radius: 1rem;
+        border: 1px solid #e2e8f0;
+        height: calc(3rem + 2px);
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-floating-custom .form-control:focus {
+        border-color: #0ea5e9;
+        box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1);
+        padding-left: 3rem;
+    }
+
+    .form-floating-custom .form-control:focus + i {
+        color: #0ea5e9;
+    }
+
+    .btn-premium {
+        background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+        border: none;
+        border-radius: 1rem;
+        padding: 0.8rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        box-shadow: 0 4px 6px -1px rgba(14, 165, 233, 0.2), 0 2px 4px -1px rgba(14, 165, 233, 0.1);
+        transition: all 0.3s ease;
+        color: #fff;
+    }
+
+    .btn-premium:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(14, 165, 233, 0.3);
+        background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+        color: #fff;
+    }
+
+    .footer-links {
+        padding: 1.5rem 2rem 2.5rem 2rem;
+        text-align: center;
+        font-size: 0.9rem;
+    }
+
+    .footer-links a {
+        color: #0ea5e9;
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.2s ease;
+    }
+
+    .footer-links a:hover {
+        color: #0369a1;
+        text-decoration: underline;
+    }
+
+    .divider {
+        height: 1px;
+        background: #f1f5f9;
+        margin: 1.5rem 0;
+    }
+
+    .alert-premium {
+        border-radius: 1rem;
+        border: none;
+        padding: 1rem;
+        font-size: 0.85rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-wrapper">
+    <div class="premium-card fade-in">
+        <div class="card-header-premium">
+            <div class="brand-icon">
+                <i class="fas fa-paw"></i>
+            </div>
+            <h4 class="fw-bold text-dark mb-1">ยินดีต้อนรับกลับมา</h4>
+            <p class="text-muted small">ระบบจัดการคลินิก VetCare Premium 🐾</p>
+        </div>
+
+        <div class="card-body px-4 pt-0">
+            {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-info alert-dismissible fade show alert-premium shadow-sm mb-3" role="alert">
+                    <i class="fas fa-info-circle me-2"></i> {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                <div class="form-floating-custom">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" name="username" id="id_username" class="form-control" placeholder="อีเมล (เช่น name@example.com)" required>
+                </div>
+
+                <div class="form-floating-custom">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" name="password" id="id_password" class="form-control" placeholder="รหัสผ่าน" required>
+                </div>
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger alert-premium mb-3">
+                        <i class="fas fa-exclamation-triangle me-2"></i> ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง
+                    </div>
+                {% endif %}
+
+                <div class="d-grid mt-4">
+                    <button type="submit" class="btn btn-premium">
+                        เข้าสู่ระบบ <i class="fas fa-sign-in-alt ms-2"></i>
+                    </button>
+                </div>
+            </form>
+
+            <div class="divider"></div>
+
+            <div class="test-accounts pb-4 px-4 text-center">
+                <p class="small text-muted fw-bold mb-3"><i class="fas fa-key me-1 text-warning"></i> บัญชีสำหรับทดสอบ (Test Accounts)</p>
+                <div class="row g-2 justify-content-center">
+                    
+                    <div class="col-4">
+                        <div class="p-2 border rounded-4 bg-light shadow-sm" style="cursor: pointer; min-height: 85px;" onclick="document.getElementById('id_username').value='admin@gmail.com'; document.getElementById('id_password').value='1234';">
+                            <span class="d-block fw-bold text-primary" style="font-size: 0.75rem;"><i class="fas fa-crown"></i> Admin</span>
+                            <span class="d-block text-secondary mt-1" style="font-size: 0.65rem;">admin@gmail.com</span>
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle mt-1" style="font-size: 0.6rem;">Pass: 1234</span>
+                        </div>
+                    </div>
+                    
+                    <div class="col-4">
+                        <div class="p-2 border rounded-4 bg-light shadow-sm" style="cursor: pointer; min-height: 85px;" onclick="document.getElementById('id_username').value='staff@gmail.com'; document.getElementById('id_password').value='1234';">
+                            <span class="d-block fw-bold text-info" style="font-size: 0.75rem;"><i class="fas fa-user-shield"></i> Staff</span>
+                            <span class="d-block text-secondary mt-1" style="font-size: 0.65rem;">staff@gmail.com</span>
+                            <span class="badge bg-info-subtle text-info border border-info-subtle mt-1" style="font-size: 0.6rem;">Pass: 1234</span>
+                        </div>
+                    </div>
+                    
+                    <div class="col-4">
+                        <div class="p-2 border rounded-4 bg-light shadow-sm" style="cursor: pointer; min-height: 85px;" onclick="document.getElementById('id_username').value='client@gmail.com'; document.getElementById('id_password').value='1234';">
+                            <span class="d-block fw-bold text-success" style="font-size: 0.75rem;"><i class="fas fa-user"></i> Client</span>
+                            <span class="d-block text-secondary mt-1" style="font-size: 0.65rem;">client@gmail.com</span>
+                            <span class="badge bg-success-subtle text-success border border-success-subtle mt-1" style="font-size: 0.6rem;">Pass: 1234</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-links">
+                <p class="mb-2 text-muted">ยังไม่มีบัญชี? <a href="{% url 'register' %}">สมัครสมาชิกพรีเมียม</a></p>
+                <a href="{% url 'dashboard' %}" class="text-secondary small"><i class="fas fa-arrow-left me-1"></i> กลับหน้าหลัก</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

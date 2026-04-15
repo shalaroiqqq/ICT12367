@@ -1,0 +1,191 @@
+{% extends 'myapp/core/base.html' %}
+
+{% block title %}รายชื่อสัตว์เลี้ยง{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-success mb-1">🐶 รายชื่อสัตว์เลี้ยง</h2>
+            <p class="text-muted small mb-0">จัดการข้อมูลสัตว์เลี้ยงและเจ้าของในระบบ</p>
+        </div>
+        <a href="{% url 'pet_create' %}" class="btn btn-success rounded-pill px-4">
+            <i class="fas fa-plus me-2"></i>เพิ่มสัตว์เลี้ยงใหม่
+        </a>
+    </div>
+
+    
+    <form method="get" class="mb-4">
+        <div class="input-group shadow-sm rounded-pill overflow-hidden border" style="border-color: var(--border-color) !important;">
+            <span class="input-group-text border-0 ps-4" style="background: var(--input-bg);">
+                <i class="fas fa-search text-muted"></i>
+            </span>
+            <input type="text" name="q" id="searchInput" value="{{ q|default:'' }}" class="form-control border-0 py-3 shadow-none" style="background: var(--input-bg); color: var(--bs-body-color);" placeholder="ค้นหารหัสลูกค้า, ชื่อสัตว์, ประเภท, ชื่อเจ้าของ หรือเบอร์โทร...">
+            <button type="submit" class="btn btn-success px-4 fw-bold">ค้นหา</button>
+            {% if q %}
+                <a href="{% url 'pet_list' %}" class="btn btn-outline-secondary border-0 d-flex align-items-center px-3" style="background: var(--input-bg);">
+                    <i class="fas fa-times"></i>
+                </a>
+            {% endif %}
+        </div>
+    </form>
+
+    <div id="resultsContainer">
+    {% if pets %}
+    <style>
+        /* Responsive Table to Card layout */
+        @media (max-width: 768px) {
+            .mobile-card-list thead { display: none; }
+            .mobile-card-list tbody, .mobile-card-list tr, .mobile-card-list td { display: block; width: 100%; }
+            .mobile-card-list tr {
+                margin-bottom: 1rem; border: 1px solid var(--border-color) !important;
+                border-radius: 12px; padding: 10px; background: var(--card-bg); box-shadow: var(--card-shadow);
+            }
+            .mobile-card-list td {
+                text-align: right; padding: 8px 10px !important; border-bottom: 1px dashed var(--border-color);
+                display: flex; justify-content: space-between; align-items: center; margin-top: 5px;
+                background-color: transparent !important;
+            }
+            .mobile-card-list.table-hover > tbody > tr:hover > td,
+            .mobile-card-list.table-hover > tbody > tr:hover > th {
+                box-shadow: none !important;
+                background-color: transparent !important;
+            }
+            .mobile-card-list td:last-child { border-bottom: 0; justify-content: flex-end; }
+            .mobile-card-list td::before {
+                content: attr(data-label); font-weight: bold; color: var(--text-muted); text-align: left; margin-right: 10px;
+            }
+            .mobile-card-list td.item-main {
+                display: flex; justify-content: flex-start; text-align: left;
+                border-bottom: 1px solid var(--border-color); padding-bottom: 12px !important; margin-bottom: 5px;
+            }
+            .mobile-card-list td.item-main::before { display: none; }
+            .mobile-card-list td.item-main .d-flex { width: 100%; }
+        }
+    </style>
+
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden" style="background: var(--card-bg);">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 mobile-card-list">
+                <thead class="text-nowrap" style="background: var(--bg-body); color: var(--text-heading);">
+                    <tr>
+                        <th class="ps-4">ชื่อสัตว์เลี้ยง</th>
+                        <th>ประเภท/สายพันธุ์</th>
+                        <th>เจ้าของ</th>
+                        <th>วันเกิด</th>
+                        <th class="text-end pe-4">การจัดการ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pet in pets %}
+                    <tr>
+                        <td class="ps-md-4 item-main" data-label="">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-white rounded-circle me-3 shadow-sm d-flex align-items-center justify-content-center border overflow-hidden" style="width: 48px; height: 48px;">
+                                    {% if pet.image %}
+                                        <img src="{{ pet.image.url }}" alt="{{ pet.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                    {% else %}
+                                        <i class="fas fa-paw text-success" style="font-size: 1.25rem;"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="text-start">
+                                    <div class="fw-bold fs-6 text-wrap">{{ pet.name }}</div>
+                                    <div class="small text-muted mt-1"><i class="fas fa-hashtag me-1 px-0 opacity-50"></i>ID: {{ pet.customer_id|default:"-" }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td data-label="ประเภท/สายพันธุ์:">
+                            <div class="d-flex flex-column align-items-end align-items-md-start">
+                                <span class="badge bg-info-subtle text-info px-3 py-2 rounded-pill">{{ pet.species }}</span>
+                                <div class="small text-muted mt-1 ps-md-2">{{ pet.breed|default:"ไม่ระบุสายพันธุ์" }}</div>
+                            </div>
+                        </td>
+                        <td data-label="เจ้าของ:">
+                            <div class="d-flex flex-column align-items-end align-items-md-start">
+                                <div class="small fw-bold" style="color: var(--text-heading);">{{ pet.owner.first_name }} {{ pet.owner.last_name }}</div>
+                                <div class="mb-1"><span class="badge bg-secondary-subtle text-secondary x-small">ID: {{ pet.owner.customer_id|default:"-" }}</span></div>
+                                <div class="small text-muted"><i class="fas fa-phone-alt me-1"></i>{{ pet.owner.phone }}</div>
+                            </div>
+                        </td>
+                        <td data-label="วันเกิด:">
+                            <div class="fw-bold">{{ pet.birth_date|date:"d M Y"|default:"ไม่ระบุ" }}</div>
+                        </td>
+                        <td class="pe-md-4 mt-2 mt-md-0" data-label="การจัดการ:">
+                            <div class="d-flex align-items-center justify-content-end gap-2">
+                                <a href="{% url 'pet_detail' pet.pk %}" class="btn btn-sm shadow-sm btn-outline-primary rounded-pill px-3" title="ดูรายละเอียด">
+                                    <i class="fas fa-eye d-md-none"></i><span class="d-none d-md-inline"><i class="fas fa-eye me-1"></i> ดู</span>
+                                </a>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-light border shadow-sm rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" type="button" data-bs-toggle="dropdown">
+                                        <i class="fas fa-ellipsis-h text-muted" style="font-size: 0.8rem;"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg z-3" style="border-radius: 12px; min-width: 140px;">
+                                        <li>
+                                            <a class="dropdown-item py-2" href="{% url 'pet_update' pet.pk %}">
+                                                <i class="fas fa-edit me-2 text-warning"></i>แก้ไขข้อมูล
+                                            </a>
+                                        </li>
+                                        <li><hr class="dropdown-divider opacity-50"></li>
+                                        <li>
+                                            <a class="dropdown-item py-2 text-danger" href="{% url 'pet_delete' pet.pk %}">
+                                                <i class="fas fa-trash-alt me-2"></i>ลบรายการ
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div class="mt-4">
+        {% include 'myapp/includes/pagination.html' %}
+    </div>
+
+    {% else %}
+    <div class="text-center py-5 bg-white rounded-4 shadow-sm border" style="border-style: dashed !important;">
+        <div class="display-1 text-muted opacity-25 mb-3"><i class="fas fa-dog"></i></div>
+        <h4 class="text-muted">ไม่พบข้อมูลสัตว์เลี้ยง</h4>
+        <p class="text-muted">ลองค้นหาด้วยคำอื่น หรือเพิ่มข้อมูลใหม่เข้าสู่ระบบ</p>
+        <a href="{% url 'pet_create' %}" class="btn btn-success rounded-pill mt-3 px-4">เพิ่มสัตว์เลี้ยงใหม่</a>
+    {% endif %}
+    </div>
+</div>
+<script>
+    // Real-time AJAX search
+    const searchInput = document.getElementById('searchInput');
+    const resultsContainer = document.getElementById('resultsContainer');
+    let searchTimeout;
+
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        const query = this.value;
+        const url = new URL(window.location.href);
+        url.searchParams.set('q', query);
+
+        searchTimeout = setTimeout(() => {
+            fetch(url, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const newResults = doc.getElementById('resultsContainer');
+                if (newResults) {
+                    resultsContainer.innerHTML = newResults.innerHTML;
+                    // Update the URL without reloading
+                    window.history.replaceState({path: url.toString()}, '', url.toString());
+                }
+            })
+            .catch(error => console.error('Error fetching search results:', error));
+        }, 300); // Faster 300ms delay for AJAX
+    });
+</script>
+{% endblock %}

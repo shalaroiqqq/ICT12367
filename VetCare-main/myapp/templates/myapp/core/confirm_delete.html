@@ -1,0 +1,27 @@
+{% extends 'myapp/core/base.html' %}
+
+{% block title %}ยืนยันการลบ{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 offset-md-3">
+        <div class="card border-danger">
+            <div class="card-body">
+                <h4 class="card-title text-danger">⚠️ ยืนยันการลบ</h4>
+                <p class="card-text">
+                    คุณแน่ใจหรือว่าต้องการลบ <strong>{{ item_name }}</strong> หรือไม่?
+                </p>
+                {% if extra_info %}
+                <p class="text-muted">{{ extra_info }}</p>
+                {% endif %}
+
+                <form method="post" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-lg">🗑️ ลบแบบถาวร</button>
+                </form>
+                <a href="{{ back_url }}" class="btn btn-secondary btn-lg">ยกเลิก</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

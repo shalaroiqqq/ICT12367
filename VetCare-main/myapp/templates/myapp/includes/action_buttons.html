@@ -1,0 +1,13 @@
+
+
+<td>
+    <a href="{% url detail_url object.pk %}" class="btn btn-sm btn-info">📖 ดู</a>
+    {% if request.user.is_superuser or request.user.is_staff or object.first_name == request.user.first_name and object.last_name == request.user.last_name or object.owner.first_name == request.user.first_name and object.owner.last_name == request.user.last_name or object.pet.owner.first_name == request.user.first_name and object.pet.owner.last_name == request.user.last_name %}
+        {% if update_url %}
+        <a href="{% url update_url object.pk %}" class="btn btn-sm btn-warning">✏️ แก้ไข</a>
+        {% endif %}
+        {% if delete_url %}
+        <a href="{% url delete_url object.pk %}" class="btn btn-sm btn-danger">🗑️ ลบ</a>
+        {% endif %}
+    {% endif %}
+</td>

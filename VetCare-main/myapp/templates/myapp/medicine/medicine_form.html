@@ -1,0 +1,545 @@
+{% extends 'myapp/core/base.html' %}
+
+{% block extra_css %}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
+<style>
+/* Profile/Product Upload UI - Circular/Rounded Style */
+.profile-upload-wrapper {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    margin: 0 auto;
+}
+.profile-pic-container {
+    width: 200px;
+    height: 200px;
+    border-radius: 20px; /* Square with rounded corners for products */
+    border: 5px solid #10b981;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    overflow: hidden;
+    position: relative;
+    background-color: #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.profile-pic-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.upload-btn-cam {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    width: 42px;
+    height: 42px;
+    background-color: #10b981;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+    transition: all 0.2s ease;
+    border: 3px solid white;
+    z-index: 30;
+}
+.upload-btn-cam:hover {
+    background-color: #059669;
+    transform: scale(1.1);
+}
+.clear-btn-trash {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    width: 42px;
+    height: 42px;
+    background-color: #ef4444;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+    transition: all 0.2s ease;
+    border: 3px solid white;
+    z-index: 30;
+}
+.clear-btn-trash:hover {
+    background-color: #b91c1c;
+    transform: scale(1.1);
+}
+
+/* Cropper Modal Customization */
+.cropper-container-wrapper {
+    width: 100%;
+    max-height: 400px;
+    overflow: hidden;
+    background-color: #f8fafc;
+    border-radius: 12px;
+}
+</style>
+{% endblock %}
+
+{% block title %}ทะเบียนยาและเวชภัณฑ์{% endblock %}
+
+{% block content %}
+<style>
+    .section-header {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--badge-color);
+        border-bottom: 2px solid var(--border-color);
+        padding-bottom: 8px;
+        margin-bottom: 16px;
+    }
+    .info-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 18px 20px;
+        box-shadow: var(--card-shadow);
+        margin-bottom: 18px;
+    }
+    .stock-badge-ok   { background: #10b981; color:#fff; padding:3px 12px; border-radius:20px; font-size:.8rem; font-weight:600; }
+    .stock-badge-warn { background: #f59e0b; color:#fff; padding:3px 12px; border-radius:20px; font-size:.8rem; font-weight:600; }
+    .stock-badge-low  { background: #ef4444; color:#fff; padding:3px 12px; border-radius:20px; font-size:.8rem; font-weight:600; }
+    .recent-row:hover { background: rgba(16, 185, 129, 0.05); cursor: pointer; }
+    [data-bs-theme="dark"] .form-label { color: var(--text-muted); }
+    [data-bs-theme="dark"] .input-group-text { border-right: none; }
+
+</style>
+
+<div class="container-fluid mt-3 mb-5">
+    <div class="card shadow border-0" style="border-radius:12px; overflow:hidden;">
+        
+        <div class="card-header py-3" style="background: var(--badge-bg); border-bottom: 1px solid var(--border-color);">
+            <div class="d-flex justify-content-between align-items-center">
+                <h4 class="mb-0 fw-bold" style="color: var(--badge-color);">
+                    <i class="fas fa-pills me-2"></i>ทะเบียนยาและเวชภัณฑ์ (Pharmacy & Medical Supplies)
+                </h4>
+                <small class="text-muted">{% now "d/m/Y H:i" %}</small>
+            </div>
+        </div>
+
+        <div class="card-body p-4" style="background-color: var(--bg-body);">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="row g-4">
+                    
+                    <div class="col-lg-8">
+
+                        
+                        <div class="info-card">
+                            <p class="section-header">📦 ข้อมูลสินค้า (Product Info)</p>
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label class="form-label text-muted fw-bold small mb-1">🔢 รหัสสินค้า (ID)</label>
+                                    {{ form.product_id }}
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label text-muted fw-bold small mb-1">📊 Barcode</label>
+                                    {{ form.barcode }}
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label text-muted fw-bold small mb-1">🏷️ ประเภทสินค้า</label>
+                                    {{ form.product_type }}
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-8">
+                                    <label class="form-label text-muted fw-bold small mb-1">💊 ชื่อยา/เวชภัณฑ์ <span class="text-danger">*</span></label>
+                                    {{ form.name }}
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label text-muted fw-bold small mb-1">📦 หน่วยนับ</label>
+                                    {{ form.unit }}
+                                </div>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label text-muted fw-bold small mb-1">🔬 ชื่อสามัญทางยา (Generic Name)</label>
+                                {{ form.generic_name }}
+                            </div>
+                        </div>
+
+                        
+                        <div class="info-card">
+                            <p class="section-header">💰 การตั้งราคา (Pricing)</p>
+                            <div class="row mb-3">
+                                <div class="col-md-3">
+                                    <label class="form-label text-muted fw-bold small mb-1">🏷️ ราคาทุน (Cost)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">฿</span>
+                                        {{ form.cost_price }}
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label text-muted fw-bold small mb-1">💵 ราคาขายปกติ</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">฿</span>
+                                        {{ form.selling_price }}
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label text-muted fw-bold small mb-1">⭐ ราคาสมาชิก</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">฿</span>
+                                        {{ form.member_price }}
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label text-muted fw-bold small mb-1">📊 VAT (%)</label>
+                                    <div class="input-group">
+                                        {{ form.vat }}
+                                        <span class="input-group-text">%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        
+                        <div class="info-card">
+                            <p class="section-header">📋 การจัดการสต็อก (Inventory Control)</p>
+                            <div class="row mb-3">
+                                <div class="col-md-3">
+                                    <label class="form-label text-muted fw-bold small mb-1">📦 จำนวนคงเหลือ</label>
+                                    {{ form.stock }}
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label text-muted fw-bold small mb-1">⚠️ จุดสั่งซื้อ</label>
+                                    {{ form.reorder_point }}
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label text-muted fw-bold small mb-1">📅 วันหมดอายุ</label>
+                                    {{ form.expiry_date }}
+                                </div>
+                                <div class="col-md-3 d-flex align-items-end pb-1">
+                                    <div id="stock-status" class="w-100 text-center">
+                                        <span class="stock-badge-ok">✅ สต็อกปกติ</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label text-muted fw-bold small mb-1">🏢 ผู้จำหน่าย (Supplier)</label>
+                                {{ form.supplier }}
+                            </div>
+                        </div>
+
+                        
+                        <div class="info-card">
+                            <p class="section-header">📖 รายละเอียดสินค้า (Product Details)</p>
+                            {{ form.full_description }}
+                        </div>
+
+                        
+                        <div class="info-card">
+                            <p class="section-header">📝 หมายเหตุ / วิธีเก็บรักษา</p>
+                            {{ form.description }}
+                        </div>
+
+                        
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            <a href="{% url 'medicine_list' %}" class="btn btn-ghost text-muted px-4">ยกเลิก</a>
+                            <button type="submit" class="btn btn-success rounded-pill px-5 fw-bold" style="background: #10b981; border: none;">
+                                <i class="fas fa-save me-2"></i>บันทึกข้อมูล
+                            </button>
+                        </div>
+                    </div>
+
+                    
+                    <div class="col-lg-4">
+                        
+                        <div class="info-card">
+                            <p class="section-header">📷 รูปสินค้า (Product Image)</p>
+                            
+                            <div class="profile-upload-wrapper mb-4">
+                                <div class="profile-pic-container" id="profile-container">
+                                    {% if form.instance.image and form.instance.image.url %}
+                                        <img id="image-preview" src="{{ form.instance.image.url }}" alt="Product Image" style="cursor: pointer;" onerror="this.src='https://ui-avatars.com/api/?name=Product&background=e2e8f0&color=64748b&size=200'">
+                                    {% else %}
+                                        <img id="image-preview" src="https://ui-avatars.com/api/?name=Product&background=e2e8f0&color=64748b&size=200" alt="Product Image" style="cursor: pointer;">
+                                    {% endif %}
+                                    <div id="delete-placeholder" class="d-none bg-light d-flex align-items-center justify-content-center flex-column p-3" style="width: 100%; height: 100%; color: #ef4444; font-size: 0.8rem; text-align: center;">
+                                        <i class="fas fa-trash-alt fs-2 mb-2 opacity-50"></i>
+                                        <div class="fw-bold">รูปภาพจะถูกลบ</div>
+                                        <div class="small opacity-75">กดปุ่มสีเทาเพื่อเลิกลบ</div>
+                                    </div>
+                                </div>
+
+                                <!-- Controls -->
+                                <label for="id_image" class="upload-btn-cam" id="upload-btn-trigger" title="เปลี่ยนรูป">
+                                    <i class="fas fa-camera"></i>
+                                </label>
+
+                                {% if form.instance.image %}
+                                <div class="clear-btn-trash" id="clear-photo-btn" title="ลบรูป">
+                                    <i class="fas fa-trash-alt"></i>
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="d-none">
+                                {{ form.image }}
+                                {% if form.instance.image %}
+                                    <input type="checkbox" name="image-clear" id="hidden-image-clear">
+                                {% endif %}
+                            </div>
+
+                            <div class="p-2 bg-light rounded-3 border mt-2 text-center">
+                                <p class="small text-muted mb-0"><i class="fas fa-info-circle me-1"></i>คลิกกกล้องเพื่อแต่งรูป หรือคลิกถังขยะเพื่อลบ</p>
+                            </div>
+                        </div>
+
+                        
+                        <div class="info-card">
+                            <p class="section-header">🕐 รายการล่าสุด 5 รายการ</p>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th style="font-size:.8rem;">ชื่อยา</th>
+                                            <th style="font-size:.8rem;">สต็อก</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for m in recent_medicines %}
+                                        <tr class="recent-row" onclick="window.location='{% url 'medicine_update' m.pk %}'">
+                                            <td style="font-size:.82rem;">{{ m.name|truncatechars:22 }}</td>
+                                            <td>
+                                                {% if m.is_low_stock %}
+                                                    <span class="stock-badge-low">{{ m.stock }}</span>
+                                                {% elif m.stock <= m.reorder_point|add:10 %}
+                                                    <span class="stock-badge-warn">{{ m.stock }}</span>
+                                                {% else %}
+                                                    <span class="stock-badge-ok">{{ m.stock }}</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr><td colspan="2" class="text-center text-muted small">ยังไม่มีข้อมูล</td></tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Cropper Modal -->
+<div class="modal fade modal-cropper" id="cropperModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0" style="border-radius: 20px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
+            <div class="modal-header bg-light border-0 px-4 py-3">
+                <h5 class="modal-title fw-bold" style="color: #10b981;">
+                    <i class="fas fa-crop-alt me-2"></i>ปรับแต่งรูปสินค้า
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 bg-white text-center">
+                <div class="cropper-container-wrapper mb-3 mx-auto">
+                    <img id="cropper-image" src="" alt="Cropper" style="max-width: 100%; display: block;">
+                </div>
+                
+                <div class="editor-controls bg-light p-3 rounded-4 mt-3">
+                    <div class="row align-items-center g-3">
+                        <div class="col-md-7 text-start">
+                            <label class="form-label small fw-bold text-muted mb-1"><i class="fas fa-search-plus me-1"></i>ซูม (Zoom)</label>
+                            <input type="range" class="form-range" id="zoom-range" min="0" max="3" step="0.1" value="0.5">
+                        </div>
+                        <div class="col-md-5 text-end">
+                            <label class="form-label small fw-bold text-muted mb-1 d-block"><i class="fas fa-sync-alt me-1"></i>หมุน (Rotate)</label>
+                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle me-1" id="rotate-left" style="width: 38px; height: 38px;">
+                                <i class="fas fa-undo"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle" id="rotate-right" style="width: 38px; height: 38px;">
+                                <i class="fas fa-redo"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-light border-0 px-4 py-3">
+                <button type="button" class="btn btn-light fw-bold px-4" data-bs-dismiss="modal" style="border-radius: 12px;">ยกเลิก</button>
+                <button type="button" class="btn btn-success fw-bold px-4" id="crop-and-save" style="border-radius: 12px; background-color: #10b981; border: none;">
+                    <i class="fas fa-check-circle me-2"></i>บันทึกและครอบตัด
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const imageInput = document.querySelector('input[type="file"]');
+        const imagePreview = document.getElementById('image-preview');
+        
+        const cropperModalEl = document.getElementById('cropperModal');
+        const cropperModal = new bootstrap.Modal(cropperModalEl);
+        const cropperImage = document.getElementById('cropper-image');
+        let cropper = null;
+
+        const zoomRange = document.getElementById('zoom-range');
+        const btnRotateLeft = document.getElementById('rotate-left');
+        const btnRotateRight = document.getElementById('rotate-right');
+        const btnCropAndSave = document.getElementById('crop-and-save');
+
+        if (imagePreview) {
+            imagePreview.addEventListener('click', () => {
+                if(imageInput) imageInput.click();
+            });
+        }
+
+        if (imageInput) {
+            imageInput.addEventListener('change', function(e) {
+                if(e.detail && e.detail.fromCropper) return;
+                
+                if (e.target.files && e.target.files[0]) {
+                    const file = e.target.files[0];
+                    if(!file.type.match('image.*')) {
+                        alert('กรุณาเลือกไฟล์ภาพเท่านั้น');
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = function(evt) {
+                        cropperImage.src = evt.target.result;
+                        cropperModal.show();
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        cropperModalEl.addEventListener('shown.bs.modal', function () {
+            if (cropper) cropper.destroy();
+
+            cropper = new Cropper(cropperImage, {
+                aspectRatio: 1, // Keep it square for medicines
+                viewMode: 1,
+                dragMode: 'move',
+                autoCropArea: 0.9,
+                guides: false,
+                center: false,
+                highlight: false,
+                cropBoxMovable: false,
+                cropBoxResizable: false,
+                toggleDragModeOnDblclick: false,
+                ready: function () {
+                    // Medicine stays square, no borderRadius '50%'
+                    zoomRange.value = 0.5;
+                }
+            });
+        });
+
+        cropperModalEl.addEventListener('hidden.bs.modal', function () {
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
+            }
+        });
+
+        zoomRange.addEventListener('input', function() {
+            if(cropper) cropper.zoomTo(Math.max(0.1, parseFloat(this.value))); 
+        });
+
+        btnRotateLeft.addEventListener('click', () => { if(cropper) cropper.rotate(-90); });
+        btnRotateRight.addEventListener('click', () => { if(cropper) cropper.rotate(90); });
+
+        btnCropAndSave.addEventListener('click', function() {
+            if (!cropper) return;
+            
+            const canvas = cropper.getCroppedCanvas({
+                width: 500,
+                height: 500,
+                fillColor: '#fff', 
+            });
+
+            imagePreview.src = canvas.toDataURL('image/jpeg', 0.9);
+
+            canvas.toBlob(function(blob) {
+                const dt = new DataTransfer();
+                const compiledImg = new File([blob], "product_" + Date.now() + ".jpg", { 
+                    type: "image/jpeg", 
+                    lastModified: Date.now() 
+                });
+                dt.items.add(compiledImg);
+                
+                if (imageInput) {
+                    imageInput.files = dt.files;
+                    imageInput.dispatchEvent(new CustomEvent('change', { detail: { fromCropper: true } }));
+                }
+                
+                cropperModal.hide();
+            }, 'image/jpeg', 0.9);
+        });
+
+        // Delete Original Image logic
+        const btnClearPhoto = document.getElementById('clear-photo-btn');
+        const hiddenClearCheckbox = document.getElementById('hidden-image-clear');
+        const deletePlaceholder = document.getElementById('delete-placeholder');
+        
+        if (btnClearPhoto) {
+            btnClearPhoto.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                if (hiddenClearCheckbox) {
+                    hiddenClearCheckbox.checked = !hiddenClearCheckbox.checked;
+                    
+                    if (hiddenClearCheckbox.checked) {
+                        imagePreview.classList.add('d-none');
+                        if(deletePlaceholder) deletePlaceholder.classList.remove('d-none');
+                        btnClearPhoto.innerHTML = '<i class="fas fa-undo"></i>';
+                        btnClearPhoto.style.backgroundColor = '#64748b';
+                        btnClearPhoto.title = "ยกเลิกการลบ";
+                    } else {
+                        imagePreview.classList.remove('d-none');
+                        if(deletePlaceholder) deletePlaceholder.classList.add('d-none');
+                        btnClearPhoto.innerHTML = '<i class="fas fa-trash-alt"></i>';
+                        btnClearPhoto.style.backgroundColor = '#ef4444';
+                        btnClearPhoto.title = "ลบรูป";
+                    }
+                }
+            });
+        }
+
+        // Live stock alert (existing logic)
+        function checkStock() {
+            const stockInput = document.getElementById('id_stock');
+            const reorderInput = document.getElementById('id_reorder_point');
+            if(!stockInput || !reorderInput) return;
+
+            const stock = parseInt(stockInput.value) || 0;
+            const reorder = parseInt(reorderInput.value) || 10;
+            const el = document.getElementById('stock-status');
+            if (el) {
+                if (stock <= reorder) {
+                    el.innerHTML = '<span class="stock-badge-low">🔴 สต็อกต่ำกว่าจุดสั่งซื้อ!</span>';
+                } else if (stock <= reorder + 10) {
+                    el.innerHTML = '<span class="stock-badge-warn">🟡 สต็อกใกล้หมด</span>';
+                } else {
+                    el.innerHTML = '<span class="stock-badge-ok">✅ สต็อกปกติ</span>';
+                }
+            }
+        }
+        const sInput = document.getElementById('id_stock');
+        const rInput = document.getElementById('id_reorder_point');
+        if(sInput) sInput.addEventListener('input', checkStock);
+        if(rInput) rInput.addEventListener('input', checkStock);
+        checkStock();
+    });
+</script>
+{% endblock %}
+

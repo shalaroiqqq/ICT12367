@@ -1,0 +1,41 @@
+{% extends 'myapp/core/base.html' %}
+
+{% block title %}จัดการแพทย์สัตว์ - Admin{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>⚕️ จัดการแพทย์สัตว์</h2>
+    <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary">ย้อนกลับ</a>
+</div>
+
+{% include 'myapp/includes/messages.html' %}
+
+{% if vets %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>ชื่อ</th>
+                    <th>ความเชี่ยวชาญ</th>
+                    <th>เบอร์โทร</th>
+                    <th>การกระทำ</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for vet in vets %}
+                <tr>
+                    <td><strong>{{ vet.name }}</strong></td>
+                    <td>{{ vet.specialization }}</td>
+                    <td>{{ vet.phone }}</td>
+                    <td>
+                        <a href="{% url 'vet_detail' vet.pk %}" class="btn btn-sm btn-info">📖 ดู</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    {% include 'myapp/includes/empty_state.html' with title='ไม่มีข้อมูล' message='ไม่มีข้อมูลแพทย์สัตว์' %}
+{% endif %}
+{% endblock %}

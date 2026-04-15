@@ -1,0 +1,110 @@
+{% extends 'myapp/core/base.html' %}
+
+{% block title %}แก้ไขข้อมูลผู้ใช้งาน - Admin Backend{% endblock %}
+
+{% block extra_css %}
+<style>
+    .edit-card {
+        background: var(--card-bg);
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: var(--card-shadow);
+        border: 1px solid var(--border-color);
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    .form-label {
+        font-weight: 600;
+        color: var(--text-heading);
+        margin-bottom: 0.5rem;
+    }
+    .form-control {
+        border-radius: 12px;
+        padding: 12px 15px;
+        border: 1px solid var(--border-color);
+        background: var(--input-bg);
+    }
+    .role-section {
+        background: rgba(0, 0, 0, 0.02);
+        border-radius: 15px;
+        padding: 20px;
+        margin-top: 20px;
+    }
+    [data-bs-theme="dark"] .role-section {
+        background: rgba(255, 255, 255, 0.03);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex align-items-center mb-4 max-w-600 mx-auto" style="max-width: 600px;">
+        <a href="{% url 'admin_user_management' %}" class="btn btn-light rounded-circle me-3">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <h2 class="fw-bold mb-0">📝 แก้ไขข้อมูลผู้ใช้: {{ target_user.username }}</h2>
+    </div>
+
+    <div class="edit-card fade-in">
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div class="row g-3">
+                <div class="col-12">
+                    <label class="form-label">ชื่อผู้ใช้งาน (Username)</label>
+                    <input type="text" name="username" value="{{ target_user.username }}" class="form-control" required>
+                </div>
+                
+                <div class="col-12">
+                    <label class="form-label">อีเมล (Email)</label>
+                    <input type="email" name="email" value="{{ target_user.email }}" class="form-control" required>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">ชื่อจริง</label>
+                    <input type="text" name="first_name" value="{{ target_user.first_name }}" class="form-control">
+                </div>
+                
+                <div class="col-md-6">
+                    <label class="form-label">นามสกุล</label>
+                    <input type="text" name="last_name" value="{{ target_user.last_name|default:'' }}" class="form-control">
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label">🔑 ตั้งรหัสผ่านใหม่ (ปล่อยว่างไว้ถ้าไม่ต้องการเปลี่ยน)</label>
+                    <input type="password" name="new_password" class="form-control" placeholder="กรอกรหัสผ่านใหม่ที่นี่...">
+                </div>
+
+                
+                <div class="col-12">
+                    <div class="role-section">
+                        <h6 class="fw-bold mb-3"><i class="fas fa-user-shield me-2 text-primary"></i> การจัดการสิทธิ์และยศ</h6>
+                        
+                        {% if target_user == request.user %}
+                        <div class="alert alert-warning py-2 small mb-0">
+                            <i class="fas fa-exclamation-triangle me-1"></i> คุณไม่สามารถเปลี่ยนสิทธิ์ของตัวเองได้ที่นี่เพื่อความปลอดภัย
+                        </div>
+                        {% else %}
+                        <div class="form-check form-switch mb-2">
+                            <input class="form-check-input" type="checkbox" name="is_staff" id="staffSwitch" {% if target_user.is_staff %}checked{% endif %}>
+                            <label class="form-check-label" for="staffSwitch">เปิดใช้งานสิทธิ์พนักงาน (Staff Status)</label>
+                        </div>
+                        
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" name="is_superuser" id="adminSwitch" {% if target_user.is_superuser %}checked{% endif %}>
+                            <label class="form-check-label" for="adminSwitch">เปิดใช้งานสิทธิ์แอดมินสูงสุด (Superuser Status)</label>
+                        </div>
+                        <p class="text-muted small mt-2 mb-0">* การเป็นแอดมินสูงสุดจะได้รับสิทธิ์พนักงานด้วยอัตโนมัติ</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-grid gap-2 mt-4">
+                <button type="submit" class="btn btn-primary rounded-pill py-3 fw-bold">บันทึกการเปลี่ยนแปลง</button>
+                <a href="{% url 'admin_user_management' %}" class="btn btn-link text-muted">ยกเลิก</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

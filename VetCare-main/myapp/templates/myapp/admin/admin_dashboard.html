@@ -1,0 +1,509 @@
+{% extends 'myapp/core/base.html' %}
+
+{% block title %}Admin Dashboard - ระบบจัดการคลินิกสัตว์เลี้ยง 2026{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ══════════════════════════════════════════
+       MOBILE-FIRST DASHBOARD
+    ══════════════════════════════════════════ */
+
+    /* ─── Stat Cards (2-col grid on mobile) ─── */
+    .stat-card {
+        border-radius: 20px;
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+        overflow: hidden;
+        border: 1px solid var(--border-color);
+        background: var(--card-bg) !important;
+    }
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 28px rgba(0,0,0,0.10);
+    }
+
+    /* ─── Compact mobile card ─── */
+    @media (max-width: 767.98px) {
+        .stat-card .card-body { padding: 1rem !important; }
+        .stat-card h2.display-6 { font-size: 1.75rem !important; }
+        .stat-icon { width: 44px !important; height: 44px !important; font-size: 1.2rem !important; border-radius: 12px !important; }
+        .btn-ghost-minimal { font-size: 0.78rem !important; padding: 0.3rem 0.85rem !important; }
+    }
+
+    /* ─── Stat icon ─── */
+    .stat-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.6rem;
+        flex-shrink: 0;
+    }
+
+    /* ─── Mobile Header Banner ─── */
+    .mobile-header-banner {
+        display: none;
+    }
+    @media (max-width: 767.98px) {
+        .mobile-header-banner {
+            display: block;
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #0ea5e9 100%);
+            border-radius: 0 0 28px 28px;
+            padding: 1.5rem 1.25rem 1.75rem;
+            margin: -1.5rem -1rem 1.25rem;
+            color: #fff;
+        }
+        .mobile-header-banner h2 { font-size: 1.35rem; font-weight: 800; color: #fff; margin: 0; }
+        .mobile-header-banner p { font-size: 0.82rem; color: rgba(255,255,255,.7); margin: 0.25rem 0 0; }
+        /* Hide desktop header on mobile */
+        .desktop-header { display: none !important; }
+    }
+    @media (min-width: 768px) {
+        .mobile-header-banner { display: none !important; }
+        .desktop-header { display: flex !important; }
+    }
+
+    /* ─── Quick Actions: Pill Bar (desktop) ─── */
+    .quick-actions-bar {
+        background: rgba(255,255,255,0.85);
+        backdrop-filter: blur(10px);
+        border-radius: 100px;
+        padding: 10px 20px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+        display: inline-flex;
+        gap: 12px;
+        border: 1px solid rgba(255,255,255,0.5);
+    }
+    [data-bs-theme="dark"] .quick-actions-bar {
+        background: rgba(30,41,59,0.85);
+        border-color: rgba(255,255,255,0.1);
+    }
+
+    /* ─── Mobile Quick Actions: 2-button row ─── */
+    .mobile-quick-actions {
+        display: none;
+    }
+    @media (max-width: 767.98px) {
+        .mobile-quick-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 1rem;
+        }
+        .mobile-quick-actions .btn {
+            flex: 1;
+            border-radius: 14px !important;
+            font-size: 0.85rem;
+            font-weight: 700;
+            padding: 0.65rem 0.5rem;
+        }
+        .quick-actions-bar { display: none !important; }
+    }
+
+    /* ─── Ghost minimal button ─── */
+    .btn-ghost-minimal {
+        background: transparent;
+        border: 1px solid rgba(0,0,0,0.1);
+        color: var(--bs-body-color);
+        font-weight: 500;
+        font-size: 0.82rem;
+        transition: all 0.25s ease;
+    }
+    [data-bs-theme="dark"] .btn-ghost-minimal { border-color: rgba(255,255,255,0.18); }
+    .btn-ghost-minimal:hover {
+        background: rgba(0,0,0,0.05);
+        transform: translateX(2px);
+    }
+    [data-bs-theme="dark"] .btn-ghost-minimal:hover { background: rgba(255,255,255,0.08); }
+
+    /* ─── Chart Container ─── */
+    .chart-container {
+        position: relative;
+        height: 280px;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    @media (max-width: 767.98px) {
+        .chart-container { height: 220px; }
+    }
+
+    /* ─── Activity Feed ─── */
+    .activity-feed {
+        position: relative;
+        padding-left: 20px;
+        list-style: none;
+    }
+    .activity-feed::before {
+        content: '';
+        position: absolute;
+        top: 0; bottom: 0; left: 26px;
+        width: 2px;
+        background: #e2e8f0;
+    }
+    [data-bs-theme="dark"] .activity-feed::before { background: #334155; }
+    .activity-item { position: relative; margin-bottom: 1.25rem; }
+    .activity-marker {
+        position: absolute;
+        left: 1px; top: 5px;
+        width: 12px; height: 12px;
+        border-radius: 50%;
+        background: #38bdf8;
+        border: 3px solid #fff;
+        z-index: 1;
+    }
+    [data-bs-theme="dark"] .activity-marker { border-color: #1e293b; }
+
+    /* ─── Pulse badge ─── */
+    .pulse-animation { animation: pulse-ring 2s cubic-bezier(0.215,0.61,0.355,1) infinite; }
+    @keyframes pulse-ring {
+        0%   { box-shadow: 0 0 0 0 rgba(56,189,248,0.7); }
+        70%  { box-shadow: 0 0 0 10px rgba(56,189,248,0); }
+        100% { box-shadow: 0 0 0 0 rgba(56,189,248,0); }
+    }
+
+    /* ─── Section Label ─── */
+    .section-label {
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        color: var(--text-muted, #94a3b8);
+        margin-bottom: 0.75rem;
+        padding-left: 2px;
+    }
+</style>
+
+{% endblock %}
+
+{% block content %}
+
+<div class="mobile-header-banner">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <div style="font-size:0.78rem;color:rgba(255,255,255,.6);letter-spacing:1px;text-transform:uppercase;font-weight:600;">VetCare Clinic</div>
+            <h2><i class="fas fa-clinic-medical me-2" style="font-size:1.1rem;opacity:.9;"></i>Dashboard</h2>
+            <p>ศูนย์ควบคุมข้อมูลคลินิก</p>
+        </div>
+        <div style="font-size:2.5rem;opacity:.25;">🏥</div>
+    </div>
+    
+    <div class="mobile-quick-actions">
+        <a href="{% url 'pet_create' %}" class="btn" style="background:rgba(34,197,94,.25);color:#fff;border:1px solid rgba(34,197,94,.4);">
+            <i class="fas fa-plus-circle me-1"></i> เพิ่มสัตว์เลี้ยง
+        </a>
+        <a href="{% url 'admin_user_management' %}" class="btn" style="background:rgba(245,158,11,.25);color:#fff;border:1px solid rgba(245,158,11,.4);">
+            <i class="fas fa-crown me-1"></i> จัดการสิทธิ์
+        </a>
+    </div>
+</div>
+
+
+<div class="row align-items-center mb-5 desktop-header">
+    <div class="col-lg-6 mb-3 mb-lg-0">
+        <div class="d-flex align-items-center mb-1 flex-wrap gap-2">
+            <h2 class="fw-bold mb-0" style="letter-spacing:-0.5px;">🏥 Admin Dashboard</h2>
+            <span class="badge rounded-pill ms-md-3 shadow-sm d-flex align-items-center fw-bold" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); font-size: 0.95rem; padding: 8px 16px;">
+                <i class="fas fa-chart-line me-2 text-warning"></i>ยอดขายเดือนนี้: ฿{{ monthly_revenue|floatformat:2|default:"0.00" }}
+            </span>
+        </div>
+        <p class="text-muted mb-0">ศูนย์ควบคุมข้อมูลคลินิกสัตวแพทย์ (Modern SaaS Style)</p>
+    </div>
+    <div class="col-lg-6 text-lg-end text-center d-flex justify-content-lg-end" style="z-index:10;">
+        <div class="quick-actions-bar">
+            <a href="{% url 'pet_create' %}" class="btn rounded-pill fw-bold text-success" style="background:rgba(34,197,94,0.15);">
+                <i class="fas fa-plus-circle me-1"></i> เพิ่มสัตว์เลี้ยง
+            </a>
+            <a href="{% url 'admin_user_management' %}" class="btn rounded-pill fw-bold text-dark" style="background:rgba(245,158,11,0.15);">
+                <i class="fas fa-crown me-1 text-warning"></i> จัดการยศ/สิทธิ์
+            </a>
+        </div>
+    </div>
+</div>
+
+{% if expiring_medicines %}
+<div class="alert alert-warning border-0 shadow-sm rounded-4 d-flex align-items-center mb-4 position-relative overflow-hidden" style="background-color: #fff8e1;" role="alert">
+    <div class="position-absolute" style="top: -20px; left: -20px; font-size: 6rem; opacity: 0.05; color: #ffc107;">
+        <i class="fas fa-exclamation-triangle"></i>
+    </div>
+    <div class="bg-warning text-white rounded-circle flex-shrink-0 d-flex align-items-center justify-content-center me-3 shadow-sm" style="width: 48px; height: 48px; z-index: 1;">
+        <i class="fas fa-box-open fs-5"></i>
+    </div>
+    <div style="z-index: 1;">
+        <h6 class="fw-bold mb-1 text-dark d-flex align-items-center">
+            <span class="text-danger me-2"><i class="fas fa-biohazard"></i> ตรวจพบยา/เวชภัณฑ์ใกล้หมดอายุ (ภายใน 30 วัน)</span>
+            <span class="badge bg-danger rounded-pill">{{ expiring_medicines|length }} รายการ</span>
+        </h6>
+        <div class="mb-0 small text-dark mt-2 d-flex flex-wrap gap-2 align-items-center">
+            {% for em in expiring_medicines|slice:":5" %}
+                <span class="badge bg-warning-subtle border border-warning text-dark px-2 py-1" style="font-size: 0.75rem;">
+                    {{ em.name }} <span class="text-danger">({{ em.stock }})</span>
+                </span>
+            {% endfor %}
+            {% if expiring_medicines|length > 5 %}
+                <a href="{% url 'medicine_list' %}" class="badge bg-dark text-white px-2 py-1 text-decoration-none" style="font-size: 0.75rem;">ดูทั้งหมด...</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+
+<div class="section-label d-md-none">ภาพรวมคลินิก</div>
+<div class="row g-3 mb-4">
+    
+    <div class="col-6 col-md-4 col-lg-2">
+        <div class="card stat-card h-100">
+            <div class="card-body p-4 position-relative">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <div class="text-muted small fw-bold text-uppercase" style="letter-spacing:1px;font-size:.72rem;">เจ้าของสัตว์</div>
+                        <h2 class="display-6 fw-bold mb-0" style="color:var(--text-heading);">{{ owners_count }}</h2>
+                    </div>
+                    <div class="stat-icon" style="background:rgba(99,102,241,.1);color:#6366f1;">
+                        <i class="fas fa-users"></i>
+                    </div>
+                </div>
+                <a href="{% url 'admin_owners' %}" class="btn btn-ghost-minimal btn-sm rounded-pill w-100">ดูรายละเอียด <i class="fas fa-arrow-right ms-1 small"></i></a>
+            </div>
+        </div>
+    </div>
+
+    
+    <div class="col-6 col-md-4 col-lg-2">
+        <div class="card stat-card h-100">
+            <div class="card-body p-4 position-relative">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <div class="text-muted small fw-bold text-uppercase" style="letter-spacing:1px;font-size:.72rem;">สัตว์เลี้ยง</div>
+                        <h2 class="display-6 fw-bold mb-0" style="color:var(--text-heading);">{{ pets_count }}</h2>
+                    </div>
+                    <div class="stat-icon" style="background:rgba(34,197,94,.1);color:#22c55e;">
+                        <i class="fas fa-cat"></i>
+                    </div>
+                </div>
+                <a href="{% url 'admin_pets' %}" class="btn btn-ghost-minimal btn-sm rounded-pill w-100">ดูรายละเอียด <i class="fas fa-arrow-right ms-1 small"></i></a>
+            </div>
+        </div>
+    </div>
+
+    
+    <div class="col-6 col-md-4 col-lg-2">
+        <div class="card stat-card h-100">
+            <div class="card-body p-4 position-relative">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <div class="text-muted small fw-bold text-uppercase" style="letter-spacing:1px;font-size:.72rem;">ทีมแพทย์</div>
+                        <h2 class="display-6 fw-bold mb-0" style="color:var(--text-heading);">{{ vets_count }}</h2>
+                    </div>
+                    <div class="stat-icon bg-info-subtle text-info">
+                        <i class="fas fa-user-md"></i>
+                    </div>
+                </div>
+                <a href="{% url 'vet_list' %}" class="btn btn-ghost-minimal btn-sm rounded-pill w-100">ดูรายละเอียด <i class="fas fa-arrow-right ms-1 small"></i></a>
+            </div>
+        </div>
+    </div>
+
+    
+    <div class="col-6 col-md-4 col-lg-2">
+        <div class="card stat-card h-100">
+            <div class="card-body p-4 position-relative">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <div class="text-muted small fw-bold text-uppercase" style="letter-spacing:1px;font-size:.72rem;">การนัดหมาย</div>
+                        <h2 class="display-6 fw-bold mb-0" style="color:var(--text-heading);">{{ appointments_count }}</h2>
+                    </div>
+                    <div class="stat-icon" style="background:rgba(245,158,11,.1);color:#f59e0b;">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                </div>
+                <a href="{% url 'admin_appointments' %}" class="btn btn-ghost-minimal btn-sm rounded-pill w-100">ดูรายละเอียด <i class="fas fa-arrow-right ms-1 small"></i></a>
+            </div>
+        </div>
+    </div>
+
+    
+    <div class="col-6 col-md-4 col-lg-2">
+        <div class="card stat-card h-100">
+            <div class="card-body p-4 position-relative">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <div class="text-muted small fw-bold text-uppercase" style="letter-spacing:1px;font-size:.72rem;">ประวัติรักษา</div>
+                        <h2 class="display-6 fw-bold mb-0" style="color:var(--text-heading);">{{ medical_records_count }}</h2>
+                    </div>
+                    <div class="stat-icon" style="background:rgba(239,68,68,.1);color:#ef4444;">
+                        <i class="fas fa-heartbeat"></i>
+                    </div>
+                </div>
+                <a href="{% url 'admin_medical_records' %}" class="btn btn-ghost-minimal btn-sm rounded-pill w-100">ดูรายละเอียด <i class="fas fa-arrow-right ms-1 small"></i></a>
+            </div>
+        </div>
+    </div>
+
+    
+    <div class="col-6 col-md-4 col-lg-2">
+        <div class="card stat-card h-100">
+            <div class="card-body p-4 position-relative">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <div class="text-muted small fw-bold text-uppercase" style="letter-spacing:1px;font-size:.72rem;">ยา/เวชภัณฑ์</div>
+                        <h2 class="display-6 fw-bold mb-0" style="color:var(--text-heading);">{{ medicines_count }}</h2>
+                    </div>
+                    <div class="stat-icon" style="background:rgba(236,72,153,.1);color:#ec4899;">
+                        <i class="fas fa-pills"></i>
+                    </div>
+                </div>
+                <a href="{% url 'medicine_list' %}" class="btn btn-ghost-minimal btn-sm rounded-pill w-100">ดูรายละเอียด <i class="fas fa-arrow-right ms-1 small"></i></a>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<div class="row g-4">
+    
+    <div class="col-lg-8">
+        <div class="card stat-card h-100 bg-white">
+            <div class="card-header bg-transparent border-0 pt-4 pb-0 px-4">
+                <h5 class="fw-bold mb-0"><i class="fas fa-chart-pie text-primary me-2"></i> สัดส่วนสัตว์เลี้ยงที่เข้ารับการรักษา</h5>
+            </div>
+            <div class="card-body px-4">
+                <div class="chart-container">
+                    <canvas id="petChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+    <div class="col-lg-4">
+        <div class="card stat-card h-100 bg-white">
+            <div class="card-header bg-transparent border-0 pt-4 pb-0 px-4 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0"><i class="fas fa-bolt text-warning me-2"></i> ความเคลื่อนไหวล่าสุด</h5>
+                <span class="badge bg-success pulse-animation">Live</span>
+            </div>
+            <div class="card-body px-4">
+                <ul class="activity-feed ps-4 mt-3">
+                    {% for record in recent_records %}
+                    <li class="activity-item ps-4">
+                        <div class="activity-marker"></div>
+                        <div class="fw-bold" style="color: var(--text-heading);">{{ record.pet.name }}</div>
+                        <div class="small mt-1 text-muted">เข้ามารับการรักษา ล่าสุด ({{ record.created_at|timesince }} ที่แล้ว)</div>
+                        <div class="small fw-semibold text-primary mt-1"><i class="fas fa-user-md me-1"></i> หมอ{{ record.vet.first_name }}</div>
+                    </li>
+                    {% empty %}
+                    <div class="text-center text-muted py-5">
+                        <i class="fas fa-history fs-3 mb-2 opacity-25"></i>
+                        <p>ไม่มีความเคลื่อนไหวล่าสุด</p>
+                    </div>
+                    {% endfor %}
+                    
+                    {% if recent_records|length < 5 %}
+                        
+                        <li class="activity-item ps-4">
+                            <div class="activity-marker bg-secondary border-secodary" style="opacity: 0.5;"></div>
+                            <div class="fw-bold text-muted" style="opacity: 0.7;">ระบบพร้อมใช้งานต้อนรับลูกค้า</div>
+                            <div class="small mt-1 text-muted" style="opacity: 0.7;">ไม่มีเคสเพิ่มเติม กรุณารอเคสถัดไป</div>
+                        </li>
+                    {% endif %}
+                </ul>
+                <div class="text-center mt-4">
+                    <a href="{% url 'admin_medical_records' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-4">ดูทั้งหมด</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+{{ pet_species_data|json_script:"pet-data" }}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const petDataJson = JSON.parse(document.getElementById('pet-data').textContent);
+        
+        // Prepare Chart.js data
+        const labels = petDataJson.map(item => item.species || 'ไม่ระบุ');
+        const data = petDataJson.map(item => item.count);
+        
+        // If empty, put dummy data
+        if(data.length === 0) {
+            labels.push('สุนัข', 'แมว', 'นก/อื่นๆ');
+            data.push(60, 35, 5);
+        }
+
+        let petChart = null;
+
+        const renderChart = () => {
+            const ctx = document.getElementById('petChart').getContext('2d');
+            const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+            
+            const textColor = isDark ? '#e2e8f0' : '#475569';
+            const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+
+            if (petChart) petChart.destroy();
+
+            petChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: [
+                            'rgba(14, 165, 233, 0.8)', // Sky
+                            'rgba(244, 63, 94, 0.8)', // Rose
+                            'rgba(34, 197, 94, 0.8)', // Green
+                            'rgba(245, 158, 11, 0.8)', // Amber
+                            'rgba(168, 85, 247, 0.8)'  // Purple
+                        ],
+                        hoverOffset: 10,
+                        borderWidth: isDark ? 2 : 3,
+                        borderColor: isDark ? '#1e293b' : '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                color: textColor,
+                                font: {
+                                    family: "'Kanit', sans-serif",
+                                    size: 14
+                                },
+                                padding: 20
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: isDark ? 'rgba(15, 23, 42, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+                            titleColor: isDark ? '#fff' : '#000',
+                            bodyColor: isDark ? '#cbd5e1' : '#475569',
+                            bodyFont: { family: "'Kanit', sans-serif" },
+                            padding: 12,
+                            borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                            borderWidth: 1,
+                            cornerRadius: 10,
+                            displayColors: true
+                        }
+                    }
+                }
+            });
+        };
+
+        renderChart();
+
+        // Re-render chart on theme change
+        window.addEventListener('themeChanged', () => {
+            renderChart();
+        });
+    });
+</script>
+{% endblock %}

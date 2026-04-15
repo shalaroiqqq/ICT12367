@@ -1,0 +1,106 @@
+{% extends 'myapp/core/base.html' %}
+
+{% block title %}โปรไฟล์ของฉัน{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-user-circle" style="font-size: 4rem; color: #3498db;"></i>
+                </div>
+                <h4>👤 {{ request.user.get_full_name }}</h4>
+                <p class="text-muted">{{ request.user.email }}</p>
+                <hr>
+                <a href="{% url 'logout' %}" class="btn btn-danger btn-sm w-100">ออกจากระบบ</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-9">
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">🐶 สัตว์เลี้ยงของฉัน</h5>
+                        <p class="card-text">
+                            <strong>{{ owner.pets.count }}</strong> ตัว
+                        </p>
+                        <a href="{% url 'owner_pets' %}" class="btn btn-primary btn-sm">ดูรายละเอียด</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">📅 การนัดหมายของฉัน</h5>
+                        <p class="card-text">
+                            <strong>{{ medical_records.count }}</strong> ครั้ง
+                        </p>
+                        <a href="{% url 'owner_appointments' %}" class="btn btn-primary btn-sm">ดูรายละเอียด</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">📋 ประวัติการรักษาล่าสุด</h5>
+            </div>
+            <div class="card-body">
+                {% if medical_records %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>สัตว์เลี้ยง</th>
+                                    <th>ผลการวินิจฉัย</th>
+                                    <th>ค่าใช้จ่าย</th>
+                                    <th>วันที่</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for record in medical_records %}
+                                <tr>
+                                    <td>{{ record.pet.name }}</td>
+                                    <td>{{ record.diagnosis|truncatewords:10 }}</td>
+                                    <td><span class="badge bg-info">฿ {{ record.cost }}</span></td>
+                                    <td>{{ record.created_at|date:"d/m/Y" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <a href="{% url 'owner_appointments' %}" class="btn btn-sm btn-primary">ดูทั้งหมด</a>
+                {% else %}
+                    <p class="text-muted">ยังไม่มีประวัติการรักษา</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">ℹ️ ข้อมูลส่วนตัว</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tr>
+                        <th>ชื่อ - สกุล:</th>
+                        <td>{{ owner.first_name }} {{ owner.last_name }}</td>
+                    </tr>
+                    <tr>
+                        <th>เบอร์โทร:</th>
+                        <td>{{ owner.phone|default:"ไม่ระบุ" }}</td>
+                    </tr>
+                    <tr>
+                        <th>ที่อยู่:</th>
+                        <td>{{ owner.address|default:"ไม่ระบุ" }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

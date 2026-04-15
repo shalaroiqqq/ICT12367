@@ -1,0 +1,668 @@
+{% extends 'myapp/core/base.html' %}
+
+{% block title %}ลงทะเบียนสัตว์เลี้ยง{% endblock %}
+{% block extra_css %}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+<style>
+/* Profile Upload UI - Circular Style */
+.profile-upload-wrapper {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    margin: 0 auto;
+}
+.profile-pic-container {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    border: 5px solid #10b981;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    overflow: hidden;
+    position: relative;
+    background-color: #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.profile-pic-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.upload-btn-cam {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    width: 48px;
+    height: 48px;
+    background-color: #10b981;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+    transition: all 0.2s ease;
+    border: 4px solid white;
+    z-index: 30;
+}
+.upload-btn-cam:hover {
+    background-color: #059669;
+    transform: scale(1.1);
+}
+.clear-btn-trash {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    width: 48px;
+    height: 48px;
+    background-color: #ef4444;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+    transition: all 0.2s ease;
+    border: 4px solid white;
+    z-index: 30;
+}
+.clear-btn-trash:hover {
+    background-color: #b91c1c;
+    transform: scale(1.1);
+}
+
+/* Cropper Modal Customization */
+.cropper-container-wrapper {
+    width: 100%;
+    max-height: 400px;
+    overflow: hidden;
+    background-color: #f8fafc;
+    border-radius: 12px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <div class="card shadow border-0" style="border-radius: 20px; overflow: hidden; background: var(--card-bg);">
+        
+        <div class="card-header font-weight-bold" style="background-color: #d1fae5; border-bottom: 1px solid rgba(16, 185, 129, 0.2); border-left: 5px solid #10b981;">
+            <h4 class="mb-0 py-2" style="color: #065f46; font-weight: 800;">
+                🐾 ทะเบียนสัตว์เลี้ยง (Pet Registration)
+            </h4>
+        </div>
+        
+        <div class="card-body p-4" style="background-color: var(--card-bg);">
+            <form method="post" enctype="multipart/form-data" class="needs-validation" id="petForm" novalidate>
+                {% csrf_token %}
+
+                
+                <div class="row align-items-end mb-4 p-3 border rounded-4 shadow-sm" style="background: var(--input-bg); border-color: var(--border-color) !important;">
+                    <div class="col-md-4">
+                        <label class="form-label text-primary fw-bold small mb-1">รหัสลูกค้า (Customer ID)</label>
+                        {{ form.customer_id }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-primary fw-bold small mb-1">เลขที่ชิป (Microchip No.)</label>
+                        {{ form.microchip_number }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-primary fw-bold small mb-1">ระดับราคา</label>
+                        {{ form.price_level }}
+                    </div>
+                </div>
+
+                <div class="row">
+                    
+                    <div class="col-md-8 pe-md-4">
+                        
+                        
+                        <h5 class="text-primary border-bottom border-primary border-2 pb-2 mb-3 mt-2 fw-bold"><i class="fas fa-user-circle me-2"></i>ข้อมูลเจ้าของ (Owner Details)</h5>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted-custom fw-bold small mb-1">ชื่อ (First Name)</label>
+                                {{ form.owner_first_name }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted-custom fw-bold small mb-1">นามสกุล (Last Name)</label>
+                                {{ form.owner_last_name }}
+                            </div>
+                        </div>
+
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label class="form-label text-muted-custom fw-bold small mb-1">ที่อยู่ (Address Line 1 & 2)</label>
+                                <div class="d-flex flex-column gap-2">
+                                    {{ form.owner_address_1 }}
+                                    {{ form.owner_address_2 }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3 g-3">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted-custom fw-bold small mb-1">เบอร์มือถือ (Mobile) <span class="text-danger">*</span></label>
+                                {{ form.owner_phone }}
+                            </div>
+                            {% if not owner_has_account %}
+                            <div class="col-md-6">
+                                <label class="form-label text-primary fw-bold small mb-1"><i class="fas fa-envelope me-1"></i> อีเมล (Login Email) <span class="text-danger">*</span></label>
+                                {{ form.owner_email }}
+                            </div>
+                            {% else %}
+                            <div class="col-md-6 d-flex align-items-end">
+                                <div class="alert alert-success py-2 px-3 mb-0 w-100 d-flex align-items-center gap-2" style="border-radius: 10px; font-size: 0.85rem;">
+                                    <i class="fas fa-check-circle text-success"></i>
+                                    <div>
+                                        <div class="fw-bold">มีบัญชีในระบบแล้ว</div>
+                                        <div class="text-muted small">เจ้าของรายนี้ล็อกอินได้แล้ว</div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% if not owner_has_account %}
+                        <div class="row mb-4 g-3">
+                            <div class="col-md-6">
+                                <label class="form-label text-primary fw-bold small mb-1"><i class="fas fa-key me-1"></i> รหัสผ่าน (Password) <span class="text-danger">*</span></label>
+                                {{ form.owner_password }}
+                                <div class="form-text mt-1" style="font-size: 0.65rem; color: #64748b;">* ระบบจะสร้างบัญชีให้ลูกค้าอัตโนมัติ</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-primary fw-bold small mb-1"><i class="fas fa-check-circle me-1"></i> ยืนยันรหัสผ่าน (Confirm Password) <span class="text-danger">*</span></label>
+                                {{ form.owner_password_confirm }}
+                                {% if form.owner_password_confirm.errors %}
+                                <div class="text-danger small mt-1"><i class="fas fa-exclamation-circle me-1"></i>{{ form.owner_password_confirm.errors|striptags }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        
+                        <h5 class="text-primary border-bottom border-primary border-2 pb-2 mb-3 fw-bold"><i class="fas fa-paw me-2"></i>ข้อมูลสัตว์เลี้ยง (Pet Details)</h5>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted-custom fw-bold small mb-1">ชื่อสัตว์เลี้ยง (Pet Name)</label>
+                                {{ form.name }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-primary fw-bold d-block mb-2">เพศ (Sex)</label>
+                                <div class="d-flex gap-3 sex-radio-group w-100" id="sexSelectionGroup">
+                                    <style>
+                                        .sex-radio-group .form-check-input { display: none !important; }
+                                        .sex-radio-group .sex-btn {
+                                            display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+                                            padding: 0.65rem 1rem; border: 2px solid #e2e8f0; border-radius: 0.75rem;
+                                            font-weight: 700; cursor: pointer; transition: all 0.2s ease-in-out;
+                                            width: 100%; color: #64748b; background-color: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.02); margin: 0;
+                                        }
+                                        .sex-radio-group .sex-btn:hover { background-color: #f8fafc; border-color: #cbd5e1; transform: translateY(-1px); }
+                                        .sex-radio-group .form-check-input:checked + .sex-btn-male {
+                                            background-color: #eff6ff; border-color: #3b82f6; color: #1d4ed8; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+                                        }
+                                        .sex-radio-group .form-check-input:checked + .sex-btn-female {
+                                            background-color: #fdf2f8; border-color: #ec4899; color: #be185d; box-shadow: 0 4px 12px rgba(236, 72, 153, 0.2);
+                                        }
+                                    </style>
+                                    {% for radio in form.sex %}
+                                        {% if radio.choice_label and '----' not in radio.choice_label %}
+                                        <div class="flex-fill">
+                                            {{ radio.tag }}
+                                            <label class="sex-btn {% if 'ผู้' in radio.choice_label or 'Male' in radio.choice_label %}sex-btn-male{% else %}sex-btn-female{% endif %}" for="{{ radio.id_for_label }}">
+                                                {% if 'ผู้' in radio.choice_label or 'Male' in radio.choice_label %}
+                                                    <i class="fas fa-mars fa-lg"></i>
+                                                {% else %}
+                                                    <i class="fas fa-venus fa-lg"></i>
+                                                {% endif %}
+                                                {{ radio.choice_label }}
+                                            </label>
+                                        </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label text-muted-custom fw-bold small mb-1">ประเภทสัตว์ (Species)</label>
+                                {{ form.species }}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-muted-custom fw-bold small mb-1">สายพันธุ์ (Breed)</label>
+                                {{ form.breed }}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-muted-custom fw-bold small mb-1">วันเกิด (Birth Date)</label>
+                                {{ form.birth_date }}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <label class="form-label text-muted fw-bold small mb-1">ส่วนเสริม: หมายเหตุ (Remarks)</label>
+                                {{ form.remarks }}
+                            </div>
+                        </div>
+
+                    </div>
+
+                    
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm mt-2 rounded-4 overflow-hidden" style="background-color: var(--input-bg); border: 1px solid var(--border-color) !important;">
+                            <div class="card-body text-center p-4">
+                                <h6 class="text-primary fw-bold mb-4 border-bottom border-primary border-opacity-25 pb-2">รูปภาพสัตว์เลี้ยง</h6>
+                                
+                                <div class="profile-upload-wrapper mb-4">
+                                    <div class="profile-pic-container" id="profile-container">
+                                        {% if form.instance.image and form.instance.image.url %}
+                                            <img id="image-preview" src="{{ form.instance.image.url }}" alt="Pet Profile" style="cursor: pointer;" onerror="this.src='https://ui-avatars.com/api/?name=Pet&background=e2e8f0&color=64748b&size=200'">
+                                        {% else %}
+                                            <img id="image-preview" src="https://ui-avatars.com/api/?name=Pet&background=e2e8f0&color=64748b&size=200" alt="Pet Profile" style="cursor: pointer;">
+                                        {% endif %}
+                                        <div id="delete-placeholder" class="d-none bg-light d-flex align-items-center justify-content-center flex-column p-3" style="width: 100%; height: 100%; color: #ef4444; font-size: 0.8rem; text-align: center;">
+                                            <i class="fas fa-trash-alt fs-2 mb-2 opacity-50"></i>
+                                            <div class="fw-bold">รูปภาพจะถูกลบ</div>
+                                            <div class="small opacity-75">กดปุ่มสีเทาเพื่อเลิกลบ</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Controls -->
+                                    <label for="id_image" class="upload-btn-cam" id="upload-btn-trigger" title="เปลี่ยนรูป">
+                                        <i class="fas fa-camera"></i>
+                                    </label>
+
+                                    {% if form.instance.image %}
+                                    <div class="clear-btn-trash" id="clear-photo-btn" title="ลบรูป">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="d-none">
+                                    {{ form.image }}
+                                    {% if form.instance.image %}
+                                        <input type="checkbox" name="image-clear" id="hidden-image-clear">
+                                    {% endif %}
+                                </div>
+
+                                <div class="p-2 bg-light rounded-3 border mt-2">
+                                    <p class="small text-muted mb-0"><i class="fas fa-info-circle me-1"></i>คลิกกกล้องเพื่อแต่งรูป หรือคลิกถังขยะเพื่อลบ</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 border-top pt-4 mt-3">
+                    <a href="{% url 'pet_list' %}" class="btn btn-danger px-4 fw-bold">🚫 ยกเลิก</a>
+                    <button type="submit" id="btnSubmit" class="btn btn-success px-5 fw-bold text-white" style="background-color: #28a745;">💾 บันทึก</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Cropper Modal -->
+<div class="modal fade modal-cropper" id="cropperModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0" style="border-radius: 20px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
+            <div class="modal-header bg-light border-0 px-4 py-3">
+                <h5 class="modal-title fw-bold" style="color: #10b981;">
+                    <i class="fas fa-crop-alt me-2"></i>ปรับแต่งรูปสัตว์เลี้ยง
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 bg-white text-center">
+                <div class="cropper-container-wrapper mb-3 mx-auto">
+                    <img id="cropper-image" src="" alt="Cropper" style="max-width: 100%; display: block;">
+                </div>
+                
+                <div class="editor-controls bg-light p-3 rounded-4 mt-3">
+                    <div class="row align-items-center g-3">
+                        <div class="col-md-7 text-start">
+                            <label class="form-label small fw-bold text-muted mb-1"><i class="fas fa-search-plus me-1"></i>ซูม (Zoom)</label>
+                            <input type="range" class="form-range" id="zoom-range" min="0" max="3" step="0.1" value="0.5">
+                        </div>
+                        <div class="col-md-5 text-end">
+                            <label class="form-label small fw-bold text-muted mb-1 d-block"><i class="fas fa-sync-alt me-1"></i>หมุน (Rotate)</label>
+                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle me-1" id="rotate-left" style="width: 38px; height: 38px;">
+                                <i class="fas fa-undo"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle" id="rotate-right" style="width: 38px; height: 38px;">
+                                <i class="fas fa-redo"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-light border-0 px-4 py-3">
+                <button type="button" class="btn btn-light fw-bold px-4" data-bs-dismiss="modal" style="border-radius: 12px;">ยกเลิก</button>
+                <button type="button" class="btn btn-success fw-bold px-4" id="crop-and-save" style="border-radius: 12px; background-color: #10b981; border: none;">
+                    <i class="fas fa-check-circle me-2"></i>บันทึกและครอบตัด
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const imageInput = document.querySelector('input[type="file"]');
+        const imagePreview = document.getElementById('image-preview');
+        
+        const cropperModalEl = document.getElementById('cropperModal');
+        const cropperModal = new bootstrap.Modal(cropperModalEl);
+        const cropperImage = document.getElementById('cropper-image');
+        let cropper = null;
+
+        const zoomRange = document.getElementById('zoom-range');
+        const btnRotateLeft = document.getElementById('rotate-left');
+        const btnRotateRight = document.getElementById('rotate-right');
+        const btnCropAndSave = document.getElementById('crop-and-save');
+
+        if (imagePreview) {
+            imagePreview.addEventListener('click', () => {
+                if(imageInput) imageInput.click();
+            });
+        }
+
+        if (imageInput) {
+            imageInput.addEventListener('change', function(e) {
+                if(e.detail && e.detail.fromCropper) return;
+                
+                if (e.target.files && e.target.files[0]) {
+                    const file = e.target.files[0];
+                    if(!file.type.match('image.*')) {
+                        alert('กรุณาเลือกไฟล์ภาพเท่านั้น');
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = function(evt) {
+                        cropperImage.src = evt.target.result;
+                        cropperModal.show();
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        cropperModalEl.addEventListener('shown.bs.modal', function () {
+            if (cropper) cropper.destroy();
+
+            cropper = new Cropper(cropperImage, {
+                aspectRatio: 1,
+                viewMode: 1,
+                dragMode: 'move',
+                autoCropArea: 0.9,
+                guides: false,
+                center: false,
+                highlight: false,
+                cropBoxMovable: false,
+                cropBoxResizable: false,
+                toggleDragModeOnDblclick: false,
+                ready: function () {
+                    const viewBox = document.querySelector('.cropper-view-box');
+                    if (viewBox) viewBox.style.borderRadius = '50%';
+                    zoomRange.value = 0.5;
+                }
+            });
+        });
+
+        cropperModalEl.addEventListener('hidden.bs.modal', function () {
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
+            }
+        });
+
+        zoomRange.addEventListener('input', function() {
+            if(cropper) cropper.zoomTo(Math.max(0.1, parseFloat(this.value))); 
+        });
+
+        btnRotateLeft.addEventListener('click', () => { if(cropper) cropper.rotate(-90); });
+        btnRotateRight.addEventListener('click', () => { if(cropper) cropper.rotate(90); });
+
+        btnCropAndSave.addEventListener('click', function() {
+            if (!cropper) return;
+            
+            const canvas = cropper.getCroppedCanvas({
+                width: 400,
+                height: 400,
+                fillColor: '#fff', 
+            });
+
+            imagePreview.src = canvas.toDataURL('image/jpeg', 0.9);
+
+            canvas.toBlob(function(blob) {
+                const dt = new DataTransfer();
+                const compiledImg = new File([blob], "pet_avatar_" + Date.now() + ".jpg", { 
+                    type: "image/jpeg", 
+                    lastModified: Date.now() 
+                });
+                dt.items.add(compiledImg);
+                
+                if (imageInput) {
+                    imageInput.files = dt.files;
+                    imageInput.dispatchEvent(new CustomEvent('change', { detail: { fromCropper: true } }));
+                }
+                
+                cropperModal.hide();
+            }, 'image/jpeg', 0.9);
+        });
+
+        // Delete Original Image logic
+        const btnClearPhoto = document.getElementById('clear-photo-btn');
+        const hiddenClearCheckbox = document.getElementById('hidden-image-clear');
+        const deletePlaceholder = document.getElementById('delete-placeholder');
+        
+        if (btnClearPhoto) {
+            btnClearPhoto.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                if (hiddenClearCheckbox) {
+                    hiddenClearCheckbox.checked = !hiddenClearCheckbox.checked;
+                    
+                    if (hiddenClearCheckbox.checked) {
+                        imagePreview.classList.add('d-none');
+                        if(deletePlaceholder) deletePlaceholder.classList.remove('d-none');
+                        btnClearPhoto.innerHTML = '<i class="fas fa-undo"></i>';
+                        btnClearPhoto.style.backgroundColor = '#64748b';
+                        btnClearPhoto.title = "ยกเลิกการลบ";
+                    } else {
+                        imagePreview.classList.remove('d-none');
+                        if(deletePlaceholder) deletePlaceholder.classList.add('d-none');
+                        btnClearPhoto.innerHTML = '<i class="fas fa-trash-alt"></i>';
+                        btnClearPhoto.style.backgroundColor = '#ef4444';
+                        btnClearPhoto.title = "ลบรูป";
+                    }
+                }
+            });
+        }
+
+        // --- Client-Side Validation Logic ---
+        const petForm = document.getElementById('petForm');
+        const btnSubmit = document.getElementById('btnSubmit');
+
+        if (petForm) {
+            petForm.addEventListener('submit', function(e) {
+                e.preventDefault(); // Prevent standard submit
+
+                // Clear previous validation states
+                document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+                document.querySelectorAll('.invalid-feedback-custom').forEach(el => el.remove());
+
+                let isValid = true;
+                let firstErrorEl = null;
+
+                // Explicitly check required fields (Name logic, inputs, selects)
+                const requiredFields = [
+                    { id: 'id_owner_first_name', msg: 'กรุณากรอกชื่อเจ้าของ' },
+                    { id: 'id_owner_last_name', msg: 'กรุณากรอกนามสกุลเจ้าของ' },
+                    { id: 'id_owner_phone', msg: 'กรุณากรอกเบอร์มือถือ' },
+                    { id: 'id_owner_email', msg: 'กรุณากรอกอีเมลสำหรับล็อกอิน' },
+                    { id: 'id_owner_password', msg: 'กรุณากำหนดรหัสผ่าน' },
+                    { id: 'id_owner_password_confirm', msg: 'กรุณายืนยันรหัสผ่านอีกครั้ง' },
+                    { id: 'id_name', msg: 'กรุณากรอกชื่อสัตว์เลี้ยง' },
+                    { id: 'id_species', msg: 'กรุณาเลือกประเภทสัตว์เลี้ยง' },
+                    { id: 'id_breed', msg: 'กรุณากรอกสายพันธุ์' },
+                    { id: 'id_birth_date', msg: 'กรุณาระบุวันเกิดสัตว์เลี้ยง' },
+                    { id: 'id_price_level', msg: 'กรุณาเลือกระดับราคา' }
+                ];
+
+                const showError = (inputEl, message) => {
+                    inputEl.classList.add('is-invalid');
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'invalid-feedback invalid-feedback-custom fw-bold small mt-1';
+                    errorDiv.innerHTML = `<i class="fas fa-exclamation-circle me-1"></i>${message}`;
+                    inputEl.parentNode.appendChild(errorDiv);
+                    if (!firstErrorEl) firstErrorEl = inputEl;
+                    isValid = false;
+                };
+
+                // Validate Inputs and Selects
+                requiredFields.forEach(field => {
+                    const el = document.getElementById(field.id);
+                    // Check if element exists (some fields might be hidden if owner has account)
+                    if (el && !el.value.trim()) {
+                        showError(el, field.msg);
+                    }
+                });
+
+                // Validation for Password matching
+                const pwd = document.getElementById('id_owner_password');
+                const confirmPwd = document.getElementById('id_owner_password_confirm');
+                if (pwd && confirmPwd && pwd.value !== confirmPwd.value && confirmPwd.value.trim() !== '') {
+                    showError(confirmPwd, 'รหัสผ่านไม่ตรงกัน กรุณาตรวจสอบอีกครั้ง');
+                }
+
+                // Specifically validate Gender (Radio Buttons)
+                let sexChecked = false;
+                const sexRadios = document.querySelectorAll('input[name="sex"]');
+                if (sexRadios.length > 0) {
+                    sexRadios.forEach(radio => { if (radio.checked) sexChecked = true; });
+                    if (!sexChecked) {
+                        const sexContainer = sexRadios[0].closest('.px-3.py-2.border'); // The bounding box
+                        if(sexContainer) {
+                            sexContainer.classList.add('border', 'border-danger');
+                            const err = document.createElement('div');
+                            err.className = 'invalid-feedback-custom text-danger fw-bold small mt-1 d-block';
+                            err.innerHTML = `<i class="fas fa-exclamation-circle me-1"></i>กรุณาระบุเพศของสัตว์เลี้ยง`;
+                            sexContainer.parentNode.appendChild(err);
+                            if (!firstErrorEl) firstErrorEl = sexContainer;
+                        }
+                        isValid = false;
+                    } else {
+                        const sexContainer = sexRadios[0].closest('.px-3.py-2.border');
+                        if (sexContainer) sexContainer.classList.remove('border-danger');
+                    }
+                }
+
+                if (!isValid) {
+                    // Scroll to the first error element smoothly
+                    if (firstErrorEl) {
+                        firstErrorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        if(firstErrorEl.focus) firstErrorEl.focus();
+                    }
+                } else {
+                    // Passed Validation! Show SweetAlert and Spinner
+                    btnSubmit.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>ระบบกำลังบันทึก...';
+                    btnSubmit.disabled = true;
+
+                    Swal.fire({
+                        title: 'บันทึกข้อมูลสำเร็จ!',
+                        text: 'ข้อมูลสัตว์เลี้ยงของคุณถูกเพิ่มเข้าสู่ระบบเรียบร้อยแล้ว',
+                        icon: 'success',
+                        confirmButtonColor: '#10b981',
+                        confirmButtonText: '<i class="fas fa-check me-1"></i> ตกลง',
+                        allowOutsideClick: false
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            petForm.submit();
+                        }
+                    });
+                }
+            });
+        }
+
+        // --- Autocomplete for Breed via Tom Select ---
+        const speciesSelect = document.getElementById('id_species');
+        const breedInput = document.getElementById('id_breed');
+
+        if (breedInput) {
+            // Check if it is currently a text input, Tom Select can enhance a text input!
+            const tomSelect = new TomSelect(breedInput, {
+                create: true,
+                maxItems: 1,
+                createFilter: function(input) {
+                    input = input.toLowerCase();
+                    return input.length > 0;
+                },
+                render: {
+                    option_create: function(data, escape) {
+                        return '<div class="create text-primary fw-bold"><i class="fas fa-plus me-1"></i> เพิ่มสายพันธุ์ใหม่: <strong>' + escape(data.input) + '</strong></div>';
+                    },
+                    no_results: function(data, escape) {
+                        return '<div class="no-results p-2 text-muted small">ไม่พบสายพันธุ์ที่ค้นหา (พิมพ์เพื่อเพิ่มใหม่)</div>';
+                    }
+                },
+                placeholder: 'พิมพ์หรือเลือกสายพันธุ์...',
+                valueField: 'value',
+                labelField: 'text',
+                searchField: 'text',
+                maxOptions: 50,
+                sortField: { field: "text", direction: "asc" }
+            });
+
+            // Function to update breeds dropdown based on species
+            const loadBreeds = (speciesName) => {
+                tomSelect.clearOptions();
+                tomSelect.clear();
+                
+                if (speciesName) {
+                    fetch(`/ajax/get-breeds/?species=${encodeURIComponent(speciesName)}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.breeds && data.breeds.length > 0) {
+                                const newOptions = data.breeds.map(breed => ({ value: breed, text: breed }));
+                                tomSelect.addOptions(newOptions);
+                            }
+                        })
+                        .catch(err => console.error('Error fetching breeds:', err));
+                }
+            };
+
+            if (speciesSelect) {
+                speciesSelect.addEventListener('change', function(e) {
+                    const speciesName = e.target.options[e.target.selectedIndex]?.text || '';
+                    // Clean species name from "(Cat)" or similar parts if needed, or pass raw
+                    // Since myapp models likely save raw choice labels, let's pass the raw text or value. 
+                    const speciesValue = e.target.value; 
+                    loadBreeds(speciesValue);
+                });
+
+                // Load on init if species already selected
+                if(speciesSelect.value) {
+                    loadBreeds(speciesSelect.value);
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

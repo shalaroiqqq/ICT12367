@@ -1,0 +1,71 @@
+{% extends 'myapp/core/base.html' %}
+
+{% block title %}จัดการสัตว์เลี้ยง - Admin{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>🐶 จัดการสัตว์เลี้ยง</h2>
+    <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary">ย้อนกลับ</a>
+</div>
+
+{% include 'myapp/includes/messages.html' %}
+
+{% if pets %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>ชื่อ</th>
+                    <th>ประเภท</th>
+                    <th>สายพันธุ์</th>
+                    <th>เจ้าของ (รหัส)</th>
+                    <th>วันเกิด</th>
+                    <th>อายุ (SQL)</th>
+                    <th>รวมยอดค่ารักษา (SQL)</th>
+                    <th>ประวัติการรักษา</th>
+                    <th>การกระทำ</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pet in pets %}
+                <tr>
+                    <td class="d-flex align-items-center">
+                        <div class="rounded-circle overflow-hidden me-3 d-flex align-items-center justify-content-center border shadow-sm" style="width: 44px; height: 44px; background: #f8f9fa;">
+                            {% if pet.image %}
+                                <img src="{{ pet.image.url }}" alt="{{ pet.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                            {% else %}
+                                <i class="fas fa-paw text-muted"></i>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <div class="fw-bold text-dark">{{ pet.name }}</div>
+                            <small class="text-muted">ID: {{ pet.id }}</small>
+                        </div>
+                    </td>
+                    <td>{{ pet.species }}</td>
+                    <td>{{ pet.breed|default:"ไม่ระบุ" }}</td>
+                    <td>
+                        {{ pet.owner.first_name }} {{ pet.owner.last_name }} 
+                        <span class="badge bg-secondary small">{{ pet.owner.customer_id|default:"-" }}</span>
+                    </td>
+                    <td>{{ pet.birth_date|date:"d/m/Y"|default:"ไม่ระบุ" }}</td>
+                    <td><span class="badge bg-light text-primary border">{{ pet.age_from_sql }}</span></td>
+                    <td><span class="fw-bold text-success">฿ {{ pet.total_spending_sql|default:"0.00"|floatformat:2 }}</span></td>
+                    <td>
+                        <span class="badge {% if pet.visit_count_sql > 0 %}bg-success{% else %}bg-secondary{% endif %} rounded-pill">
+                            {{ pet.visit_count_sql|default:"0" }} ครั้ง
+                        </span>
+                    </td>
+                    <td>
+                        <a href="{% url 'pet_detail' pet.pk %}" class="btn btn-sm btn-info">📖 ดู</a>
+                        <a href="{% url 'admin_pet_delete' pet.pk %}" class="btn btn-sm btn-danger">🗑️ ลบ</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    {% include 'myapp/includes/empty_state.html' with title='ไม่มีข้อมูล' message='ไม่มีข้อมูลสัตว์เลี้ยง' %}
+{% endif %}
+{% endblock %}

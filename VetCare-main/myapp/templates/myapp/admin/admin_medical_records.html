@@ -1,0 +1,48 @@
+{% extends 'myapp/core/base.html' %}
+
+{% block title %}จัดการปรวัติการรักษา - Admin{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>📋 จัดการปรวัติการรักษา</h2>
+    <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary">ย้อนกลับ</a>
+</div>
+
+{% include 'myapp/includes/messages.html' %}
+
+{% if records %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>สัตว์เลี้ยง</th>
+                    <th>เจ้าของ</th>
+                    <th>แพทย์</th>
+                    <th>ผลการวินิจฉัย</th>
+                    <th>ค่าใช้จ่าย</th>
+                    <th>วันที่</th>
+                    <th>การกระทำ</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in records %}
+                <tr>
+                    <td class="fw-bold">{{ record.pet_summary_name|default:record.pet.name }}</td>
+                    <td>{{ record.pet.owner.first_name }} {{ record.pet.owner.last_name }}</td>
+                    <td>{{ record.vet.name }}</td>
+                    <td>{{ record.diagnosis|truncatewords:10 }}</td>
+                    <td><span class="badge bg-info">฿ {{ record.cost }}</span></td>
+                    <td>{{ record.created_at|date:"d/m/Y" }}</td>
+                    <td>
+                        <a href="{% url 'medical_record_detail' record.pk %}" class="btn btn-sm btn-info">📖 ดู</a>
+                        <a href="{% url 'admin_medical_record_delete' record.pk %}" class="btn btn-sm btn-danger">🗑️ ลบ</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    {% include 'myapp/includes/empty_state.html' with title='ไม่มีข้อมูล' message='ไม่มีข้อมูลปรวัติการรักษา' %}
+{% endif %}
+{% endblock %}
